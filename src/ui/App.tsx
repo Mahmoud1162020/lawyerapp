@@ -8,12 +8,12 @@ import Navbar from "./components/NavBar";
 import { SecondNav } from "./components/SecondNav";
 
 function App() {
-  // useEffect(() => {
-  //   const unsub = window.electron.subscribeStatistics((stats) =>
-  //     console.log("===>", stats)
-  //   );
-  //   return unsub;
-  // }, []);
+  useEffect(() => {
+    const unsub = window.electron.subscribeStatistics((stats) =>
+      console.log("===>", stats)
+    );
+    return unsub;
+  }, []);
   return (
     <Router>
       <Navbar />
