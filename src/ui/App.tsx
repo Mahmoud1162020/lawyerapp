@@ -1,15 +1,21 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import reactLogo from "./assets/react.svg";
 
 import "./App.css";
+import Test from "./Test";
 
 function App() {
   const [count, setCount] = useState(0);
-
+  useEffect(() => {
+    const unsub = window.electron.subscribeStatistics((stats) =>
+      console.log("===>", stats)
+    );
+    return unsub;
+  }, []);
   return (
     <>
-      99999
       <div>
+        <Test />
         <a href="https://react.dev" target="_blank">
           <img src={reactLogo} className="logo react" alt="React logo" />
         </a>
