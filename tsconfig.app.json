@@ -17,7 +17,7 @@
     "noEmit": true,
     "jsx": "react-jsx"
   },
-  "include": ["src"],
+  "include": ["src", "tailwind.config.js"],
   "exclude": ["src/electron"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
