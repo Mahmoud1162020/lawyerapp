@@ -2,6 +2,7 @@ type Statistics = {
     cpuUsage: number;
     ramUsage: number;
     storageUsage: number;
+    btnClicked: boolean
   };
   
   type StaticData = {
@@ -19,6 +20,7 @@ type Statistics = {
     getStaticData: StaticData;
     changeView: View;
     sendFrameAction: FrameWindowAction;
+    buttonClicked: string
   };
   
   type UnsubscribeFunction = () => void;
@@ -29,6 +31,7 @@ type Statistics = {
         callback: (statistics: Statistics) => void
       ) => UnsubscribeFunction;
       getStaticData: () => Promise<StaticData>;
+      sendExit: () => void;
       subscribeChangeView: (
         callback: (view: View) => void
       ) => UnsubscribeFunction;

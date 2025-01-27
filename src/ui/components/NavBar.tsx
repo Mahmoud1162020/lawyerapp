@@ -23,6 +23,12 @@ function Navbar() {
   const { navName } = useAppSelector((state) => state.nav);
   console.log(navName);
 
+  const handleExit = async () => {
+    console.log("====================================");
+    console.log("Exit");
+    console.log("====================================");
+    window.electron.sendExit(); // Send the exit event to the main process
+  };
   const handleSubmit = async (item: number) => {
     try {
       console.log(item);
@@ -51,14 +57,14 @@ function Navbar() {
           {navItems.map((item) => (
             <button
               key={item.name}
-              className="navbar-link"
+              className="navbar-button"
               onClick={() => handleSubmit(item.itemId)}>
               <item.icon className="icon" />
               {item.name}
             </button>
           ))}
 
-          <button className="navbar-link">
+          <button className="navbar-link" onClick={handleExit}>
             <LogOut className="icon" />
             تسجيل الخروج
           </button>

@@ -15,6 +15,7 @@ export function pollResources(mainWindow: BrowserWindow) {
       cpuUsage,
       ramUsage,
       storageUsage: storageData.usage,
+      btnClicked:getStaticData().btnClicked
     });
   }, POLLING_INTERVAL);
 }
@@ -23,11 +24,12 @@ export function getStaticData() {
   const totalStorage = getStorageData().total;
   const cpuModel = os.cpus()[0].model;
   const totalMemoryGB = Math.floor(osUtils.totalmem() / 1024);
-
+const btnClicked=true;
   return {
     totalStorage,
     cpuModel,
     totalMemoryGB,
+    btnClicked
   };
 }
 

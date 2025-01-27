@@ -94,4 +94,15 @@
       padding: 1rem;
     }
   }
-  
+
+.nav-button {
+  background-color: #f0f0f0; /* Default button color */
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.nav-button:hover {
+  background-color: #d0d0d0; /* Color on hover */
+}
