@@ -32,9 +32,19 @@ type Statistics = {
       ) => UnsubscribeFunction;
       getStaticData: () => Promise<StaticData>;
       sendExit: () => void;
+      register: (username: string, password: string) => Promise<void>;
+      login: (username: string, password: string) => Promise<void>;
+      logout: () => Promise<void>;
+      deleteUser: (userId: number) => Promise<{deleted:boolean}>;
+      onUserStatusUpdate: (callback: (status: UserStatus) => void) => void; // Corrected type
       subscribeChangeView: (
         callback: (view: View) => void
       ) => UnsubscribeFunction;
       sendFrameAction: (payload: FrameWindowAction) => void;
     };
+  }
+
+  interface UserStatus {
+    isLoggedIn: boolean;
+    username?: string;
   }

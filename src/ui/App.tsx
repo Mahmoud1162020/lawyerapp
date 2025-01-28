@@ -6,6 +6,10 @@ import "./App.css";
 
 import Navbar from "./components/NavBar";
 import { SecondNav } from "./components/SecondNav";
+import Register from "./components/Register";
+import Login from "./components/Login";
+import UserManagement from "./components/UserManagement";
+import UserStatus from "./components/UserStatus";
 
 function App() {
   useEffect(() => {
@@ -16,6 +20,7 @@ function App() {
   }, []);
   return (
     <Router>
+      <UserStatus />
       <Navbar />
       <SecondNav />
     </Router>

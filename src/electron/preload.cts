@@ -13,6 +13,13 @@ electron.contextBridge.exposeInMainWorld('electron', {
   getStaticData: () => ipcInvoke('getStaticData'),
   sendFrameAction: (payload) => ipcSend('sendFrameAction', payload),
   sendExit: () => electron.ipcRenderer.send('exit'),
+  register: (username: string, password: string) => electron.ipcRenderer.invoke('register', { username, password }),
+  login: (username: string, password: string) => electron.ipcRenderer.invoke('login', { username, password }),
+  logout: () => electron.ipcRenderer.invoke('logout'),
+  deleteUser: (userId: number) => electron.ipcRenderer.invoke('delete-user', userId),
+  onUserStatusUpdate: (callback: (status: UserStatus) => void) => {
+    electron.ipcRenderer.on('user-status-update', (event, status) => callback(status));
+  },
 
 } satisfies Window['electron']);
 
