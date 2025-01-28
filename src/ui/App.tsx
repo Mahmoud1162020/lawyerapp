@@ -1,12 +1,7 @@
 import { useEffect } from "react";
-
 import { Routes, BrowserRouter as Router, Route } from "react-router-dom";
-
 import "./App.css";
-
 import Navbar from "./components/NavBar";
-import { SecondNav } from "./components/SecondNav";
-import TestV from "./components/TestV";
 import Reports from "./screens/Reports";
 import Cash from "./screens/Cash";
 import Management from "./screens/Management";

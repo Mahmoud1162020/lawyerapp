@@ -1,12 +1,5 @@
 import React, { useState } from "react";
-import {
-  Menu,
-  X,
-  FileText,
-  Users,
-  LogOut,
-  CircleDollarSign,
-} from "lucide-react";
+import { Menu, X, FileText, Users, CircleDollarSign } from "lucide-react";
 import "./NavBar.css";
 import { useAppDispatch, useAppSelector } from "../store";
 import { navState } from "../store/slices/navSlice";
@@ -25,12 +18,12 @@ function Navbar() {
   const { navName } = useAppSelector((state) => state.nav);
   console.log(navName);
 
-  const handleExit = async () => {
-    console.log("====================================");
-    console.log("Exit");
-    console.log("====================================");
-    window.electron.logout(); // Send the exit event to the main process
-  };
+  // const handleExit = async () => {
+  //   console.log("====================================");
+  //   console.log("Exit");
+  //   console.log("====================================");
+  //   window.electron.logout(); // Send the exit event to the main process
+  // };
   const handleSubmit = async (item: number) => {
     try {
       console.log(item);
