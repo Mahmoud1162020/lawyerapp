@@ -19,7 +19,6 @@ const UserStatus: React.FC = () => {
 
   return (
     <div>
-      <h1>Electron + React Authentication</h1>
       {userStatus.isLoggedIn ? (
         <div>
           <p>Welcome, {userStatus.username}!</p>
