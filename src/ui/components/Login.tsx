@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 const styles = {
   container: {
@@ -33,10 +33,14 @@ const styles = {
 const Login: React.FC = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [isUser, setIsUser] = useState(null);
+
+  // Retrieve user session on app start
 
   const handleLogin = async () => {
     try {
       const user = await window.electron.login(username, password); // Replace with your actual login logic
+      window.electron.setUser(user);
       console.log("Logged in:", user);
     } catch (error) {
       console.error("Login failed:", error);

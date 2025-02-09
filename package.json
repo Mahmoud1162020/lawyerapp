@@ -21,7 +21,7 @@
   "dependencies": {
     "@reduxjs/toolkit": "^2.5.0",
     "bcrypt": "^5.1.1",
-    "electron-store": "^10.0.0",
+    "electron-store": "^10.0.1",
     "lucide-react": "^0.469.0",
     "os-utils": "^0.0.14",
     "react": "^18.3.1",

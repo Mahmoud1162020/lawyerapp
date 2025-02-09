@@ -18,6 +18,17 @@ const UserStatus: React.FC = () => {
     // Add your login navigation logic here
     setIsModalOpen(false);
   };
+  useEffect(() => {
+    window.electron.getUser().then((user: User) => {
+      if (user) {
+        console.log("==============user======================");
+        console.log(user);
+        console.log("====================================");
+        window.electron.setUser(user);
+      }
+    });
+    // Listen for user status updates
+  }, []);
 
   useEffect(() => {
     // Listen for user status updates
@@ -47,9 +58,9 @@ const UserStatus: React.FC = () => {
             onLogin={handleLogin}
           />
 
-          <button onClick={() => window.electron.login("username", "password")}>
+          {/* <button onClick={() => window.electron.login("username", "password")}>
             Login
-          </button>
+          </button> */}
         </div>
       )}
     </div>

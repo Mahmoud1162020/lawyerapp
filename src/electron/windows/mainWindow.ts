@@ -4,6 +4,7 @@ import { getPreloadPath } from "../pathResolver.js";
 import { isDev } from "../util.js";
 
 
+
 export function createMainWindow(): BrowserWindow {
   const mainWindow = new BrowserWindow({
     webPreferences: {

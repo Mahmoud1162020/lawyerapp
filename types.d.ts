@@ -10,6 +10,11 @@ type Statistics = {
     cpuModel: string;
     totalMemoryGB: number;
   };
+  type User={
+    id:number;
+    username:string;
+    password:string;
+  }
   
   type View = 'CPU' | 'RAM' | 'STORAGE';
   
@@ -34,6 +39,8 @@ type Statistics = {
       sendExit: () => void;
       register: (username: string, password: string) => Promise<void>;
       login: (username: string, password: string) => Promise<void>;
+      getUser: () => Promise<User>;
+      setUser: (user: User) => Promise<void>;
       logout: () => Promise<void>;
       deleteUser: (userId: number) => Promise<{deleted:boolean}>;
       onUserStatusUpdate: (callback: (status: UserStatus) => void) => void; // Corrected type
