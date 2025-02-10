@@ -1,0 +1,66 @@
+.transaction-container {
+    background-color: #6d4c66;
+    padding: 20px;
+    color: white;
+    font-family: Arial, sans-serif;
+    direction: rtl;
+  }
+  
+  .form-section {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    width: 200px;
+  }
+  
+  input, select {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #d3d3d3;
+  }
+  
+  .save-btn {
+    background-color: #b58952;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .transactions-table table,
+  .personal-table table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+  }
+  
+  .transactions-table th, .transactions-table td,
+  .personal-table th, .personal-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+    background: #b0b0b0;
+  }
+  
+  .delete-btn {
+    background: #ddd;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+  }
+  
+  .search-section{
+    
+    height: 60px;
+    
+  }
+  .search-section input{
+    width: 40% !important;
+    height: 25px;
+   }

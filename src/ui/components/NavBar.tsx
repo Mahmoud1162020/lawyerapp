@@ -7,9 +7,9 @@ import UserStatus from "./UserStatus";
 import { Link } from "react-router-dom";
 
 const navItems = [
-  { name: "النقد", href: "/cash", icon: CircleDollarSign, itemId: 0 },
-  { name: "تقرير", href: "/reports", icon: FileText, itemId: 1 },
   { name: "ادارة", href: "/manage", icon: Users, itemId: 2 },
+  { name: "تقرير", href: "/reports", icon: FileText, itemId: 1 },
+  { name: "النقد", href: "/cash", icon: CircleDollarSign, itemId: 0 },
 ];
 
 function Navbar() {

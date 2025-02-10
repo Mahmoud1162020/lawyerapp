@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 
-const styles = {
+import { CSSProperties } from "react";
+
+const styles: { [key: string]: CSSProperties } = {
   container: {
     width: "100%", // Changed `innerWidth` to `width`
     height: "90%",
@@ -33,13 +35,12 @@ const styles = {
 const Login: React.FC = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [isUser, setIsUser] = useState(null);
 
   // Retrieve user session on app start
 
   const handleLogin = async () => {
     try {
-      const user = await window.electron.login(username, password); // Replace with your actual login logic
+      const user: User = await window.electron.login(username, password); // Replace with your actual login logic
       window.electron.setUser(user);
       console.log("Logged in:", user);
     } catch (error) {

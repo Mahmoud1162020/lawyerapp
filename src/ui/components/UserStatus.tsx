@@ -21,9 +21,6 @@ const UserStatus: React.FC = () => {
   useEffect(() => {
     window.electron.getUser().then((user: User) => {
       if (user) {
-        console.log("==============user======================");
-        console.log(user);
-        console.log("====================================");
         window.electron.setUser(user);
       }
     });
