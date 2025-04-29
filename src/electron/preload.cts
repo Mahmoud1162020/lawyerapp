@@ -22,7 +22,28 @@ electron.contextBridge.exposeInMainWorld('electron', {
   onUserStatusUpdate: (callback: (status: UserStatus) => void) => {
     electron.ipcRenderer.on('user-status-update', (event, status) => callback(status));
   },
-
+  addTransaction: (
+    user_id: number,
+    recipient: string,
+    amount: number,
+    report: string,
+    transactionId: string
+  ): Promise<{ id: number }> => electron.ipcRenderer.invoke('add-transaction', { user_id, recipient, amount, report, transactionId }),
+  getTransactionsByUser:(userId:number)=> electron.ipcRenderer.invoke("get-transactions-by-user",userId),
+  updateTransaction: (id: number, field: string, value: string | number) =>electron.ipcRenderer.invoke("update-transaction", id, field, value),
+  deleteTransaction:(transactionId: number)=>electron.ipcRenderer.invoke("delete-transaction",transactionId),
+  addCustomersAccount:(
+    name: string,
+    accountNumber: string,
+    accountType: string,
+    phone: string,
+    address: string,
+    details: string
+  ): Promise<{ id: number }> => electron.ipcRenderer.invoke('add-customers-account', {name, accountNumber, accountType, phone, address, details }),
+  getAllCustomersAccounts:():Promise<{ id: number; name : string;accountNumber: string; accountType: string; phone: string; address: string; date: string; details: string | null }[]>=>electron.ipcRenderer.invoke("get-all-customers-accounts"),
+  getCustomersAccountById: (id: number): Promise<{ id: number;name:string; accountNumber: string; accountType: string; phone: string; address: string; date: string; details: string | null } | null> => electron.ipcRenderer.invoke('get-customers-account-by-id', id),
+  deleteCustomersAccount: (id: number): Promise<{ deleted: boolean }> => electron.ipcRenderer.invoke('delete-customers-account', id),
+  updateCustomersAccount: (id: number, field: string, value: string | number): Promise<{ updated: boolean }> => electron.ipcRenderer.invoke('update-customers-account', id, field, value),
 } satisfies Window['electron']);
 
 function ipcInvoke<Key extends keyof EventPayloadMapping>(

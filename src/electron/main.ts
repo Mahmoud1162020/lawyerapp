@@ -1,10 +1,14 @@
 import { app } from "electron";
 import { createMainWindow } from "./windows/mainWindow.js";
 import { registerIpcHandlers } from "./ipc/userHandlers.js";
+import { registerTransactionIpcHandlers } from "./ipc/TransactionsHandler.js";
+import { registerCustomersAccountIpcHandlers } from "./ipc/CustomersAccountHandler.js";
 
 app.on("ready", () => {
   const mainWindow = createMainWindow();
   registerIpcHandlers(mainWindow);
+  registerTransactionIpcHandlers(mainWindow);
+  registerCustomersAccountIpcHandlers(mainWindow);
 });
 
 

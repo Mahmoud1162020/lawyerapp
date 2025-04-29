@@ -1,0 +1,77 @@
+.contracts-container {
+  margin: 20px;
+  font-family: Arial, sans-serif;
+  direction: rtl;
+  text-align: right;
+}
+
+.contracts-form-container {
+  margin-bottom: 20px;
+  padding: 15px;
+  border: 2px solid #2980b9;
+  border-radius: 8px;
+  background-color: #ecf0f1;
+}
+
+.contracts-form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.contracts-form-group {
+  flex: 1 1 200px;
+  display: flex;
+  flex-direction: column;
+}
+
+.contracts-form-group label {
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+.contracts-form-group input,
+.contracts-form-group textarea {
+  padding: 8px;
+  border: 1px solid #bdc3c7;
+  border-radius: 4px;
+}
+
+.contracts-form-buttons {
+  margin-top: 15px;
+  display: flex;
+  gap: 15px;
+  justify-content: flex-start;
+}
+
+.contracts-save-button {
+  padding: 10px 15px;
+  background-color: #27ae60;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.contracts-table-container {
+  overflow-x: auto;
+}
+
+.contracts-data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.contracts-data-table th,
+.contracts-data-table td {
+  padding: 10px;
+  border: 1px solid #bdc3c7;
+  text-align: center;
+}
+
+.contracts-search-trigger {
+  cursor: pointer;
+  color: #2980b9;
+  margin-top: 5px;
+}

@@ -1,11 +1,16 @@
 export interface RootState {
     nav: NavState;
+    subNav:subNavState;
     user: UserState;
     settings: SettingsState;
   }
   
   export interface NavState {
     navName: number;
+    
+  }
+  export interface subNavState {
+    subNavName: number;
     
   }
   

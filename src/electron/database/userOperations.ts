@@ -1,4 +1,3 @@
-
 import sqlite3 from 'sqlite3';
 import { open, Database } from 'sqlite';
 import path from 'path';
@@ -7,12 +6,14 @@ import { app } from 'electron';
 
 const saltRounds = 10;
 ////data base////////////////////////////////
-async function initializeDatabase(): Promise<Database> {
+export async function initializeDatabase(): Promise<Database> {
   const db = await open({
-    filename: path.join(app.getPath("userData"), "database.sqlite"),
+    filename: path.join(app.getPath("userData"), "appdatabase.sqlite"),
     driver: sqlite3.Database,
   });
-
+console.log('====================================');
+console.log(path.join(app.getPath("userData"), "appdatabase.sqlite"));
+console.log('====================================');
   // ✅ Ensure the "meta" table exists
   await db.exec(`
     CREATE TABLE IF NOT EXISTS meta (
@@ -31,6 +32,7 @@ async function applyMigrations(db: Database) {
   let currentVersion = await getDatabaseVersion(db);
 
   if (currentVersion < 1) {
+    // ✅ Create the "users" table
     await db.exec(`
       CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -41,15 +43,61 @@ async function applyMigrations(db: Database) {
     await db.run(`INSERT INTO meta (key, value) VALUES ('db_version', '1') ON CONFLICT(key) DO UPDATE SET value='1'`);
     currentVersion = 1;
   }
+
   if (currentVersion < 2) {
-    // ✅ Add the "role" column to the users table
+    // ✅ Add the "role" column to users
     await db.exec(`ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user';`);
     await db.run(`UPDATE meta SET value = '2' WHERE key = 'db_version'`);
     console.log("Database updated to version 2: Added 'role' column.");
     currentVersion = 2;
   }
+
+  if (currentVersion < 3) {
+    // ✅ Create the "transactions" table
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS transactions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        recipient TEXT NOT NULL,
+        amount REAL NOT NULL,
+        report TEXT,
+        transactionId TEXT UNIQUE NOT NULL,
+        date TEXT DEFAULT (datetime('now', 'localtime')), 
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      );
+    `);
+    
+    await db.run(`UPDATE meta SET value = '3' WHERE key = 'db_version'`);
+    console.log("Database updated to version 3: Added 'transactions' table.");
+    currentVersion = 3;
+  }
+
+  if (currentVersion < 4) {
+    // ✅ Create the "customersaccount" table
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS customersaccount (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        accountNumber TEXT NOT NULL,
+        accountType TEXT NOT NULL,
+        phone TEXT NOT NULL,
+        address TEXT NOT NULL,
+        date TEXT DEFAULT (datetime('now', 'localtime')),
+        details TEXT
+      );
+    `);
+    await db.run(`UPDATE meta SET value = '4' WHERE key = 'db_version'`);
+    console.log("Database updated to version 4: Added 'customersaccount' table.");
+    currentVersion = 4;
+  }
+  if (currentVersion < 5) {
+    // ✅ Add the "details" column to customersaccount
+    await db.exec(`ALTER TABLE customersaccount ADD COLUMN name TEXT`);
+    await db.run(`UPDATE meta SET value = '5' WHERE key = 'db_version'`);
+    console.log("Database updated to version 5: Added 'name' column to customersaccount.");
+    currentVersion = 5;
+  }
 }
-}
+
 async function getDatabaseVersion(db: Database): Promise<number> {
   const row = await db.get(`SELECT value FROM meta WHERE key = 'db_version'`);
   return row ? Number(row.value) : 0;

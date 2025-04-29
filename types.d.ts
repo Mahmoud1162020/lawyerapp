@@ -15,6 +15,16 @@ type Statistics = {
     username:string;
     password:string;
   }
+  type Transaction= {
+    id: number;
+    user_id: number;
+    recipient: string;
+    amount: number;
+    report: string;
+    transactionId: string;
+    date: string;
+    username: string;
+  }
   
   type View = 'CPU' | 'RAM' | 'STORAGE';
   
@@ -48,7 +58,31 @@ type Statistics = {
         callback: (view: View) => void
       ) => UnsubscribeFunction;
       sendFrameAction: (payload: FrameWindowAction) => void;
+      addTransaction:( user_id: number,
+        recipient: string,
+        amount: number,
+        report: string,
+        transactionId: string)=>Promise<{ id: number }>;
+      
+      getTransactionsByUser:(userId:number)=>Promise<Transaction>;
+      updateTransaction:(id: number,
+        field: string,
+        value: string|number)=>Promise<{ updated: boolean }>;
+        deleteTransaction:(transactionId: number)=>Promise<{ deleted: boolean }>;
+        addCustomersAccount:(
+        name:string,
+        accountNumber: string,
+        accountType: string,
+        phone: string,
+        address: string,
+        details: string)=>Promise<{ id: number }>;
+      getAllCustomersAccounts: ()=>Promise<{ id: number; name: string; accountNumber: string; accountType: string; phone: string; address: string; date: string; details: string | null }[]>,
+      deleteCustomersAccount: (id: number)=>Promise<{ deleted: boolean }>,
+      getCustomersAccountById: (id: number)=> Promise<{ id: number;name:string; accountNumber: string; accountType: string; phone: string; address: string; date: string; details: string | null } | null>,
+      updateCustomersAccount: (id: number, field: string, value: string | number)=>Promise<{ updated: boolean }>
+      
     };
+
   }
 
   interface UserStatus {

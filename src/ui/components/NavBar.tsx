@@ -53,7 +53,11 @@ function Navbar() {
         </div>
         <div className={`navbar-links ${isOpen ? "open" : ""}`}>
           {navItems.map((item) => (
-            <Link to={item.href} className="navbar-link" style={{}}>
+            <Link
+              key={item.itemId}
+              to={item.href}
+              className="navbar-link"
+              style={{}}>
               <button
                 style={{
                   textDecoration: "none",

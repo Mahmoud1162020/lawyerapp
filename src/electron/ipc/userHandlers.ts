@@ -26,18 +26,15 @@ export function registerIpcHandlers(mainWindow: BrowserWindow): void {
   });
   ipcMain.handle("get-user", async() => {
    
-    const user: User = store.get("user") as User;
-    console.log('==============user======================');
-    console.log(user);
-    console.log('====================================');
-    if(user){
-      userStatus = { isLoggedIn: true, username: user.username };
-      mainWindow.webContents.send("user-status-update", userStatus);
-
-    }
-   
-    
-    return await store.get("user");
+  const user: User = store.get("user") as User;
+  // console.log('==============user======================');
+  // console.log(user);
+  // console.log('====================================');
+  if(user){
+    userStatus = { isLoggedIn: true, username: user.username };
+    mainWindow.webContents.send("user-status-update", userStatus);
+  }
+  return user;
   });
 
   ipcMain.handle("login", async (_event, { username, password }: { username: string; password: string }) => {

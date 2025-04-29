@@ -1,12 +1,11 @@
-import React, { useEffect } from "react";
+import ManagementTab from "../components/Tab/ManagementTab";
 
 const Management = () => {
-  useEffect(() => {
-    console.log("====================================");
-    console.log("Management");
-    console.log("====================================");
-  }, []);
-  return <div style={{ marginTop: "500px" }}>Management</div>;
+  return (
+    <div>
+      <ManagementTab />
+    </div>
+  );
 };
 
 export default Management;
