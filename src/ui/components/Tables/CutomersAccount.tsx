@@ -90,6 +90,8 @@ export default function DataTable() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  useEffect(() => {}, []);
   const handleSearchChange = (field: string, value: string) => {
     setSearchFilters((prevFilters) => ({
       ...prevFilters,

@@ -1,3 +1,4 @@
+import { useAppSelector } from "../../store";
 import CustomersAccount from "../Tables/CutomersAccount";
 import ProceduresTable from "../Tables/ProceduresTable";
 import RealStatesTable from "../Tables/RealStatesTable";
@@ -7,7 +8,9 @@ interface TabContentProps {
   activeTab: string;
 }
 
-export default function TabContent({ activeTab }: TabContentProps) {
+export default function ManageTabContent({ activeTab }: TabContentProps) {
+  const { subNavState } = useAppSelector((state) => state.subNav);
+  activeTab = subNavState.toString();
   const content = {
     customersAccount: (
       <div className="tab-content">

@@ -1,6 +1,7 @@
 import React from "react";
 import "./LoginModal.css";
 import Login from "../Login";
+import Register from "../Register";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
         <p>يرجى تسجيل الدخول لمتابعة استخدام التطبيق.</p>
         <div className="modal-buttons">
           <Login />
+          <Register />
           {/* <button className="login-btn" onClick={onLogin}>
             تسجيل الدخول
           </button> */}

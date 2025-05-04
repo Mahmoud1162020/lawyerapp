@@ -2,23 +2,20 @@ import { createSlice } from '@reduxjs/toolkit';
 import { subNavState } from '../../types';
 
 const initialState: subNavState = {
-  subNavName:0,
+  subNavState:0,
 
 };
 
-const authSlice = createSlice({
+const subNavSlice = createSlice({
   name: 'sub-nav',
   initialState,
   reducers: {
-    navState: (state,action) => {
-    
-     state.subNavName = action.payload
-     
-      
+    subNav: (state, action) => {
+      state.subNavState = action.payload;
     },
  
   },
 });
 
-export const { navState} = authSlice.actions;
-export default authSlice.reducer;
+export const { subNav} = subNavSlice.actions;
+export default subNavSlice.reducer;

@@ -10,7 +10,7 @@ export interface RootState {
     
   }
   export interface subNavState {
-    subNavName: number;
+    subNavState: number;
     
   }
   

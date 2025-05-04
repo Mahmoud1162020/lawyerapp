@@ -3,12 +3,14 @@ import { createMainWindow } from "./windows/mainWindow.js";
 import { registerIpcHandlers } from "./ipc/userHandlers.js";
 import { registerTransactionIpcHandlers } from "./ipc/TransactionsHandler.js";
 import { registerCustomersAccountIpcHandlers } from "./ipc/CustomersAccountHandler.js";
+import { registerRealStateIpcHandlers } from "./ipc/RealStateHandler.js";
 
 app.on("ready", () => {
   const mainWindow = createMainWindow();
   registerIpcHandlers(mainWindow);
   registerTransactionIpcHandlers(mainWindow);
   registerCustomersAccountIpcHandlers(mainWindow);
+  registerRealStateIpcHandlers(mainWindow);
 });
 
 

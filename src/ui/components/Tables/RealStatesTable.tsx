@@ -1,103 +1,107 @@
 import { useEffect, useState } from "react";
-import "./RealStatesTable.css"; // Create a corresponding CSS file (see below)
+import { Select, Input, Button, DatePicker, Table, Collapse } from "antd";
+import "./RealStatesTable.css"; // Add your custom styles here
+import { useNavigate } from "react-router-dom";
 import { IoIosRefresh } from "react-icons/io";
 import ConfirmModal from "../Modal/ConfirmModal";
-import { useNavigate } from "react-router-dom";
+
+const { Option } = Select;
+const { TextArea } = Input;
+const { Panel } = Collapse;
 
 export default function RealStatesTable() {
   const navigate = useNavigate();
 
-  // Form fields for adding a new real state record (labels in Arabic)
+  // Form fields for adding a new real state record
   const [propertyTitle, setPropertyTitle] = useState(""); // اسم العقار
   const [propertyNumber, setPropertyNumber] = useState(""); // رقم العقار
-  const [agentName, setAgentName] = useState(""); // اصحاب العقار (اسم المالك أو بالعربية)
+  const [selectedOwners, setSelectedOwners] = useState<number[]>([]); // Multi-select for owners
   const [address, setAddress] = useState(""); // عنوان العقار
   const [price, setPrice] = useState(""); // السعر
   const [date, setDate] = useState(""); // التاريخ
   const [details, setDetails] = useState(""); // الملاحظات
-
-  // Table data and search/filter states
-  const [tableData, setTableData] = useState<
+  const [customersAccounts, setCustomersAccounts] = useState<
     {
       id: number;
-      propertyNumber: string;
-      title: string;
-      agentName: string;
+      name: string;
+      accountNumber: string;
+      accountType: string;
+      phone: string;
       address: string;
-      price: string;
       date: string;
       details: string | null;
     }[]
   >([]);
-  const [filteredData, setFilteredData] = useState(tableData);
+  const [activeCollapse, setActiveCollapse] = useState<
+    string | string[] | number | number[]
+  >(["0"]);
+
+  // Table data
+  const [tableData, setTableData] = useState<
+    {
+      key: number;
+      propertyTitle: string;
+      propertyNumber: string;
+      owners: string;
+      address: string;
+      price: string;
+      date: string;
+      details: string;
+    }[]
+  >([]);
+  const getAllCustomersAccounts = async () => {
+    try {
+      const customersAccounts = await window.electron.getAllCustomersAccounts();
+      console.log("Fetched Customers Accounts:", customersAccounts);
+      setCustomersAccounts(customersAccounts);
+    } catch (error) {
+      console.log("Error fetching data from the database:", error);
+    }
+  };
+
+  const getAllRealStates = async () => {
+    try {
+      const realStates = await window.electron.getAllRealStates();
+      console.log("Fetched Real States:", realStates);
+      setTableData(
+        realStates.map((realState) => ({
+          key: realState.id,
+          propertyTitle: realState.propertyTitle,
+          propertyNumber: realState.propertyNumber,
+          owners: realState.owners.map((owner) => owner.name).join(", "),
+          address: realState.address,
+          price: realState.price.toString(),
+          date: realState.date,
+          details: realState.details || "",
+        }))
+      );
+    } catch (error) {
+      console.log("Error fetching data from the database:", error);
+    }
+  };
+  //fetching data from the database
+  useEffect(() => {
+    // get the customers accounts from the database
+    getAllCustomersAccounts();
+    console.log("this is fetching data from db");
+    getAllRealStates();
+  }, []);
+
+  // Search filters
   const [searchFilters, setSearchFilters] = useState({
+    propertyTitle: "",
     propertyNumber: "",
-    title: "",
-    agentName: "",
+    owners: "",
     address: "",
     price: "",
+    date: "",
   });
-  const [focusedField, setFocusedField] = useState<string | null>(null);
 
-  // Modal states for delete confirmation
+  const [focusedField, setFocusedField] = useState<string | null>(null); // Tracks the currently focused column for search
+
+  // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [propertyToDelete, setPropertyToDelete] = useState<number | null>(null);
-
-  // Fetch real state records on mount
-  useEffect(() => {
-    const fetchRealStates = async () => {
-      try {
-        // This should fetch real state records from your backend
-        const properties = await window.electron.getAllRealStates();
-        console.log("Fetched real states:", properties);
-        setTableData(properties);
-        setFilteredData(properties);
-      } catch (error) {
-        console.error("Error fetching real states:", error);
-      }
-    };
-
-    fetchRealStates();
-  }, []);
-
-  // Filter table data based on search filters
-  useEffect(() => {
-    const filtered = tableData.filter((row) => {
-      return (
-        (row.propertyNumber?.toLowerCase() || "").includes(
-          searchFilters.propertyNumber.toLowerCase()
-        ) &&
-        (row.title?.toLowerCase() || "").includes(
-          searchFilters.title.toLowerCase()
-        ) &&
-        (row.agentName?.toLowerCase() || "").includes(
-          searchFilters.agentName.toLowerCase()
-        ) &&
-        (row.address?.toLowerCase() || "").includes(
-          searchFilters.address.toLowerCase()
-        ) &&
-        (row.price?.toLowerCase() || "").includes(
-          searchFilters.price.toLowerCase()
-        )
-      );
-    });
-    setFilteredData(filtered);
-  }, [searchFilters, tableData]);
-
-  // Blur search fields on click outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (!target.closest(".search-trigger") && !target.closest("input")) {
-        setFocusedField(null);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
+  const [recordToDelete, setRecordToDelete] = useState<number | null>(null);
 
   const handleSearchChange = (field: string, value: string) => {
     setSearchFilters((prevFilters) => ({
@@ -114,12 +118,21 @@ export default function RealStatesTable() {
     setFocusedField(null);
   };
 
-  // Save a new real state record with Arabic placeholders/labels
+  const filteredData = tableData.filter((row) => {
+    return (
+      row.propertyTitle.includes(searchFilters.propertyTitle) &&
+      row.propertyNumber.includes(searchFilters.propertyNumber) &&
+      row.owners.includes(searchFilters.owners) &&
+      row.address.includes(searchFilters.address) &&
+      row.date.includes(searchFilters.date)
+    );
+  });
+
   const handleSave = async () => {
     if (
       propertyTitle.trim() === "" ||
       propertyNumber.trim() === "" ||
-      agentName.trim() === "" ||
+      selectedOwners.length === 0 || // Ensure at least one owner is selected
       address.trim() === "" ||
       price.trim() === "" ||
       date.trim() === ""
@@ -127,274 +140,348 @@ export default function RealStatesTable() {
       alert("الرجاء ملء جميع الحقول");
       return;
     }
+
     try {
-      const response = await window.electron.addRealState(
-        propertyTitle, // اسم العقار
-        propertyNumber, // رقم العقار
-        agentName, // اصحاب العقار
-        address, // عنوان العقار
-        price, // السعر
-        date, // التاريخ
-        details // الملاحظات
+      // Prepare the new record data
+      const newRecord = {
+        propertyTitle,
+        propertyNumber,
+        address,
+        price: parseFloat(price), // Ensure price is stored as a number
+        date,
+        details,
+        owners: selectedOwners, // Array of owner IDs
+        customerId: selectedOwners[0], // Use the first owner as the customer_id
+      };
+      console.log("New Record Data:", newRecord);
+
+      // Send the new record to the backend via IPC
+      const addedRealState = await window.electron.addRealState(
+        newRecord.propertyTitle,
+        newRecord.propertyNumber,
+        newRecord.address,
+        newRecord.price, // Convert price to a number for backend
+        newRecord.details,
+        newRecord.owners // Array of owner IDs
       );
-      console.log("Real state added:", response);
-      const updatedProperties = await window.electron.getAllRealStates();
-      setTableData(updatedProperties);
-      setFilteredData(updatedProperties);
+
+      // Add the new record to the table data
+      setTableData([
+        ...tableData,
+        {
+          key: addedRealState.id, // Use the ID returned from the backend
+          ...newRecord,
+          owners: newRecord.owners.join(", "), // Convert owners array to a comma-separated string for display
+        },
+      ]);
 
       // Clear form fields
       setPropertyTitle("");
       setPropertyNumber("");
-      setAgentName("");
+      setSelectedOwners([]);
       setAddress("");
       setPrice("");
       setDate("");
       setDetails("");
+
+      console.log("New RealState Added:", addedRealState);
     } catch (error) {
-      console.error("Error adding real state:", error);
+      console.error("Failed to save real state:", error);
+      alert("حدث خطأ أثناء حفظ العقار. يرجى المحاولة مرة أخرى.");
     }
   };
 
-  const handleDelete = (id: number) => {
-    setPropertyToDelete(id);
+  const handleDelete = (key: number) => {
+    setRecordToDelete(key);
     setIsModalOpen(true);
   };
 
-  const handleConfirmDelete = async () => {
-    if (propertyToDelete !== null) {
-      try {
-        await window.electron.deleteRealState(propertyToDelete);
-        console.log(`Deleted real state with id: ${propertyToDelete}`);
-        const updatedProperties = await window.electron.getAllRealStates();
-        setTableData(updatedProperties);
-        setFilteredData(updatedProperties);
-      } catch (error) {
-        console.error("Error deleting real state:", error);
-      } finally {
-        setPropertyToDelete(null);
-        setIsModalOpen(false);
-      }
+  const handleConfirmDelete = () => {
+    if (recordToDelete !== null) {
+      const updatedData = tableData.filter((row) => row.key !== recordToDelete);
+      console.log("deletion:", recordToDelete);
+      window.electron
+        .deleteRealState(recordToDelete)
+        .then((response) => {
+          if (response.deleted) {
+            console.log("Record deleted successfully");
+          } else {
+            console.error("Failed to delete record");
+          }
+        })
+        .catch((error) => {
+          console.error("Error deleting record:", error);
+        });
+      // Update the table data state
+
+      setTableData(updatedData);
     }
+    setIsModalOpen(false);
+    setRecordToDelete(null);
   };
 
   const handleCancelDelete = () => {
-    setPropertyToDelete(null);
     setIsModalOpen(false);
+    setRecordToDelete(null);
   };
 
-  return (
-    <div className="data-table-container">
-      <div className="form-container">
-        <div className="form-row">
-          <div className="form-group">
-            <label>ادخل اسم العقار</label>
-            <input
-              type="text"
-              value={propertyTitle}
-              onChange={(e) => setPropertyTitle(e.target.value)}
-              placeholder="500"
+  // Table columns with hover or click-based search
+  const columns = [
+    {
+      title: (
+        <div>
+          {focusedField === "propertyTitle" ? (
+            <Input
+              placeholder="بحث"
+              value={searchFilters.propertyTitle}
+              onBlur={handleSearchBlur}
+              onChange={(e) =>
+                handleSearchChange("propertyTitle", e.target.value)
+              }
             />
-          </div>
-          <div className="form-group">
-            <label>ادخل رقم العقار</label>
-            <input
-              type="text"
-              value={propertyNumber}
-              onChange={(e) => setPropertyNumber(e.target.value)}
-              placeholder="07701234567"
+          ) : (
+            <div
+              className="search-trigger"
+              onClick={() => handleSearchFocus("propertyTitle")}>
+              اسم العقار
+            </div>
+          )}
+        </div>
+      ),
+      dataIndex: "propertyTitle",
+      key: "propertyTitle",
+    },
+    {
+      title: (
+        <div>
+          {focusedField === "propertyNumber" ? (
+            <Input
+              placeholder="بحث"
+              value={searchFilters.propertyNumber}
+              onBlur={handleSearchBlur}
+              onChange={(e) =>
+                handleSearchChange("propertyNumber", e.target.value)
+              }
             />
-          </div>
-          <div className="form-group">
-            <label>ادخل اصحاب العقار</label>
-            <input
-              type="text"
-              value={agentName}
-              onChange={(e) => setAgentName(e.target.value)}
-              placeholder="الزراعي"
+          ) : (
+            <div
+              className="search-trigger"
+              onClick={() => handleSearchFocus("propertyNumber")}>
+              رقم العقار
+            </div>
+          )}
+        </div>
+      ),
+      dataIndex: "propertyNumber",
+      key: "propertyNumber",
+    },
+    {
+      title: (
+        <div>
+          {focusedField === "owners" ? (
+            <Input
+              placeholder="بحث"
+              value={searchFilters.owners}
+              onBlur={handleSearchBlur}
+              onChange={(e) => handleSearchChange("owners", e.target.value)}
             />
-          </div>
-          <div className="form-group">
-            <label>ادخل عنوان العقار</label>
-            <input
-              type="text"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder="الملاحظات"
+          ) : (
+            <div
+              className="search-trigger"
+              onClick={() => handleSearchFocus("owners")}>
+              اصحاب العقار
+            </div>
+          )}
+        </div>
+      ),
+      dataIndex: "owners",
+      key: "owners",
+    },
+    {
+      title: (
+        <div>
+          {focusedField === "address" ? (
+            <Input
+              placeholder="بحث"
+              value={searchFilters.address}
+              onBlur={handleSearchBlur}
+              onChange={(e) => handleSearchChange("address", e.target.value)}
             />
-          </div>
-          <div className="form-group">
-            <label>السعر</label>
-            <input
-              type="text"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              placeholder="1500"
-            />
-          </div>
-          <div className="form-group">
-            <label>التاريخ</label>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-            />
-          </div>
-          <div className="form-group">
-            <label>الملاحظات</label>
-            <textarea
-              value={details}
-              onChange={(e) => setDetails(e.target.value)}
-              placeholder="الملاحظات"
-            />
-          </div>
+          ) : (
+            <div
+              className="search-trigger"
+              onClick={() => handleSearchFocus("address")}>
+              عنوان العقار
+            </div>
+          )}
+        </div>
+      ),
+      dataIndex: "address",
+      key: "address",
+    },
+    {
+      title: "السعر",
+      dataIndex: "price",
+      key: "price",
+    },
+    {
+      title: "التاريخ",
+      dataIndex: "date",
+      key: "date",
+    },
+    {
+      title: "الملاحظات",
+      dataIndex: "details",
+      key: "details",
+    },
+    {
+      title: "خيارات",
+      key: "actions",
+      render: (_, record) => {
+        console.log("Record:", record.key);
 
-          <button className="save-button" onClick={handleSave}>
-            حفظ
-          </button>
+        return (
+          <div style={{ display: "flex", gap: "10px" }}>
+            <Button
+              type="primary"
+              danger
+              onClick={() => handleDelete(record.key)}>
+              حذف
+            </Button>
+            <Button
+              type="default"
+              onClick={() => navigate(`/real-state-details/${record.key}`)}>
+              تفاصيل
+            </Button>
+          </div>
+        );
+      },
+    },
+  ];
+
+  return (
+    <div className="real-states-data-table-container">
+      <Collapse
+        onChange={(key) => {
+          setActiveCollapse(key);
+        }}
+        defaultActiveKey={["0"]}
+        style={{ display: "flex", justifyContent: "space-between" }}>
+        <Panel
+          style={{ fontSize: "18px" }}
+          header="إدخال معلومات العقار"
+          key="1">
+          <div className="real-states-form-container">
+            <div className="real-states-form-row">
+              <div className="real-states-form-group">
+                <label>ادخل اسم العقار</label>
+                <Input
+                  value={propertyTitle}
+                  onChange={(e) => setPropertyTitle(e.target.value)}
+                  placeholder="اسم العقار"
+                />
+              </div>
+              <div className="real-states-form-group">
+                <label>ادخل رقم العقار</label>
+                <Input
+                  value={propertyNumber}
+                  onChange={(e) => setPropertyNumber(e.target.value)}
+                  placeholder="رقم العقار"
+                />
+              </div>
+              <div className="real-states-form-group">
+                <label>ادخل اصحاب العقار</label>
+                <Select
+                  mode="multiple"
+                  allowClear
+                  showSearch // Enables search functionality
+                  placeholder="اختر اصحاب العقار"
+                  value={selectedOwners}
+                  onChange={(values) => setSelectedOwners(values)}
+                  filterOption={(input, option) =>
+                    (option?.children as string)
+                      .toLowerCase()
+                      .includes(input.toLowerCase())
+                  } // Custom search logic
+                >
+                  {customersAccounts.map((owner) => (
+                    <Option key={owner.id} value={owner.id}>
+                      {owner.name}
+                    </Option>
+                  ))}
+                </Select>
+              </div>
+              <div className="real-states-form-group">
+                <label>ادخل عنوان العقار</label>
+                <Input
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder="عنوان العقار"
+                />
+              </div>
+              <div className="real-states-form-group">
+                <label>السعر</label>
+                <Input
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  placeholder="السعر"
+                />
+              </div>
+              <div className="real-states-form-group">
+                <label>التاريخ</label>
+                <input
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                />
+              </div>
+              <div className="real-states-form-group real-states-full-width">
+                <label>الملاحظات</label>
+                <TextArea
+                  value={details}
+                  onChange={(e) => setDetails(e.target.value)}
+                  placeholder="الملاحظات"
+                  rows={2}
+                />
+              </div>
+            </div>
+            <Button
+              type="primary"
+              onClick={handleSave}
+              className="real-states-save-button">
+              حفظ
+            </Button>
+          </div>
+        </Panel>
+        {activeCollapse[1] !== "1" && (
           <button
-            className="save-button"
+            className="real-states-refresh-button"
             onClick={() =>
               setSearchFilters({
+                propertyTitle: "",
                 propertyNumber: "",
-                title: "",
-                agentName: "",
+                owners: "",
                 address: "",
                 price: "",
+                date: "",
               })
             }>
             <IoIosRefresh />
           </button>
-        </div>
+        )}
+      </Collapse>
+
+      {/* Table Section */}
+      <div className="real-states-table-container">
+        <Table
+          dataSource={filteredData}
+          columns={columns}
+          pagination={{ pageSize: 5 }}
+          bordered
+        />
       </div>
 
-      <div className="table-container">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>رقم</th>
-              <th>
-                {focusedField === "propertyNumber" && (
-                  <input
-                    type="text"
-                    placeholder="بحث"
-                    value={searchFilters.propertyNumber}
-                    onBlur={handleSearchBlur}
-                    onChange={(e) =>
-                      handleSearchChange("propertyNumber", e.target.value)
-                    }
-                  />
-                )}
-                <div
-                  className="search-trigger"
-                  onClick={() => handleSearchFocus("propertyNumber")}>
-                  رقم العقار
-                </div>
-              </th>
-              <th>
-                {focusedField === "title" && (
-                  <input
-                    type="text"
-                    placeholder="بحث"
-                    value={searchFilters.title}
-                    onBlur={handleSearchBlur}
-                    onChange={(e) =>
-                      handleSearchChange("title", e.target.value)
-                    }
-                  />
-                )}
-                <div
-                  className="search-trigger"
-                  onClick={() => handleSearchFocus("title")}>
-                  اسم العقار
-                </div>
-              </th>
-              <th>
-                {focusedField === "agentName" && (
-                  <input
-                    type="text"
-                    placeholder="بحث"
-                    value={searchFilters.agentName}
-                    onBlur={handleSearchBlur}
-                    onChange={(e) =>
-                      handleSearchChange("agentName", e.target.value)
-                    }
-                  />
-                )}
-                <div
-                  className="search-trigger"
-                  onClick={() => handleSearchFocus("agentName")}>
-                  اصحاب العقار
-                </div>
-              </th>
-              <th>
-                {focusedField === "address" && (
-                  <input
-                    type="text"
-                    placeholder="بحث"
-                    value={searchFilters.address}
-                    onBlur={handleSearchBlur}
-                    onChange={(e) =>
-                      handleSearchChange("address", e.target.value)
-                    }
-                  />
-                )}
-                <div
-                  className="search-trigger"
-                  onClick={() => handleSearchFocus("address")}>
-                  عنوان العقار
-                </div>
-              </th>
-              <th>
-                {focusedField === "price" && (
-                  <input
-                    type="text"
-                    placeholder="بحث"
-                    value={searchFilters.price}
-                    onBlur={handleSearchBlur}
-                    onChange={(e) =>
-                      handleSearchChange("price", e.target.value)
-                    }
-                  />
-                )}
-                <div
-                  className="search-trigger"
-                  onClick={() => handleSearchFocus("price")}>
-                  السعر
-                </div>
-              </th>
-              <th>التاريخ</th>
-              <th>خيارات</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredData.map((row) => (
-              <tr key={row.id}>
-                <td>{row.id}</td>
-                <td>{row.propertyNumber}</td>
-                <td>{row.title}</td>
-                <td>{row.agentName}</td>
-                <td>{row.address}</td>
-                <td>{row.price}</td>
-                <td>{row.date}</td>
-                <td>
-                  <button
-                    className="delete-button"
-                    onClick={() => handleDelete(row.id)}>
-                    حذف
-                  </button>
-                  <button
-                    className="details-button"
-                    onClick={() => navigate(`/realstate/${row.id}`)}>
-                    تفاصيل
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Confirmation Modal */}
+      {/* Confirm Modal */}
       <ConfirmModal
         show={isModalOpen}
         message="هل أنت متأكد أنك تريد الحذف؟"

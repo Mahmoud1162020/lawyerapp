@@ -80,7 +80,14 @@ type Statistics = {
       deleteCustomersAccount: (id: number)=>Promise<{ deleted: boolean }>,
       getCustomersAccountById: (id: number)=> Promise<{ id: number;name:string; accountNumber: string; accountType: string; phone: string; address: string; date: string; details: string | null } | null>,
       updateCustomersAccount: (id: number, field: string, value: string | number)=>Promise<{ updated: boolean }>
-      
+      addRealState: (propertyTitle: string,propertyNumber: string,address: string,price: number,details: string,owners: number[])=> Promise<{ id: number }>
+      getAllRealStates: ()=>Promise<{ id: number; propertyTitle: string; propertyNumber: string; address: string; price: number; date: string; details: string | null; owners: { id: number; name: string }[] }[]>,
+      getRealStateById: (id: number)=>Promise<{ id: number; propertyTitle: string; propertyNumber: string; address: string; price: number; date: string; details: string | null; owners: { id: number; name: string }[] } | null>,
+      deleteRealState: (id: number)=> Promise<{ deleted: boolean }>,
+      updateRealState: (id: number, field: string, value: string | number)=> Promise<{ updated: boolean }> ,
+      updateRealStateOwners: (realStateId: number, owners: number[])=>Promise<{ updated: boolean }> ,
+    
+
     };
 
   }

@@ -37,7 +37,8 @@ async function applyMigrations(db: Database) {
       CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE NOT NULL,
-        password TEXT NOT NULL
+        password TEXT NOT NULL,
+        role TEXT DEFAULT 'user'
       );
     `);
     await db.run(`INSERT INTO meta (key, value) VALUES ('db_version', '1') ON CONFLICT(key) DO UPDATE SET value='1'`);
@@ -45,10 +46,20 @@ async function applyMigrations(db: Database) {
   }
 
   if (currentVersion < 2) {
-    // ✅ Add the "role" column to users
-    await db.exec(`ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user';`);
+    // ✅ Check if the "role" column exists in the "users" table
+    const roleColumnExists = await db.get(`
+      SELECT 1 
+      FROM pragma_table_info('users') 
+      WHERE name = 'role'
+    `);
+
+    if (!roleColumnExists) {
+      // Add the "role" column if it does not exist
+      await db.exec(`ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user';`);
+      console.log("Database updated to version 2: Added 'role' column.");
+    }
+
     await db.run(`UPDATE meta SET value = '2' WHERE key = 'db_version'`);
-    console.log("Database updated to version 2: Added 'role' column.");
     currentVersion = 2;
   }
 
@@ -66,7 +77,6 @@ async function applyMigrations(db: Database) {
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
       );
     `);
-    
     await db.run(`UPDATE meta SET value = '3' WHERE key = 'db_version'`);
     console.log("Database updated to version 3: Added 'transactions' table.");
     currentVersion = 3;
@@ -82,19 +92,54 @@ async function applyMigrations(db: Database) {
         phone TEXT NOT NULL,
         address TEXT NOT NULL,
         date TEXT DEFAULT (datetime('now', 'localtime')),
-        details TEXT
+        details TEXT,
+        name TEXT
       );
     `);
     await db.run(`UPDATE meta SET value = '4' WHERE key = 'db_version'`);
     console.log("Database updated to version 4: Added 'customersaccount' table.");
     currentVersion = 4;
   }
+
   if (currentVersion < 5) {
-    // ✅ Add the "details" column to customersaccount
-    await db.exec(`ALTER TABLE customersaccount ADD COLUMN name TEXT`);
+    // ✅ Add the "name" column to customersaccount (already included in version 4 for new databases)
     await db.run(`UPDATE meta SET value = '5' WHERE key = 'db_version'`);
-    console.log("Database updated to version 5: Added 'name' column to customersaccount.");
+    console.log("Database updated to version 5.");
     currentVersion = 5;
+  }
+
+  if (currentVersion < 6) {
+    // ✅ Create the "realstates" table
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS realstates (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        propertyTitle TEXT NOT NULL,
+        propertyNumber TEXT NOT NULL,
+        address TEXT NOT NULL,
+        price REAL NOT NULL,
+        date TEXT DEFAULT (datetime('now', 'localtime')),
+        details TEXT
+      );
+    `);
+    await db.run(`UPDATE meta SET value = '6' WHERE key = 'db_version'`);
+    console.log("Database updated to version 6: Added 'realstates' table.");
+    currentVersion = 6;
+  }
+
+  if (currentVersion < 7) {
+    // ✅ Create the "realstate_owners" table
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS realstate_owners (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        realstate_id INTEGER NOT NULL,
+        customer_id INTEGER NOT NULL,
+        FOREIGN KEY (realstate_id) REFERENCES realstates(id) ON DELETE CASCADE,
+        FOREIGN KEY (customer_id) REFERENCES customersaccount(id) ON DELETE CASCADE
+      );
+    `);
+    await db.run(`UPDATE meta SET value = '7' WHERE key = 'db_version'`);
+    console.log("Database updated to version 7: Added 'realstate_owners' table.");
+    currentVersion = 7;
   }
 }
 

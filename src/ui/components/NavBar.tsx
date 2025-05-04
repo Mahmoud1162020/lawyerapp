@@ -16,8 +16,7 @@ function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const dispatch = useAppDispatch();
   const { navName } = useAppSelector((state) => state.nav);
-  console.log(navName);
-
+  console.log("====navName======>", navName);
   // const handleExit = async () => {
   //   console.log("====================================");
   //   console.log("Exit");

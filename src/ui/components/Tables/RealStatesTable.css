@@ -1,69 +1,62 @@
-.realstate-container {
+.real-states-data-table-container {
   margin: 20px;
   font-family: Arial, sans-serif;
+  direction: rtl;
+  text-align: right;
 }
 
-.realstate-form-container {
+.real-states-form-container {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #f9f9f9;
   margin-bottom: 20px;
-  padding: 15px;
-  border: 2px solid #2980b9;
-  border-radius: 8px;
-  background-color: #ecf0f1;
+  width:92vw;
 }
 
-.realstate-form-row {
+.real-states-form-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 15px;
+  gap: 8px;
 }
 
-.realstate-form-group {
-  flex: 1 1 200px;
+.real-states-form-group {
+  flex: 1 1 calc(10% - 15px); /* 4 items per row */
   display: flex;
   flex-direction: column;
 }
 
-.realstate-form-group label {
+.real-states-form-group.real-states-full-width {
+  flex: 1 1 100%; /* Full width for the "الملاحظات" field */
+}
+
+.real-states-form-group label {
   margin-bottom: 5px;
   font-weight: bold;
-  color: #2c3e50;
 }
 
-.realstate-form-group input,
-.realstate-form-group textarea {
-  padding: 8px;
-  border: 1px solid #bdc3c7;
-  border-radius: 4px;
+.real-states-save-button {
+  margin-top: 10px;
+  width: 100%;
 }
 
-.realstate-save-button {
-  padding: 10px 15px;
-  background-color: #27ae60;
-  color: #fff;
+.real-states-refresh-button{
+  width: 60px;
+  height: 50px;
+  padding: 0;
+  background-color: #2dbc3b;
+  color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  margin-top: 10px;
+  font-weight: bolder;
+  margin-left: 10px;
+  margin-top: 2px;
 }
 
-.realstate-table-container {
-  overflow-x: auto;
+.real-states-refresh-button:hover {
+  background-color: #6b4b6b;
 }
-
-.realstate-data-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.realstate-data-table th,
-.realstate-data-table td {
-  padding: 10px;
-  border: 1px solid #bdc3c7;
-  text-align: center;
-}
-
-.realstate-search-trigger {
-  cursor: pointer;
-  color: #2980b9;
-  margin-top: 5px;
+.real-states-table-container {
+  margin-top: 20px;
 }

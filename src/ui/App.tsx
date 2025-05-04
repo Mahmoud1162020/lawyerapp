@@ -9,6 +9,8 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css"; // Import styles
 import TransactionDetails from "./screens/TransactionDetails";
 import CustomerDetails from "./components/Details/CustomerDetails";
+import RealStateDetails from "./components/Details/RealStateDetails";
+import Register from "./components/Register";
 
 function App() {
   useEffect(() => {
@@ -27,9 +29,11 @@ function App() {
         <Route path="/reports" element={<Reports />} />
         <Route path="/cash" element={<Cash />} />
         <Route path="/manage" element={<Management />} />
+        <Route path="/real-state-details/:id" element={<RealStateDetails />} />
         <Route path="/transaction-details" element={<TransactionDetails />} />
         <Route path="/details/:id" element={<CustomerDetails />} />
         {/* Add other routes here */}
+        <Route path="/register" element={<Register />} />
       </Routes>
     </Router>
   );

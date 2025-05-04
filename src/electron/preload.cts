@@ -44,6 +44,19 @@ electron.contextBridge.exposeInMainWorld('electron', {
   getCustomersAccountById: (id: number): Promise<{ id: number;name:string; accountNumber: string; accountType: string; phone: string; address: string; date: string; details: string | null } | null> => electron.ipcRenderer.invoke('get-customers-account-by-id', id),
   deleteCustomersAccount: (id: number): Promise<{ deleted: boolean }> => electron.ipcRenderer.invoke('delete-customers-account', id),
   updateCustomersAccount: (id: number, field: string, value: string | number): Promise<{ updated: boolean }> => electron.ipcRenderer.invoke('update-customers-account', id, field, value),
+  addRealState: (
+    propertyTitle: string,
+    propertyNumber: string,
+    address: string,
+    price: number,
+    details: string,
+    owners: number[]
+  ): Promise<{ id: number }> => electron.ipcRenderer.invoke('add-real-state', {propertyTitle, propertyNumber, address, price, details, owners }),
+  getAllRealStates: (): Promise<{ id: number; propertyTitle: string; propertyNumber: string; address: string; price: number; date: string; details: string | null; owners: { id: number; name: string }[] }[]> => electron.ipcRenderer.invoke('get-all-real-states'),
+  getRealStateById: (id: number): Promise<{ id: number; propertyTitle: string; propertyNumber: string; address: string; price: number; date: string; details: string | null; owners: { id: number; name: string }[] } | null> => electron.ipcRenderer.invoke('get-real-state-by-id', id),
+  deleteRealState: (id: number): Promise<{ deleted: boolean }> => electron.ipcRenderer.invoke('delete-real-state', id),
+  updateRealState: (id: number, field: string, value: string | number): Promise<{ updated: boolean }> => electron.ipcRenderer.invoke('update-real-state', id, field, value),
+  updateRealStateOwners: (realStateId: number, owners: number[]): Promise<{ updated: boolean }> => electron.ipcRenderer.invoke('update-real-state-owners', realStateId, owners),
 } satisfies Window['electron']);
 
 function ipcInvoke<Key extends keyof EventPayloadMapping>(
