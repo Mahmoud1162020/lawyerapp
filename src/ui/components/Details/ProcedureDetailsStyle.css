@@ -1,0 +1,68 @@
+.procedure-details-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.procedure-details-container h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 24px;
+  color: #333;
+}
+
+.procedure-form-group {
+  margin-bottom: 15px;
+}
+
+.procedure-form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #555;
+}
+
+.procedure-form-group input,
+.procedure-form-group textarea,
+.procedure-form-group .ant-select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.procedure-form-group textarea {
+  resize: none;
+}
+
+.procedure-save-button,
+.procedure-cancel-button {
+  padding: 10px 20px;
+  margin-right: 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.procedure-save-button {
+  background-color: #4caf50;
+  color: white;
+}
+
+.procedure-save-button:hover {
+  background-color: #45a049;
+}
+
+.procedure-cancel-button {
+  background-color: #f44336;
+  color: white;
+}
+
+.procedure-cancel-button:hover {
+  background-color: #e53935;
+}

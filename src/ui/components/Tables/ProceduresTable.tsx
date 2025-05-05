@@ -5,15 +5,30 @@ import "./ProceduresTable.css"; // Use the updated CSS file below
 import { IoIosRefresh } from "react-icons/io";
 import ConfirmModal from "../Modal/ConfirmModal";
 import { useNavigate } from "react-router-dom";
-
+import { Collapse, Select } from "antd";
+const { Panel } = Collapse;
+const { Option } = Select;
 export default function ProceduresTable() {
   const navigate = useNavigate();
-
+  const [selectedOwners, setSelectedOwners] = useState<number[]>([]); // Multi-select for owners
+  const [activeCollapse, setActiveCollapse] = useState<string[]>(["0"]);
+  const [customersAccounts, setCustomersAccounts] = useState<
+    {
+      id: number;
+      name: string;
+      accountNumber: string;
+      accountType: string;
+      phone: string;
+      address: string;
+      date: string;
+      details: string | null;
+    }[]
+  >([]);
   // Form fields for adding a new procedure record (labels in Arabic)
-  const [procedureNumber, setProcedureNumber] = useState(""); // رقم الإجراء
-  const [procedureName, setProcedureName] = useState(""); // اسم الإجراء
-  const [description, setDescription] = useState(""); // وصف الإجراء
-  const [date, setDate] = useState(""); // تاريخ الإجراء
+  const [procedureNumber, setProcedureNumber] = useState(""); // رقم المعاملة
+  const [procedureName, setProcedureName] = useState(""); // اسم المعاملة
+  const [description, setDescription] = useState(""); // وصف المعاملة
+  const [date, setDate] = useState(""); // تاريخ المعاملة
   const [status, setStatus] = useState(""); // الحالة
   const [phone, setPhone] = useState(""); // رقم الهاتف
 
@@ -26,6 +41,7 @@ export default function ProceduresTable() {
       description: string;
       date: string;
       status: string;
+      phone: string;
     }[]
   >([]);
   const [filteredData, setFilteredData] = useState(tableData);
@@ -34,6 +50,7 @@ export default function ProceduresTable() {
     procedureName: "",
     description: "",
     status: "",
+    phone: "",
   });
   const [focusedField, setFocusedField] = useState<string | null>(null);
 
@@ -44,7 +61,18 @@ export default function ProceduresTable() {
   );
 
   // Fetch procedure records on mount
+  const getAllCustomersAccounts = async () => {
+    try {
+      const customersAccounts = await window.electron.getAllCustomersAccounts();
+      console.log("Fetched Customers Accounts:", customersAccounts);
+      setCustomersAccounts(customersAccounts);
+    } catch (error) {
+      console.log("Error fetching data from the database:", error);
+    }
+  };
+
   useEffect(() => {
+    getAllCustomersAccounts();
     const fetchProcedures = async () => {
       try {
         const procedures = await window.electron.getAllProcedures();
@@ -120,18 +148,21 @@ export default function ProceduresTable() {
       procedureName.trim() === "" ||
       description.trim() === "" ||
       date.trim() === "" ||
-      status.trim() === ""
+      status.trim() === "" ||
+      phone.trim() === ""
     ) {
       alert("الرجاء ملء جميع الحقول");
       return;
     }
     try {
       const response = await window.electron.addProcedure(
-        procedureNumber, // رقم الإجراء
-        procedureName, // اسم الإجراء
-        description, // وصف الإجراء
-        date, // تاريخ الإجراء
-        status // الحالة
+        procedureNumber, // رقم المعاملة
+        procedureName, // اسم المعاملة
+        description, // وصف المعاملة
+        date, // تاريخ المعاملة
+        status, // الحالة
+        phone, // رقم الهاتف
+        selectedOwners // المالكين (owners) - Provide an empty array or appropriate data
       );
       console.log("Procedure added:", response);
       const updatedProcedures = await window.electron.getAllProcedures();
@@ -144,6 +175,7 @@ export default function ProceduresTable() {
       setDescription("");
       setDate("");
       setStatus("");
+      setSelectedOwners([]);
     } catch (error) {
       console.error("Error adding procedure:", error);
     }
@@ -178,81 +210,116 @@ export default function ProceduresTable() {
 
   return (
     <div className="procedures-container" dir="rtl">
-      <div className="procedures-form-container">
-        <div className="procedures-form-row">
-          <div className="procedures-form-group">
-            <label>ادخل رقم المعاملة</label>
-            <input
-              type="text"
-              value={procedureNumber}
-              onChange={(e) => setProcedureNumber(e.target.value)}
-              placeholder="مثال: 500"
-            />
+      <Collapse
+        onChange={(key) => {
+          setActiveCollapse(key);
+        }}
+        defaultActiveKey={["0"]}
+        style={{ display: "flex", justifyContent: "space-between" }}>
+        <Panel key="1" header="إدخال معلومات المعاملة" showArrow={false}>
+          <div className="procedures-form-container">
+            <div className="procedures-form-row">
+              <div className="procedures-form-group">
+                <label>ادخل رقم المعاملة</label>
+                <input
+                  type="text"
+                  value={procedureNumber}
+                  onChange={(e) => setProcedureNumber(e.target.value)}
+                  placeholder="مثال: 500"
+                />
+              </div>
+              <div className="procedures-form-group">
+                <label>ادخل صاحب المعاملة</label>
+                <Select
+                  mode="multiple"
+                  allowClear
+                  showSearch // Enables search functionality
+                  placeholder="اختر اصحاب المعاملة"
+                  value={selectedOwners}
+                  onChange={(values) => setSelectedOwners(values)}
+                  filterOption={(input, option) =>
+                    (option?.children as string)
+                      .toLowerCase()
+                      .includes(input.toLowerCase())
+                  } // Custom search logic
+                >
+                  {customersAccounts.map((owner) => (
+                    <Option key={owner.id} value={owner.id}>
+                      {owner.name}
+                    </Option>
+                  ))}
+                </Select>
+              </div>
+              <div className="procedures-form-group">
+                <label>ادخل اسم المعاملة</label>
+                <input
+                  type="text"
+                  value={procedureName}
+                  onChange={(e) => setProcedureName(e.target.value)}
+                  placeholder="مثال: صورة قيد"
+                />
+              </div>
+              <div className="procedures-form-group">
+                <label>ادخل رقم الهاتف</label>
+                <input
+                  type="text"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="مثال: 07701213457"
+                />
+              </div>
+              <div className="procedures-form-group">
+                <label>ادخل الملاحظات</label>
+                <input
+                  type="text"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder=""
+                />
+              </div>
+              <div className="procedures-form-group">
+                <label>الحالة</label>
+                <input
+                  type="text"
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                  placeholder="مثال: جديد/مكتمل"
+                />
+              </div>
+              <div className="procedures-form-group">
+                <label>التاريخ</label>
+                <input
+                  style={{ maxWidth: "200px" }}
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                />
+              </div>
+            </div>
+            {/* New container for buttons under the inputs */}
+            <div className="procedures-form-buttons">
+              <button className="procedures-save-button" onClick={handleSave}>
+                حفظ
+              </button>
+            </div>
           </div>
-          <div className="procedures-form-group">
-            <label>ادخل صاحب المعاملة</label>
-            <input
-              type="text"
-              value={procedureName}
-              onChange={(e) => setProcedureName(e.target.value)}
-              placeholder="مثال: 07701234567"
-            />
-          </div>
-          <div className="procedures-form-group">
-            <label>ادخل رقم الهاتف</label>
-            <input
-              type="text"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="مثال: 07701213457"
-            />
-          </div>
-          <div className="procedures-form-group">
-            <label>ادخل الملاحظات</label>
-            <input
-              type="text"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="0"
-            />
-          </div>
-          <div className="procedures-form-group">
-            <label>الحالة</label>
-            <input
-              type="text"
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              placeholder="مثال: جديد/لا/نعم/مكتمل"
-            />
-          </div>
-          <div className="procedures-form-group">
-            <label>التاريخ</label>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-            />
-          </div>
-        </div>
-        {/* New container for buttons under the inputs */}
-        <div className="procedures-form-buttons">
-          <button className="procedures-save-button" onClick={handleSave}>
-            حفظ
-          </button>
+        </Panel>
+        {activeCollapse[1] !== "1" && (
           <button
-            className="procedures-save-button"
+            className="real-states-refresh-button"
             onClick={() =>
               setSearchFilters({
                 procedureNumber: "",
                 procedureName: "",
                 description: "",
                 status: "",
+                phone: "",
               })
             }>
             <IoIosRefresh />
           </button>
-        </div>
-      </div>
+        )}
+      </Collapse>
 
       <div className="procedures-table-container">
         <table className="procedures-data-table">
@@ -274,7 +341,7 @@ export default function ProceduresTable() {
                 <div
                   className="procedures-search-trigger"
                   onClick={() => handleSearchFocus("procedureNumber")}>
-                  رقم الإجراء
+                  رقم المعاملة
                 </div>
               </th>
               <th>
@@ -292,7 +359,7 @@ export default function ProceduresTable() {
                 <div
                   className="procedures-search-trigger"
                   onClick={() => handleSearchFocus("procedureName")}>
-                  اسم الإجراء
+                  اسم المعاملة
                 </div>
               </th>
               <th>
@@ -310,7 +377,7 @@ export default function ProceduresTable() {
                 <div
                   className="procedures-search-trigger"
                   onClick={() => handleSearchFocus("description")}>
-                  وصف الإجراء
+                  وصف المعاملة
                 </div>
               </th>
               <th>
@@ -352,7 +419,7 @@ export default function ProceduresTable() {
                   </button>
                   <button
                     className="details-button"
-                    onClick={() => navigate(`/procedure/${row.id}`)}>
+                    onClick={() => navigate(`/procedure-details/${row.id}`)}>
                     تفاصيل
                   </button>
                 </td>

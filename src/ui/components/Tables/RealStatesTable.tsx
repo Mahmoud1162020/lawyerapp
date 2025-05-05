@@ -4,6 +4,10 @@ import "./RealStatesTable.css"; // Add your custom styles here
 import { useNavigate } from "react-router-dom";
 import { IoIosRefresh } from "react-icons/io";
 import ConfirmModal from "../Modal/ConfirmModal";
+import {
+  formatNumberWithCommas,
+  sanitizeNumberInput,
+} from "../../helper/formatting";
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -422,8 +426,8 @@ export default function RealStatesTable() {
               <div className="real-states-form-group">
                 <label>السعر</label>
                 <Input
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
+                  value={price} // Format for display
+                  onChange={(e) => setPrice(e.target.value)} // Store plain number
                   placeholder="السعر"
                 />
               </div>

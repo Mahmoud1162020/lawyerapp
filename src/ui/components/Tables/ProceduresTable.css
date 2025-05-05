@@ -11,12 +11,13 @@
   border: 2px solid #2980b9;
   border-radius: 8px;
   background-color: #ecf0f1;
+  width:92vw;
 }
 
 .procedures-form-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 15px;
+  gap: 10px;
 }
 
 .procedures-form-group {
@@ -36,6 +37,7 @@
   padding: 8px;
   border: 1px solid #bdc3c7;
   border-radius: 4px;
+  width: 80%;
 }
 
 .procedures-form-buttons {

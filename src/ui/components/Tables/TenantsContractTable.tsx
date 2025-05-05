@@ -5,14 +5,16 @@ import "./TenantsContractTable.css";
 import { IoIosRefresh } from "react-icons/io";
 import ConfirmModal from "../Modal/ConfirmModal";
 import { useNavigate } from "react-router-dom";
+import { Select } from "antd";
 
+const { Option } = Select;
 export default function TenantsContractTable() {
   const navigate = useNavigate();
 
   // Form fields for adding a new tenant contract record (labels in Arabic)
   const [contractStatus, setContractStatus] = useState("جديد"); // الحالة
   const [startDate, setStartDate] = useState(""); // ادخل تاريخ بدء العقد
-  const [tenantName, setTenantName] = useState(""); // ادخل اسم المستأجر
+  const [tenantName, setTenantName] = useState<number[]>([]); // ادخل اسم المستأجر
   const [propertyNumber, setPropertyNumber] = useState(""); // ادخل رقم العقار
   const [endDate, setEndDate] = useState(""); // ادخل تاريخ نهاية العقد
   const [entitlement, setEntitlement] = useState(""); // ادخل الاستحقاق (مثال: الزراعي)
@@ -20,7 +22,21 @@ export default function TenantsContractTable() {
   const [installmentCount, setInstallmentCount] = useState(""); // عدد الدفعات
   const [leasedUsage, setLeasedUsage] = useState(""); // ادخل استخدام المأجور (مثال: الزراعي)
   const [propertyType, setPropertyType] = useState(""); // ادخل نوع العقار (مثال: عدد الدفعات)
-
+  const [realStateData, setRealStateData] = useState<
+    {
+      id: number;
+      propertyTitle: string;
+      propertyNumber: string;
+      address: string;
+      price: number;
+      date: string;
+      details: string | null;
+      owners: { id: number; name: string }[];
+    }[]
+  >([]);
+  const [selectedRealState, setSelectedRealState] = useState<
+    { id: number; name: string }[]
+  >([]);
   // Table data and search/filter states
   const [tableData, setTableData] = useState<
     {
@@ -31,14 +47,14 @@ export default function TenantsContractTable() {
       leasedUsage: string;
       propertyType: string;
       contractNumber: string;
-      tenantName: string;
+      tenantName: string[];
       propertyNumber: string;
     }[]
   >([]);
   const [filteredData, setFilteredData] = useState(tableData);
   const [searchFilters, setSearchFilters] = useState({
     contractNumber: "",
-    tenantName: "",
+    tenantName: [],
     propertyNumber: "",
   });
   const [focusedField, setFocusedField] = useState<string | null>(null);
@@ -48,13 +64,68 @@ export default function TenantsContractTable() {
   const [contractToDelete, setContractToDelete] = useState<number | null>(null);
 
   // Fetch tenant contract records on mount
+
+  const [customersAccounts, setCustomersAccounts] = useState<
+    {
+      id: number;
+      name: string;
+      accountNumber: string;
+      accountType: string;
+      phone: string;
+      address: string;
+      date: string;
+      details: string | null;
+    }[]
+  >([]);
+  console.log("property number", propertyNumber);
+
+  const getAllCustomersAccounts = async () => {
+    try {
+      const customersAccounts = await window.electron.getAllCustomersAccounts();
+      console.log("Fetched Customers Accounts:", customersAccounts);
+      setCustomersAccounts(customersAccounts);
+    } catch (error) {
+      console.log("Error fetching data from the database:", error);
+    }
+  };
+
+  const getAllRealStates = async () => {
+    try {
+      const realStates = await window.electron.getAllRealStates();
+      console.log("Fetched Real States:", realStates);
+      setRealStateData(realStates);
+    } catch (error) {
+      console.log("Error fetching data from the database:", error);
+    }
+  };
   useEffect(() => {
+    getAllCustomersAccounts();
+    getAllRealStates();
     const fetchContracts = async () => {
       try {
-        const contracts = await window.electron.getAllTenantContracts();
+        const contracts = await window.electron.getAllTenants();
         console.log("Fetched tenant contracts:", contracts);
-        setTableData(contracts);
-        setFilteredData(contracts);
+        setTableData(
+          contracts.map((contract) => ({
+            ...contract,
+            entitlement: String(contract.entitlement), // Convert to string
+            propertyNumber: String(contract.propertyNumber), // Convert to string
+            tenantName: contract.tenantNames, // Map tenantNames to tenantName
+          }))
+        );
+        setFilteredData(
+          contracts.map((contract) => ({
+            id: contract.id,
+            endDate: contract.endDate,
+            startDate: contract.startDate,
+            entitlement: String(contract.entitlement), // Convert to string
+            leasedUsage: contract.leasedUsage,
+            propertyType: contract.propertyType,
+            contractNumber: contract.contractNumber,
+            tenantName: contract.tenantNames, // Map tenantNames to tenantName
+            propertyNumber: String(contract.propertyNumber), // Convert to string
+          }))
+        );
       } catch (error) {
         console.error("Error fetching tenant contracts:", error);
       }
@@ -70,9 +141,9 @@ export default function TenantsContractTable() {
         row.contractNumber
           .toLowerCase()
           .includes(searchFilters.contractNumber.toLowerCase()) &&
-        row.tenantName
-          .toLowerCase()
-          .includes(searchFilters.tenantName.toLowerCase()) &&
+        searchFilters.tenantName.every((filterName) =>
+          row.tenantName.some((name) => name.toLowerCase().includes(filterName))
+        ) &&
         row.propertyNumber
           .toLowerCase()
           .includes(searchFilters.propertyNumber.toLowerCase())
@@ -107,12 +178,13 @@ export default function TenantsContractTable() {
   const handleSearchBlur = () => {
     setFocusedField(null);
   };
+  console.log("tenantName", tenantName);
 
   // Save a new tenant contract record
   const handleSave = async () => {
     if (
       !startDate ||
-      !tenantName ||
+      tenantName.length === 0 ||
       !propertyNumber ||
       !endDate ||
       !entitlement ||
@@ -122,27 +194,48 @@ export default function TenantsContractTable() {
       return;
     }
     try {
-      const response = await window.electron.addTenantContract(
+      const response = await window.electron.addTenant(
         contractStatus,
         startDate,
         tenantName,
-        propertyNumber,
+        Number(propertyNumber),
         endDate,
-        entitlement,
+        Number(entitlement),
         contractNumber,
-        installmentCount,
+        Number(installmentCount),
         leasedUsage,
         propertyType
       );
       console.log("Tenant contract added:", response);
-      const updatedContracts = await window.electron.getAllTenantContracts();
-      setTableData(updatedContracts);
-      setFilteredData(updatedContracts);
+      const updatedContracts = await window.electron.getAllTenants();
+      console.log("Updated tenant contracts:", updatedContracts);
+
+      setTableData(
+        updatedContracts.map((contract) => ({
+          ...contract,
+          entitlement: String(contract.entitlement), // Convert to string
+          propertyNumber: String(contract.propertyNumber), // Convert to string
+          tenantName: contract.tenantNames, // Map tenantNames to tenantName
+        }))
+      );
+      setFilteredData(
+        updatedContracts.map((contract) => ({
+          id: contract.id,
+          endDate: contract.endDate,
+          startDate: contract.startDate,
+          entitlement: String(contract.entitlement), // Convert to string
+          leasedUsage: contract.leasedUsage,
+          propertyType: contract.propertyType,
+          contractNumber: contract.contractNumber,
+          tenantName: contract.tenantNames.map((name: string) => name), // Ensure tenantNames is an array
+          propertyNumber: String(contract.propertyNumber), // Convert to string
+        }))
+      );
 
       // Clear form fields
       setContractStatus("جديد");
       setStartDate("");
-      setTenantName("");
+      setTenantName([]);
       setPropertyNumber("");
       setEndDate("");
       setEntitlement("");
@@ -163,11 +256,31 @@ export default function TenantsContractTable() {
   const handleConfirmDelete = async () => {
     if (contractToDelete !== null) {
       try {
-        await window.electron.deleteTenantContract(contractToDelete);
+        await window.electron.deleteTenant(contractToDelete);
         console.log(`Deleted tenant contract with id: ${contractToDelete}`);
-        const updatedContracts = await window.electron.getAllTenantContracts();
-        setTableData(updatedContracts);
-        setFilteredData(updatedContracts);
+        const updatedContracts = await window.electron.getAllTenants();
+        setTableData(
+          updatedContracts.map((contract) => ({
+            ...contract,
+            entitlement: String(contract.entitlement), // Convert to string
+            propertyNumber: String(contract.propertyNumber), // Convert to string
+            tenantName: contract.tenantNames, // Map tenantNames to tenantName
+          }))
+        );
+
+        setFilteredData(
+          updatedContracts.map((contract) => ({
+            id: contract.id,
+            endDate: contract.endDate,
+            startDate: contract.startDate,
+            entitlement: String(contract.entitlement), // Convert to string
+            leasedUsage: contract.leasedUsage,
+            propertyType: contract.propertyType,
+            contractNumber: contract.contractNumber,
+            tenantName: contract.tenantNames, // Map tenantNames to tenantName
+            propertyNumber: String(contract.propertyNumber), // Convert to string
+          }))
+        );
       } catch (error) {
         console.error("Error deleting tenant contract:", error);
       } finally {
@@ -205,21 +318,65 @@ export default function TenantsContractTable() {
           </div>
           <div className="contracts-form-group">
             <label>ادخل اسم المستأجر</label>
-            <input
+            <Select
+              mode="multiple"
+              allowClear
+              showSearch // Enables search functionality
+              placeholder="اختر اصحاب العقار"
+              value={tenantName}
+              onChange={(values) => setTenantName(values)}
+              filterOption={(input, option) =>
+                String(option?.children)
+                  .toLowerCase()
+                  .includes(input.toLowerCase())
+              } // Custom search logic
+            >
+              {customersAccounts.map((owner) => (
+                <Option key={owner.id} value={owner.id}>
+                  {owner.name}
+                </Option>
+              ))}
+            </Select>
+            {/* <input
               type="text"
               value={tenantName}
               onChange={(e) => setTenantName(e.target.value)}
               placeholder="500"
-            />
+            /> */}
           </div>
           <div className="contracts-form-group">
-            <label>ادخل رقم العقار</label>
-            <input
+            <label>ادخل رقم العقار </label>
+            <Select
+              allowClear
+              showSearch // Enables search functionality
+              placeholder="اختر رقم العقار"
+              value={
+                realStateData
+                  .filter((rs) => rs.id === Number(propertyNumber))
+                  ?.find((rs) => rs.id === Number(propertyNumber))
+                  ?.propertyTitle
+              }
+              onChange={(values) => {
+                setPropertyNumber(values?.toString());
+              }}
+              filterOption={(input, option) =>
+                typeof option?.children === "string"
+                  ? option.children
+                  : "".toLowerCase().includes(input.toLowerCase())
+              } // Custom search logic
+            >
+              {realStateData.map((realstate) => (
+                <Option key={realstate.id} value={realstate.id}>
+                  {realstate.propertyTitle}
+                </Option>
+              ))}
+            </Select>
+            {/* <input
               type="text"
               value={propertyNumber}
               onChange={(e) => setPropertyNumber(e.target.value)}
               placeholder="07701234567"
-            />
+            /> */}
           </div>
           <div className="contracts-form-group">
             <label>ادخل تاريخ نهاية العقد</label>
@@ -284,7 +441,7 @@ export default function TenantsContractTable() {
             onClick={() =>
               setSearchFilters({
                 contractNumber: "",
-                tenantName: "",
+                tenantName: [],
                 propertyNumber: "",
               })
             }>
@@ -323,7 +480,10 @@ export default function TenantsContractTable() {
                     value={searchFilters.tenantName}
                     onBlur={handleSearchBlur}
                     onChange={(e) =>
-                      handleSearchChange("tenantName", e.target.value)
+                      handleSearchChange(
+                        "tenantName",
+                        e.target.value.split(",").map((name) => name.trim())
+                      )
                     }
                   />
                 )}
@@ -363,7 +523,8 @@ export default function TenantsContractTable() {
             {filteredData.map((row) => (
               <tr key={row.id}>
                 <td>{row.propertyNumber}</td>
-                <td>{row.tenantName}</td>
+                <td>{row.tenantName?.join(", ")}</td>
+                {/* Join tenant names with a comma */}
                 <td>{row.contractNumber}</td>
                 <td>{row.propertyType}</td>
                 <td>{row.leasedUsage}</td>

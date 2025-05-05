@@ -11,6 +11,8 @@ import TransactionDetails from "./screens/TransactionDetails";
 import CustomerDetails from "./components/Details/CustomerDetails";
 import RealStateDetails from "./components/Details/RealStateDetails";
 import Register from "./components/Register";
+import ProcedureDetails from "./components/Details/ProcedureDetails";
+import TenantsDetails from "./components/Details/TenantsDetails";
 
 function App() {
   useEffect(() => {
@@ -30,6 +32,9 @@ function App() {
         <Route path="/cash" element={<Cash />} />
         <Route path="/manage" element={<Management />} />
         <Route path="/real-state-details/:id" element={<RealStateDetails />} />
+        tenantContract
+        <Route path="/tenantContract/:id" element={<TenantsDetails />} />
+        <Route path="/procedure-details/:id" element={<ProcedureDetails />} />
         <Route path="/transaction-details" element={<TransactionDetails />} />
         <Route path="/details/:id" element={<CustomerDetails />} />
         {/* Add other routes here */}

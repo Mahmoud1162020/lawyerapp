@@ -57,6 +57,37 @@ electron.contextBridge.exposeInMainWorld('electron', {
   deleteRealState: (id: number): Promise<{ deleted: boolean }> => electron.ipcRenderer.invoke('delete-real-state', id),
   updateRealState: (id: number, field: string, value: string | number): Promise<{ updated: boolean }> => electron.ipcRenderer.invoke('update-real-state', id, field, value),
   updateRealStateOwners: (realStateId: number, owners: number[]): Promise<{ updated: boolean }> => electron.ipcRenderer.invoke('update-real-state-owners', realStateId, owners),
+  addProcedure: (
+    procedureNumber: string,
+    procedureName: string,
+    description: string,
+    date: string,
+    status: string,
+    phone: string,
+    owners: number[]
+  ): Promise<{ id: number }> => electron.ipcRenderer.invoke('add-procedure', {procedureNumber,procedureName,description, date, status, phone, owners }),
+  getAllProcedures: (): Promise<{ id: number; procedureNumber: string; procedureName: string; description: string; date: string; status: string; phone: string; owners: { id: number; name: string }[] }[]> => electron.ipcRenderer.invoke('get-all-procedures'),
+  getProcedureById: (id: number): Promise<{ id: number; procedureNumber: string; procedureName: string; description: string; date: string; status: string; phone: string; owners: { id: number; name: string }[] } | null> => electron.ipcRenderer.invoke('get-procedure-by-id', id),
+  deleteProcedure: (id: number): Promise<{ deleted: boolean }> => electron.ipcRenderer.invoke('delete-procedure', id),
+  updateProcedure: (id: number, field: string, value: string | number): Promise<{ updated: boolean }> => electron.ipcRenderer.invoke('update-procedure', id, field, value),
+  updateProcedureOwners: (procedureId: number, owners: number[]): Promise<{ updated: boolean }> => electron.ipcRenderer.invoke('update-procedure-owners', procedureId, owners),
+  addTenant: (
+    contractStatus: string,
+    startDate: string,
+    tenantIds: number[],
+    propertyNumber: number,
+    endDate: string,
+    entitlement: number,
+    contractNumber: string,
+    installmentCount: number,
+    leasedUsage: string,
+    propertyType: string
+  ): Promise<{ id: number }> => electron.ipcRenderer.invoke('add-tenant', {contractStatus, startDate, tenantIds, propertyNumber, endDate, entitlement, contractNumber, installmentCount, leasedUsage, propertyType }),
+  getAllTenants: (): Promise<{ id: number; contractStatus: string; startDate: string; tenantNames: string[]; propertyNumber: number; endDate: string; entitlement: number; contractNumber: string; installmentCount: number; leasedUsage: string; propertyType: string }[]> => electron.ipcRenderer.invoke('get-all-tenants'),
+  getTenantById: (tenantId: number): Promise<{ id: number; contractStatus: string; startDate: string; tenantNames: string[]; propertyNumber: number; endDate: string; entitlement: number; contractNumber: string; installmentCount: number; leasedUsage: string; propertyType: string } | null> => electron.ipcRenderer.invoke('get-tenant-by-id', tenantId),
+  deleteTenant: (tenantId: number): Promise<{ deleted: boolean }> => electron.ipcRenderer.invoke('delete-tenant', tenantId),
+  updateTenant: (id: number, field: string, value: string | number): Promise<{ updated: boolean }> => electron.ipcRenderer.invoke('update-tenant', id, field, value),
+  updateTenantNames: (tenantId: number, tenantNames: string[]): Promise<{ updated: boolean }> => electron.ipcRenderer.invoke('update-tenant-names', tenantId, tenantNames),
 } satisfies Window['electron']);
 
 function ipcInvoke<Key extends keyof EventPayloadMapping>(

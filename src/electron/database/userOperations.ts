@@ -32,7 +32,6 @@ async function applyMigrations(db: Database) {
   let currentVersion = await getDatabaseVersion(db);
 
   if (currentVersion < 1) {
-    // ✅ Create the "users" table
     await db.exec(`
       CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -46,7 +45,6 @@ async function applyMigrations(db: Database) {
   }
 
   if (currentVersion < 2) {
-    // ✅ Check if the "role" column exists in the "users" table
     const roleColumnExists = await db.get(`
       SELECT 1 
       FROM pragma_table_info('users') 
@@ -54,7 +52,6 @@ async function applyMigrations(db: Database) {
     `);
 
     if (!roleColumnExists) {
-      // Add the "role" column if it does not exist
       await db.exec(`ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user';`);
       console.log("Database updated to version 2: Added 'role' column.");
     }
@@ -64,7 +61,6 @@ async function applyMigrations(db: Database) {
   }
 
   if (currentVersion < 3) {
-    // ✅ Create the "transactions" table
     await db.exec(`
       CREATE TABLE IF NOT EXISTS transactions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -83,7 +79,6 @@ async function applyMigrations(db: Database) {
   }
 
   if (currentVersion < 4) {
-    // ✅ Create the "customersaccount" table
     await db.exec(`
       CREATE TABLE IF NOT EXISTS customersaccount (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -102,14 +97,12 @@ async function applyMigrations(db: Database) {
   }
 
   if (currentVersion < 5) {
-    // ✅ Add the "name" column to customersaccount (already included in version 4 for new databases)
     await db.run(`UPDATE meta SET value = '5' WHERE key = 'db_version'`);
     console.log("Database updated to version 5.");
     currentVersion = 5;
   }
 
   if (currentVersion < 6) {
-    // ✅ Create the "realstates" table
     await db.exec(`
       CREATE TABLE IF NOT EXISTS realstates (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -127,7 +120,6 @@ async function applyMigrations(db: Database) {
   }
 
   if (currentVersion < 7) {
-    // ✅ Create the "realstate_owners" table
     await db.exec(`
       CREATE TABLE IF NOT EXISTS realstate_owners (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -141,6 +133,78 @@ async function applyMigrations(db: Database) {
     console.log("Database updated to version 7: Added 'realstate_owners' table.");
     currentVersion = 7;
   }
+
+  if (currentVersion < 8) {
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS procedures (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        procedureNumber TEXT NOT NULL,
+        procedureName TEXT NOT NULL,
+        description TEXT,
+        date TEXT DEFAULT (datetime('now', 'localtime')),
+        status TEXT NOT NULL,
+        phone TEXT NOT NULL
+      );
+    `);
+    await db.run(`UPDATE meta SET value = '8' WHERE key = 'db_version'`);
+    console.log("Database updated to version 8: Added 'procedures' table.");
+    currentVersion = 8;
+  }
+
+  if (currentVersion < 9) {
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS procedure_owners (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        procedure_id INTEGER NOT NULL,
+        customer_id INTEGER NOT NULL,
+        FOREIGN KEY (procedure_id) REFERENCES procedures(id) ON DELETE CASCADE,
+        FOREIGN KEY (customer_id) REFERENCES customersaccount(id) ON DELETE CASCADE
+      );
+    `);
+    await db.run(`UPDATE meta SET value = '9' WHERE key = 'db_version'`);
+    console.log("Database updated to version 9: Added 'procedure_owners' table.");
+    currentVersion = 9;
+  }
+
+  if (currentVersion < 10) {
+    // ✅ Create the "tenants" table
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS tenants (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        contractStatus TEXT NOT NULL,
+        startDate TEXT NOT NULL,
+        propertyNumber INTEGER NOT NULL,
+        endDate TEXT NOT NULL,
+        entitlement REAL NOT NULL,
+        contractNumber TEXT NOT NULL UNIQUE,
+        installmentCount INTEGER NOT NULL,
+        leasedUsage TEXT NOT NULL,
+        propertyType TEXT NOT NULL,
+        FOREIGN KEY (propertyNumber) REFERENCES realstates(id) ON DELETE CASCADE
+      );
+    `);
+    await db.run(`UPDATE meta SET value = '10' WHERE key = 'db_version'`);
+    console.log("Database updated to version 10: Added 'tenants' table.");
+    currentVersion = 10;
+  }
+
+  if (currentVersion < 11) {
+    // ✅ Create the "tenant_names" table
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS tenant_names (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        tenant_id INTEGER NOT NULL, -- Foreign key to tenants table
+        customer_id INTEGER NOT NULL, -- Foreign key to customersaccount table
+        FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
+        FOREIGN KEY (customer_id) REFERENCES customersaccount(id) ON DELETE CASCADE
+      );
+    `);
+    await db.run(`UPDATE meta SET value = '11' WHERE key = 'db_version'`);
+    console.log("Database updated to version 11: Added 'tenant_names' table.");
+    currentVersion = 11;
+  }
+
+ 
 }
 
 async function getDatabaseVersion(db: Database): Promise<number> {
