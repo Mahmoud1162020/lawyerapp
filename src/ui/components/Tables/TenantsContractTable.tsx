@@ -109,7 +109,7 @@ export default function TenantsContractTable() {
           contracts.map((contract) => ({
             ...contract,
             entitlement: String(contract.entitlement), // Convert to string
-            propertyNumber: String(contract.propertyNumber), // Convert to string
+            propertyNumber: String(contract?.propertyDetails?.propertyNumber), // Convert to string
             tenantName: contract.tenantNames, // Map tenantNames to tenantName
           }))
         );
@@ -123,7 +123,7 @@ export default function TenantsContractTable() {
             propertyType: contract.propertyType,
             contractNumber: contract.contractNumber,
             tenantName: contract.tenantNames, // Map tenantNames to tenantName
-            propertyNumber: String(contract.propertyNumber), // Convert to string
+            propertyNumber: String(contract?.propertyDetails?.propertyNumber), // Convert to string
           }))
         );
       } catch (error) {
@@ -214,7 +214,7 @@ export default function TenantsContractTable() {
         updatedContracts.map((contract) => ({
           ...contract,
           entitlement: String(contract.entitlement), // Convert to string
-          propertyNumber: String(contract.propertyNumber), // Convert to string
+          propertyNumber: String(contract?.propertyDetails?.propertyNumber), // Convert to string
           tenantName: contract.tenantNames, // Map tenantNames to tenantName
         }))
       );
@@ -228,7 +228,7 @@ export default function TenantsContractTable() {
           propertyType: contract.propertyType,
           contractNumber: contract.contractNumber,
           tenantName: contract.tenantNames.map((name: string) => name), // Ensure tenantNames is an array
-          propertyNumber: String(contract.propertyNumber), // Convert to string
+          propertyNumber: String(contract?.propertyDetails?.propertyNumber), // Convert to string
         }))
       );
 

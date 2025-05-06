@@ -26,7 +26,6 @@ function App() {
       <Navbar />
       {/* <SecondNav /> */}
       <ToastContainer position="top-right" autoClose={3000} newestOnTop rtl />
-
       <Routes>
         <Route path="/reports" element={<Reports />} />
         <Route path="/cash" element={<Cash />} />

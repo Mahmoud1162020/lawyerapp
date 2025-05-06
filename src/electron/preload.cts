@@ -75,15 +75,23 @@ electron.contextBridge.exposeInMainWorld('electron', {
     contractStatus: string,
     startDate: string,
     tenantIds: number[],
-    propertyNumber: number,
+    propertyId: number,
     endDate: string,
     entitlement: number,
     contractNumber: string,
     installmentCount: number,
     leasedUsage: string,
     propertyType: string
-  ): Promise<{ id: number }> => electron.ipcRenderer.invoke('add-tenant', {contractStatus, startDate, tenantIds, propertyNumber, endDate, entitlement, contractNumber, installmentCount, leasedUsage, propertyType }),
-  getAllTenants: (): Promise<{ id: number; contractStatus: string; startDate: string; tenantNames: string[]; propertyNumber: number; endDate: string; entitlement: number; contractNumber: string; installmentCount: number; leasedUsage: string; propertyType: string }[]> => electron.ipcRenderer.invoke('get-all-tenants'),
+  ): Promise<{ id: number }> => electron.ipcRenderer.invoke('add-tenant', {contractStatus, startDate, tenantIds, propertyId, endDate, entitlement, contractNumber, installmentCount, leasedUsage, propertyType }),
+  getAllTenants: (): Promise<{ id: number; contractStatus: string; startDate: string; tenantNames: string[]; propertyNumber: number; endDate: string; entitlement: number; contractNumber: string; installmentCount: number; leasedUsage: string; propertyType: string,propertyDetails: {
+    id: number,
+    propertyTitle: string,
+    propertyNumber: string,
+    address: string,
+    price: number,
+    date: string
+    details: string | null
+  } }[]> => electron.ipcRenderer.invoke('get-all-tenants'),
   getTenantById: (tenantId: number): Promise<{ id: number; contractStatus: string; startDate: string; tenantNames: string[]; propertyNumber: number; endDate: string; entitlement: number; contractNumber: string; installmentCount: number; leasedUsage: string; propertyType: string } | null> => electron.ipcRenderer.invoke('get-tenant-by-id', tenantId),
   deleteTenant: (tenantId: number): Promise<{ deleted: boolean }> => electron.ipcRenderer.invoke('delete-tenant', tenantId),
   updateTenant: (id: number, field: string, value: string | number): Promise<{ updated: boolean }> => electron.ipcRenderer.invoke('update-tenant', id, field, value),

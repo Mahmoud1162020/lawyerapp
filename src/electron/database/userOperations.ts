@@ -173,14 +173,14 @@ async function applyMigrations(db: Database) {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         contractStatus TEXT NOT NULL,
         startDate TEXT NOT NULL,
-        propertyNumber INTEGER NOT NULL,
+        propertyId INTEGER NOT NULL,
         endDate TEXT NOT NULL,
         entitlement REAL NOT NULL,
         contractNumber TEXT NOT NULL UNIQUE,
         installmentCount INTEGER NOT NULL,
         leasedUsage TEXT NOT NULL,
         propertyType TEXT NOT NULL,
-        FOREIGN KEY (propertyNumber) REFERENCES realstates(id) ON DELETE CASCADE
+        FOREIGN KEY (propertyId) REFERENCES realstates(id) ON DELETE CASCADE
       );
     `);
     await db.run(`UPDATE meta SET value = '10' WHERE key = 'db_version'`);

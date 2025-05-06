@@ -11,13 +11,13 @@ import {
 export function registerTenantsIpcHandlers(mainWindow: BrowserWindow): void {
   // Add a new tenant
   ipcMain.handle("add-tenant", async (_event, tenantData) => {
-    console.log("tenantData", tenantData);
+    console.log("tenantData=====", tenantData);
     
     const tenant = await addTenant(
       tenantData.contractStatus,
       tenantData.startDate,
       tenantData.tenantIds,
-      tenantData.propertyNumber, // Foreign key to realstates table
+      tenantData.propertyId, // Foreign key to realstates table
       tenantData.endDate,
       tenantData.entitlement,
       tenantData.contractNumber,

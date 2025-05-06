@@ -5,7 +5,7 @@ export async function addTenant(
   contractStatus: string,
   startDate: string,
   tenantIds: number[], // Array of customer IDs
-  propertyNumber: number, // Foreign key to realstates table
+  propertyId: number, // Foreign key to realstates table
   endDate: string,
   entitlement: number,
   contractNumber: string,
@@ -13,7 +13,7 @@ export async function addTenant(
   leasedUsage: string,
   propertyType: string
 ): Promise<{ id: number }> {
-  console.log("🔹 addTenant() Triggered",tenantIds);
+  console.log("🔹 addTenant() Triggered=====",propertyId);
 
   const db = await initializeDatabase();
 
@@ -21,13 +21,13 @@ export async function addTenant(
     // Insert into the tenants table
     const result = await db.run(
       `INSERT INTO tenants (
-        contractStatus, startDate, propertyNumber, endDate, entitlement,
+        contractStatus, startDate, propertyId, endDate, entitlement,
         contractNumber, installmentCount, leasedUsage, propertyType
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         contractStatus,
         startDate,
-        propertyNumber,
+        propertyId,
         endDate,
         entitlement,
         contractNumber,
@@ -104,15 +104,14 @@ export async function getAllTenants(): Promise<{
     // Map the results to get the names
     tenant.tenantNames = tenantNamesResult.map((row) => row.name);
 
-console.log("tenant.tenantNames",tenant.tenantNames);
 
     const propertyDetails = await db.get(
       `
-      SELECT id, propertyTitle, address 
+      SELECT *
       FROM realstates 
       WHERE id = ?
     `,
-      [tenant.propertyNumber]
+      [tenant.propertyId]
     );
 
     tenant.propertyDetails = propertyDetails || null;
@@ -175,7 +174,7 @@ console.log("tenant.tenantNames",tenant.tenantNames);
     FROM realstates 
     WHERE id = ?
   `,
-    [tenant.propertyNumber]
+    [tenant.propertyId]
   );
 
   tenant.propertyDetails = propertyDetails || null;
@@ -216,7 +215,7 @@ export async function updateTenant(
   const allowedFields = [
     "contractStatus",
     "startDate",
-    "propertyNumber",
+    "propertyId",
     "endDate",
     "entitlement",
     "contractNumber",

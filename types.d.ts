@@ -92,8 +92,16 @@ type Statistics = {
       deleteProcedure: (id: number)=>Promise<{ deleted: boolean }>,
       updateProcedure: (id: number, field: string, value: string | number)=>Promise<{ updated: boolean }>,
       updateProcedureOwners: (procedureId: number, owners: number[])=>Promise<{ updated: boolean }>
-      addTenant:(contractStatus:string,startDate:string,tenantIds:number[],propertyNumber:number,endDate:string,entitlement:number,contractNumber:string,installmentCount:number,leasedUsage:string,propertyType:string)=>Promise<{ id: number }>,
-      getAllTenants: ()=>Promise<{ id: number; contractStatus: string; startDate: string; tenantNames: string[]; propertyNumber: number; endDate: string; entitlement: number; contractNumber: string; installmentCount: number; leasedUsage: string; propertyType: string }[]>,
+      addTenant:(contractStatus:string,startDate:string,tenantIds:number[],propertyId:number,endDate:string,entitlement:number,contractNumber:string,installmentCount:number,leasedUsage:string,propertyType:string)=>Promise<{ id: number }>,
+      getAllTenants: ()=>Promise<{ id: number; contractStatus: string; startDate: string; tenantNames: string[]; propertyNumber: number; endDate: string; entitlement: number; contractNumber: string; installmentCount: number; leasedUsage: string; propertyType: string,propertyDetails: {
+        id: number,
+        propertyTitle: string,
+        propertyNumber: string,
+        address: string,
+        price: number,
+        date: string
+        details: string | null
+      } }[]>,
       getTenantById: (id: number)=>Promise<{ id: number; contractStatus: string; startDate: string; tenantNames: string[]; propertyNumber: number; endDate: string; entitlement: number; contractNumber: string; installmentCount: number; leasedUsage: string; propertyType: string } | null>,
       deleteTenant: (id: number)=>Promise<{ deleted: boolean }>,
       updateTenant: (id: number, field: string, value: string | number)=>Promise<{ updated: boolean }>
