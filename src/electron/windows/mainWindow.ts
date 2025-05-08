@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog } from "electron";
+import { app, BrowserWindow, dialog, ipcMain } from "electron";
 import path from "path";
 import { getPreloadPath } from "../pathResolver.js";
 import { isDev } from "../util.js";
@@ -35,6 +35,10 @@ export function createMainWindow(): BrowserWindow {
       mainWindow.destroy();
     }
   });
-
+ipcMain.on("error",(error)=>{
+  // console.log("❌ Error:");
+  mainWindow.webContents.send("sql-error",error);
+  
+})
   return mainWindow;
 }

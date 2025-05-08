@@ -1,4 +1,6 @@
+import { ipcMain } from "electron";
 import { initializeDatabase } from "../userOperations.js"; // Import the database initialization
+import { ErrorFn } from "./ErrorHandlerOperations.js";
 
 // Add a New Tenant
 export async function addTenant(
@@ -57,6 +59,8 @@ export async function addTenant(
     return { id: tenantId };
   } catch (error) {
     console.error("❌ SQLite Insert Error:", error);
+  ipcMain.emit("error",error)
+
     throw error;
   }
 }
@@ -77,6 +81,7 @@ export async function getAllTenants(): Promise<{
   propertyDetails: { id: number; propertyTitle: string; address: string } | null;
 }[]> {
   const db = await initializeDatabase();
+  // ErrorFn("this is a test error===="); // Test error handling
 
   // Fetch all tenants
   const tenants = await db.all(`

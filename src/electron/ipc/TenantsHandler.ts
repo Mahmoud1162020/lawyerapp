@@ -55,6 +55,7 @@ export function registerTenantsIpcHandlers(mainWindow: BrowserWindow): void {
       return result; // Returns { updated: boolean }
     } catch (error) {
       console.error("❌ Failed to update tenant:", error);
+      ipcMain.emit("error", error); // Emit an error event to the main process
       throw error; // Ensure the frontend gets an error response
     }
   });

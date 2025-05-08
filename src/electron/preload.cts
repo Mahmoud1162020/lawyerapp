@@ -11,6 +11,17 @@ electron.contextBridge.exposeInMainWorld('electron', {
       callback(view);
     }),
   getStaticData: () => ipcInvoke('getStaticData'),
+  onError: (callback: (error: string) => void) => {
+    electron.ipcRenderer.on("sql-error", (_event, error) => {
+      callback(error); // Pass the error message to the callback
+    });
+  },
+  offError: (callback: (error: string) => void) => {
+    const wrappedCallback = (callback as any)._wrappedCallback;
+    if (wrappedCallback) {
+      electron.ipcRenderer.off("sql-error", wrappedCallback);
+    }
+  },
   sendFrameAction: (payload) => ipcSend('sendFrameAction', payload),
   sendExit: () => electron.ipcRenderer.send('exit'),
   register: (username: string, password: string) => electron.ipcRenderer.invoke('register', { username, password }),

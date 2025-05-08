@@ -6,6 +6,7 @@ import { IoIosRefresh } from "react-icons/io";
 import ConfirmModal from "../Modal/ConfirmModal";
 import { useNavigate } from "react-router-dom";
 import { Select } from "antd";
+import { toast } from "react-toastify";
 
 const { Option } = Select;
 export default function TenantsContractTable() {
@@ -98,6 +99,32 @@ export default function TenantsContractTable() {
       console.log("Error fetching data from the database:", error);
     }
   };
+
+  useEffect(() => {
+    let isMounted = true;
+    const handleError = (error: string) => {
+      console.error("Error from Electron backend:", error);
+      toast.error("رقم العقد موجود مسبقاً", { autoClose: 3000 });
+
+      if (
+        isMounted &&
+        error.stack.includes(
+          "Error: SQLITE_CONSTRAINT: UNIQUE constraint failed: tenants.contractNumber"
+        )
+      ) {
+        toast.error("رقم العقد موجود مسبقاً", { autoClose: 3000 });
+      }
+    };
+
+    // Attach the error listener
+    window.electron.onError(handleError);
+
+    // Cleanup the listener on component unmount
+    return () => {
+      isMounted = false;
+      window.electron.offError(handleError);
+    };
+  }, []);
   useEffect(() => {
     getAllCustomersAccounts();
     getAllRealStates();

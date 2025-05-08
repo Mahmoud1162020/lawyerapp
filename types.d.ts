@@ -58,6 +58,8 @@ type Statistics = {
         callback: (view: View) => void
       ) => UnsubscribeFunction;
       sendFrameAction: (payload: FrameWindowAction) => void;
+      onError: (callback: (error: string) => void) => void;
+      offError: (callback: (error: string) => void) => void;
       addTransaction:( user_id: number,
         recipient: string,
         amount: number,
