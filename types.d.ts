@@ -4,7 +4,16 @@ type Statistics = {
     storageUsage: number;
     btnClicked: boolean
   };
-  
+  type Customer={    
+      id: number;
+      name: string;
+      accountNumber: string;
+      accountType: string;
+      phone: string;
+      address: string;
+      date: string;
+      details: string | null;
+  }
   type StaticData = {
     totalStorage: number;
     cpuModel: string;
@@ -17,14 +26,25 @@ type Statistics = {
   }
   type Transaction= {
     id: number;
-    user_id: number;
+    userId: number;
     recipient: string;
     amount: number;
     report: string;
-    transactionId: string;
+    procedureId: number;
+    type: "procedure" | "personal";
     date: string;
-    username: string;
   }
+  type Procedure={ 
+    id: number;
+    procedureNumber: string;
+    procedureName: string;
+    description: string;
+    date: string;
+    status: string;
+    phone: string;
+    owners: { id: number; name: string }[] 
+  }
+  
   
   type View = 'CPU' | 'RAM' | 'STORAGE';
   
@@ -60,17 +80,24 @@ type Statistics = {
       sendFrameAction: (payload: FrameWindowAction) => void;
       onError: (callback: (error: string) => void) => void;
       offError: (callback: (error: string) => void) => void;
-      addTransaction:( user_id: number,
+      // Transactions
+      addTransaction: (
+        userId: number,
         recipient: string,
         amount: number,
         report: string,
-        transactionId: string)=>Promise<{ id: number }>;
+        procedureId: number,
+        type: "procedure" | "personal"
+      ) => Promise<{ id: number }>;
+      getAllTransactions: () => Promise<Transaction[]>;
+      getTransactionById:(id:number)=>Promise<Transaction|null>
       
       getTransactionsByUser:(userId:number)=>Promise<Transaction>;
       updateTransaction:(id: number,
         field: string,
         value: string|number)=>Promise<{ updated: boolean }>;
         deleteTransaction:(transactionId: number)=>Promise<{ deleted: boolean }>;
+        // Customers
         addCustomersAccount:(
         name:string,
         accountNumber: string,

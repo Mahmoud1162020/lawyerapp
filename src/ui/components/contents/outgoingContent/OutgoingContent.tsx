@@ -2,13 +2,16 @@ import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import "./OutgoingContent.css";
 import ConfirmModal from "../../Modal/ConfirmModal";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { Button, Select } from "antd";
 
 // toast.configure(); // Initialize toast notifications
-
+const { Option } = Select;
 const TransactionPage: React.FC = () => {
+  const navigate = useNavigate();
+  const [customerAccounts, setCustomerAccounts] = useState<Customer[]>([]);
   const [amount, setAmount] = useState<number | "">("");
-  const [transactionNumber, setTransactionNumber] = useState<string>("");
+  const [transactionNumber, setTransactionNumber] = useState<string>();
   const [recipient, setRecipient] = useState("");
   const [report, setReport] = useState("");
   const [selectedType, setSelectedType] = useState("معاملة"); // Default selection
@@ -18,6 +21,8 @@ const TransactionPage: React.FC = () => {
   const [editableDates, setEditableDates] = useState<{ [key: number]: string }>(
     {}
   );
+
+  const [allProcedures, setAllProcedures] = useState<Procedure[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState<number | null>(
     null
@@ -47,7 +52,38 @@ const TransactionPage: React.FC = () => {
     }
   };
 
+  const getAllCustomersAccounts = async () => {
+    try {
+      const customersAccounts = await window.electron.getAllCustomersAccounts();
+      console.log("Fetched Customers Accounts:", customersAccounts);
+      setCustomerAccounts(customersAccounts);
+    } catch (error) {
+      console.log("Error fetching data from the database:", error);
+    }
+  };
+
+  const getAllProcedures = async () => {
+    try {
+      const allProcedures = await window.electron.getAllProcedures();
+      console.log("====================================");
+      console.log(allProcedures);
+      console.log("====================================");
+      if (allProcedures) {
+        setAllProcedures(allProcedures);
+      } else {
+        toast.error("لم يتم العثور على العمليات!", { autoClose: 3000 });
+      }
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "حدث خطأ غير متوقع!";
+      toast.error(`❌ خطأ: ${errorMessage}`);
+      console.error("Error fetching procedures:", error);
+    }
+  };
+
   useEffect(() => {
+    getAllCustomersAccounts();
+    getAllProcedures();
     window.electron.getUser().then((user: User) => {
       console.log("====================================");
       console.log(user);
@@ -80,7 +116,7 @@ const TransactionPage: React.FC = () => {
 
   const handleSave = async () => {
     try {
-      if (!recipient || !amount) {
+      if (!recipient || !amount || !transactionNumber) {
         toast.error("يرجى ملء جميع الحقول المطلوبة!", { autoClose: 3000 });
         return;
       }
@@ -97,8 +133,12 @@ const TransactionPage: React.FC = () => {
           recipient,
           Number(amount),
           report,
-          transactionNumber
+          Number(transactionNumber),
+          selectedType === "معاملة" ? "procedure" : "personal"
         );
+        console.log("====================================");
+        console.log(transaction);
+        console.log("====================================");
         if (transaction) {
           setUpdateFlag(!updateFlag); // Trigger update
           toast.success("تمت إضافة المعاملة بنجاح!", { autoClose: 3000 });
@@ -250,7 +290,8 @@ const TransactionPage: React.FC = () => {
           <button
             className="save-btn"
             onClick={handleSave}
-            disabled={!recipient || !amount}>
+            // disabled={!recipient || !amount}
+          >
             حفظ
           </button>
 
@@ -279,17 +320,28 @@ const TransactionPage: React.FC = () => {
           {selectedType === "معاملة" && (
             <div className="input-group">
               <label>ادخل رقم المعاملة</label>
-              <input
+              <Select
+                allowClear
+                value={transactionNumber}
+                onChange={(value) => setTransactionNumber(value as string)}>
+                {allProcedures.map((procedure) => (
+                  <Option key={procedure.id} value={procedure.id}>
+                    {procedure.procedureNumber}
+                  </Option>
+                ))}
+              </Select>
+              {/* <input
                 type="text"
                 value={transactionNumber}
                 onChange={(e) => setTransactionNumber(e.target.value)}
                 onKeyDown={handleKeyDown}
-              />
+              /> */}
             </div>
           )}
 
           <div className="input-group">
             <label>ادخل الاسم</label>
+
             <input
               onKeyDown={handleKeyDown}
               type="text"
@@ -321,127 +373,59 @@ const TransactionPage: React.FC = () => {
                 <th>رقم المعاملة</th>
                 <th>المبلغ</th>
                 <th>تقرير</th>
+                <th>نوع الإجراء</th>
                 <th>التاريخ</th>
                 <th>خيارات</th>
               </tr>
             </thead>
             <tbody>
-              {filteredTransactions.map((t) => (
-                <tr key={t.id}>
-                  <td>{t.id}</td>
+              {filteredTransactions.map((t) => {
+                console.log(t.report.length > 50);
 
-                  {/* Editable Recipient Field */}
-                  <td>
-                    <input
-                      type="text"
-                      value={t.recipient}
-                      onChange={(e) =>
-                        setTransactions(
-                          transactions.map((tx) =>
-                            tx.id === t.id
-                              ? { ...tx, recipient: e.target.value }
-                              : tx
-                          )
-                        )
-                      }
-                      onBlur={() =>
-                        handleUpdateField(t.id, "recipient", t.recipient)
-                      }
-                    />
-                  </td>
+                return (
+                  <tr key={t.id}>
+                    <td>{t.id}</td>
 
-                  {/* Editable Transaction Number */}
-                  <td>
-                    <input
-                      type="text"
-                      value={t.transactionId}
-                      onChange={(e) =>
-                        setTransactions(
-                          transactions.map((tx) =>
-                            tx.id === t.id
-                              ? { ...tx, transactionId: e.target.value }
-                              : tx
-                          )
-                        )
-                      }
-                      onBlur={() =>
-                        handleUpdateField(
-                          t.id,
-                          "transactionId",
-                          t.transactionId
-                        )
-                      }
-                    />
-                  </td>
+                    {/* Editable Recipient Field */}
+                    <td>{t.recipient}</td>
 
-                  {/* Editable Amount */}
-                  <td>
-                    <input
-                      type="number"
-                      value={t.amount}
-                      onChange={(e) =>
-                        setTransactions(
-                          transactions.map((tx) =>
-                            tx.id === t.id
-                              ? { ...tx, amount: Number(e.target.value) }
-                              : tx
-                          )
-                        )
-                      }
-                      onBlur={() => handleUpdateField(t.id, "amount", t.amount)}
-                    />
-                  </td>
+                    {/* Editable Transaction Number */}
+                    <td>{t.procedureId}</td>
 
-                  {/* Editable Report */}
-                  <td>
-                    <input
-                      type="text"
-                      value={t.report}
-                      onChange={(e) =>
-                        setTransactions(
-                          transactions.map((tx) =>
-                            tx.id === t.id
-                              ? { ...tx, report: e.target.value }
-                              : tx
-                          )
-                        )
-                      }
-                      onBlur={() => handleUpdateField(t.id, "report", t.report)}
-                    />
-                  </td>
+                    {/* Editable Amount */}
+                    <td>{t.amount}</td>
 
-                  {/* Editable Date */}
-                  <td>
-                    <input
-                      type="date"
-                      value={new Date(t.date).toISOString().slice(0, 10)}
-                      onChange={(e) =>
-                        setTransactions(
-                          transactions.map((tx) =>
-                            tx.id === t.id
-                              ? { ...tx, date: e.target.value }
-                              : tx
-                          )
-                        )
-                      }
-                      onBlur={() => handleUpdateField(t.id, "date", t.date)}
-                    />
-                  </td>
+                    {/* Editable Report */}
+                    <td>
+                      <p>
+                        {t.report.length > 30
+                          ? t.report.slice(0, 20) + "..."
+                          : t.report}
+                      </p>
+                    </td>
+                    <td>{t.type === "procedure" ? "معاملة" : "شخصي"}</td>
 
-                  {/* Delete Button */}
-                  <td>
-                    <button className="btn" onClick={() => handleDelete(t.id)}>
-                      حذف
-                    </button>
-                    <Link
-                      className="btn"
-                      to="/transaction-details"
-                      state={{ item: t }}>
-                      تفاصيل
-                    </Link>
-                  </td>
-                </tr>
-              ))}
+                    {/* Editable Date */}
+                    <td>{new Date(t.date).toISOString().slice(0, 10)}</td>
+
+                    {/* Delete Button */}
+                    <td>
+                      <Button
+                        className="btn"
+                        onClick={() => handleDelete(t.id)}>
+                        حذف
+                      </Button>
+                      <Button
+                        type="default"
+                        onClick={() =>
+                          navigate(`/outgoing-transaction-details/${t.id}`)
+                        }>
+                        تفاصيل
+                      </Button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

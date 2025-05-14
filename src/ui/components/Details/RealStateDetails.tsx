@@ -44,6 +44,8 @@ export default function RealStateDetails() {
   const getRealStateById = async (id: number) => {
     try {
       const response = await window.electron.getRealStateById(id);
+      console.log("resa", response);
+
       if (response) {
         setRecord({
           propertyTitle: response.propertyTitle,
@@ -145,7 +147,7 @@ export default function RealStateDetails() {
     alert("تم حفظ التعديلات بنجاح");
     navigate(-1); // Navigate back to the previous page
   };
-  console.log("record------", record.owners);
+  console.log("record------", record);
 
   return (
     <div className="real-state-details-container">

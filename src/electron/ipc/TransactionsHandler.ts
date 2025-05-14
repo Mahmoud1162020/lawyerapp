@@ -6,17 +6,18 @@ import {
   deleteTransaction,
   searchTransactions,
   updateTransaction,
+  getTransactionById,
 } from "../database/transactionsOperations.js";
 
 export function registerTransactionIpcHandlers(mainWindow: BrowserWindow): void {
   ipcMain.handle("add-transaction", async (_event, transactionData) => {
     const transaction = await addTransaction(
-      transactionData.user_id,
+      transactionData.userId,
       transactionData.recipient,
       transactionData.amount,
       transactionData.report,
-      transactionData.transactionId
-    );
+      transactionData.procedureId,
+      transactionData.type)
     mainWindow.webContents.send("transaction-added", transaction);
     return transaction;
   });
@@ -27,6 +28,10 @@ export function registerTransactionIpcHandlers(mainWindow: BrowserWindow): void 
 
   ipcMain.handle("get-transactions-by-user", async (_event, userId: number) => {
     return await getTransactionsByUser(userId);
+  });
+
+  ipcMain.handle("get-transactions-by-id", async (_event, id: number) => {
+    return await getTransactionById(id);
   });
 
   ipcMain.handle("delete-transaction", async (_event, transactionId: number) => {

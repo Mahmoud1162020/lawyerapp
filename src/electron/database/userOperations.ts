@@ -63,14 +63,16 @@ async function applyMigrations(db: Database) {
   if (currentVersion < 3) {
     await db.exec(`
       CREATE TABLE IF NOT EXISTS transactions (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER NOT NULL,
-        recipient TEXT NOT NULL,
-        amount REAL NOT NULL,
-        report TEXT,
-        transactionId TEXT UNIQUE NOT NULL,
-        date TEXT DEFAULT (datetime('now', 'localtime')), 
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      recipient TEXT NOT NULL,
+      amount REAL NOT NULL,
+      report TEXT,
+      procedureId INTEGER NOT NULL,
+      type TEXT CHECK(type IN ('procedure', 'personal')) NOT NULL,
+      date TEXT DEFAULT (datetime('now', 'localtime')), 
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (procedureId) REFERENCES procedures(id) ON DELETE CASCADE
       );
     `);
     await db.run(`UPDATE meta SET value = '3' WHERE key = 'db_version'`);

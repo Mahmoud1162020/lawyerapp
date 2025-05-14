@@ -9,18 +9,7 @@ const { TextArea } = Input;
 export default function ProcedureDetails() {
   const { id } = useParams(); // Get the procedure ID from the URL
   const navigate = useNavigate();
-  const [customerAccounts, setCustomerAccounts] = useState<
-    {
-      id: number;
-      name: string;
-      accountNumber: string;
-      accountType: string;
-      phone: string;
-      address: string;
-      date: string;
-      details: string | null;
-    }[]
-  >([]);
+  const [customerAccounts, setCustomerAccounts] = useState<Customer[]>([]);
   const [record, setRecord] = useState({
     procedureNumber: "",
     procedureName: "",

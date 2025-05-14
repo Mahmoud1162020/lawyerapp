@@ -33,16 +33,21 @@ electron.contextBridge.exposeInMainWorld('electron', {
   onUserStatusUpdate: (callback: (status: UserStatus) => void) => {
     electron.ipcRenderer.on('user-status-update', (event, status) => callback(status));
   },
+  // Transactions
   addTransaction: (
-    user_id: number,
+    userId: number,
     recipient: string,
     amount: number,
     report: string,
-    transactionId: string
-  ): Promise<{ id: number }> => electron.ipcRenderer.invoke('add-transaction', { user_id, recipient, amount, report, transactionId }),
+    procedureId: number,
+    type: "procedure" | "personal"
+  ): Promise<{ id: number }> => electron.ipcRenderer.invoke('add-transaction', { userId, recipient, amount, report, procedureId, type }),
+  getAllTransactions: (): Promise<{ id: number; userId: number; recipient: string; amount: number; report: string; procedureId: number; type: "procedure" | "personal"; date: string }[]> => electron.ipcRenderer.invoke("get-all-transactions"),
   getTransactionsByUser:(userId:number)=> electron.ipcRenderer.invoke("get-transactions-by-user",userId),
   updateTransaction: (id: number, field: string, value: string | number) =>electron.ipcRenderer.invoke("update-transaction", id, field, value),
   deleteTransaction:(transactionId: number)=>electron.ipcRenderer.invoke("delete-transaction",transactionId),
+  getTransactionById:(id:number):Promise<Transaction>=>electron.ipcRenderer.invoke("get-transactions-by-id",id),
+  // Customers
   addCustomersAccount:(
     name: string,
     accountNumber: string,
