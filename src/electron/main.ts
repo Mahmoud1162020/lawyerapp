@@ -6,11 +6,13 @@ import { registerCustomersAccountIpcHandlers } from "./ipc/CustomersAccountHandl
 import { registerRealStateIpcHandlers } from "./ipc/RealStateHandler.js";
 import { registerProcedureIpcHandlers } from "./ipc/ProcedureHandler.js";
 import { registerTenantsIpcHandlers } from "./ipc/TenantsHandler.js";
+import { registerPersonalTransactionIpcHandlers } from "./ipc/personalTransactionsHandler.js";
 
 app.on("ready", () => {
   const mainWindow = createMainWindow();
   registerIpcHandlers(mainWindow);
   registerTransactionIpcHandlers(mainWindow);
+  registerPersonalTransactionIpcHandlers(mainWindow);
   registerCustomersAccountIpcHandlers(mainWindow);
   registerRealStateIpcHandlers(mainWindow);
   registerProcedureIpcHandlers(mainWindow);

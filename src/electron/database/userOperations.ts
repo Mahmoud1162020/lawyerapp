@@ -37,7 +37,9 @@ async function applyMigrations(db: Database) {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
-        role TEXT DEFAULT 'user'
+        role TEXT DEFAULT 'user',
+        debit REAL DEFAULT 0, -- New column for debit
+        credit REAL DEFAULT 0 -- New column for credit
       );
     `);
     await db.run(`INSERT INTO meta (key, value) VALUES ('db_version', '1') ON CONFLICT(key) DO UPDATE SET value='1'`);
@@ -71,6 +73,7 @@ async function applyMigrations(db: Database) {
       procedureId INTEGER NOT NULL,
       type TEXT CHECK(type IN ('procedure', 'personal')) NOT NULL,
       date TEXT DEFAULT (datetime('now', 'localtime')), 
+      transactionType TEXT CHECK(transactionType IN ('incoming', 'outgoing')) NOT NULL,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
       FOREIGN KEY (procedureId) REFERENCES procedures(id) ON DELETE CASCADE
       );
@@ -90,7 +93,9 @@ async function applyMigrations(db: Database) {
         address TEXT NOT NULL,
         date TEXT DEFAULT (datetime('now', 'localtime')),
         details TEXT,
-        name TEXT
+        name TEXT,
+        debit REAL DEFAULT 0, -- New column for debit
+        credit REAL DEFAULT 0 -- New column for credit
       );
     `);
     await db.run(`UPDATE meta SET value = '4' WHERE key = 'db_version'`);
@@ -204,6 +209,25 @@ async function applyMigrations(db: Database) {
     await db.run(`UPDATE meta SET value = '11' WHERE key = 'db_version'`);
     console.log("Database updated to version 11: Added 'tenant_names' table.");
     currentVersion = 11;
+  }
+  if (currentVersion < 12) {
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS personaltransactions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      recipient_id INTEGER NOT NULL, 
+      amount REAL NOT NULL,
+      report TEXT,
+      type TEXT CHECK(type IN ('procedure', 'personal')) NOT NULL,
+      date TEXT DEFAULT (datetime('now', 'localtime')), 
+      transactionType TEXT CHECK(transactionType IN ('incoming', 'outgoing')) NOT NULL,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (recipient_id) REFERENCES customersaccount(id) ON DELETE CASCADE
+      );
+    `);
+    await db.run(`UPDATE meta SET value = '12' WHERE key = 'db_version'`);
+    console.log("Database updated to version 12: Added 'personaltransactions' table.");
+    currentVersion = 12;
   }
 
  

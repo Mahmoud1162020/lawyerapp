@@ -13,10 +13,14 @@ const TransactionPage: React.FC = () => {
   const [amount, setAmount] = useState<number | "">("");
   const [transactionNumber, setTransactionNumber] = useState<string>();
   const [recipient, setRecipient] = useState("");
+  const [recipientId, setRecipientId] = useState<number>();
   const [report, setReport] = useState("");
   const [selectedType, setSelectedType] = useState("معاملة"); // Default selection
   const [searchQuery, setSearchQuery] = useState("");
   const [userInfo, setUserInfo] = useState<User | null>(null);
+  const [date, setDate] = useState<string>(
+    new Date().toISOString().slice(0, 10)
+  ); // State to manage the date input
   const [updateFlag, setUpdateFlag] = useState(false); // State to track updates
   const [editableDates, setEditableDates] = useState<{ [key: number]: string }>(
     {}
@@ -35,16 +39,8 @@ const TransactionPage: React.FC = () => {
     value: string | number;
   } | null>(null);
 
-  const [personalTransactions, setPersonalTransactions] = useState([
-    {
-      id: 1,
-      name: "mahmood",
-      amount: 100,
-      balance: 120000,
-      details: "تفاصيل",
-      date: "1/2/2024",
-    },
-  ]);
+  const [personalTransactions, setPersonalTransactions] =
+    useState<PersonalTransaction[]>();
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
@@ -84,6 +80,7 @@ const TransactionPage: React.FC = () => {
   useEffect(() => {
     getAllCustomersAccounts();
     getAllProcedures();
+
     window.electron.getUser().then((user: User) => {
       console.log("====================================");
       console.log(user);
@@ -107,16 +104,28 @@ const TransactionPage: React.FC = () => {
               }
             );
             setEditableDates(initialDates);
-
-            //////
           });
       }
     });
   }, [updateFlag]);
 
+  useEffect(() => {
+    const fetchPersonalTransactions = async () => {
+      try {
+        const transactions = await window.electron.getAllPersonalTransactions();
+        console.log("Fetched Personal Transactions:", transactions);
+        setPersonalTransactions(transactions);
+      } catch (error) {
+        console.log("Error fetching data from the database:", error);
+      }
+    };
+
+    fetchPersonalTransactions();
+  }, [updateFlag]);
+
   const handleSave = async () => {
     try {
-      if (!recipient || !amount || !transactionNumber) {
+      if (!amount) {
         toast.error("يرجى ملء جميع الحقول المطلوبة!", { autoClose: 3000 });
         return;
       }
@@ -134,7 +143,9 @@ const TransactionPage: React.FC = () => {
           Number(amount),
           report,
           Number(transactionNumber),
-          selectedType === "معاملة" ? "procedure" : "personal"
+          selectedType === "معاملة" ? "procedure" : "personal",
+          "outgoing",
+          date
         );
         console.log("====================================");
         console.log(transaction);
@@ -144,19 +155,19 @@ const TransactionPage: React.FC = () => {
           toast.success("تمت إضافة المعاملة بنجاح!", { autoClose: 3000 });
         }
       } else {
-        setPersonalTransactions([
-          ...personalTransactions,
-          {
-            id: personalTransactions.length + 1,
-            name: "mahmood",
-            amount: Number(amount),
-            balance: 1200000,
-            details: "تفاصيل",
-            date: "1/2/2024",
-          },
-        ]);
-
-        toast.success("تمت إضافة العملية الشخصية بنجاح!", { autoClose: 3000 });
+        //user_id, recipient, amount, report, type, date
+        const transaction = await window.electron.addPersonalTransaction(
+          user.id,
+          recipientId ?? 0, // Provide a default value or handle undefined
+          Number(amount),
+          report,
+          "outgoing",
+          date
+        );
+        if (transaction) {
+          setUpdateFlag(!updateFlag); // Trigger update
+          toast.success("تمت إضافة المعاملة بنجاح!", { autoClose: 3000 });
+        }
       }
 
       setRecipient("");
@@ -234,9 +245,9 @@ const TransactionPage: React.FC = () => {
       setTransactions(transactions.filter((t) => t.id !== transactionToDelete));
       await window.electron.deleteTransaction(transactionToDelete);
     } else {
-      setPersonalTransactions(
-        personalTransactions.filter((t) => t.id !== transactionToDelete)
-      );
+      // setPersonalTransactions(
+      //   personalTransactions.filter((t) => t.id !== transactionToDelete)
+      // );
     }
 
     toast.success("تم حذف المعاملة بنجاح!", { autoClose: 3000 });
@@ -245,14 +256,13 @@ const TransactionPage: React.FC = () => {
     setIsModalOpen(false);
   };
 
-  const filteredTransactions = transactions.filter(
-    (t) =>
-      t.recipient.includes(searchQuery) || t.transactionId.includes(searchQuery)
+  const filteredTransactions = transactions.filter((t) =>
+    t.recipient.includes(searchQuery)
   );
 
-  const filteredPersonalTransactions = personalTransactions.filter((t) =>
-    t.name.includes(searchQuery)
-  );
+  // const filteredPersonalTransactions = personalTransactions.filter((t) =>
+  //   t.name.includes(searchQuery)
+  // );
 
   return (
     <div className="transaction-container">
@@ -339,14 +349,39 @@ const TransactionPage: React.FC = () => {
             </div>
           )}
 
-          <div className="input-group">
-            <label>ادخل الاسم</label>
+          {selectedType === "معاملة" ? (
+            <div className="input-group">
+              <label>ادخل الاسم</label>
 
+              <input
+                onKeyDown={handleKeyDown}
+                type="text"
+                value={recipient}
+                onChange={(e) => setRecipient(e.target.value)}
+              />
+            </div>
+          ) : (
+            <div className="input-group">
+              <label>ادخل الاسم</label>
+              <Select
+                allowClear
+                value={recipientId}
+                onChange={(value) => setRecipientId(value as number)}>
+                {customerAccounts.map((ca) => (
+                  <Option key={ca.id} value={ca.id}>
+                    {ca.name}
+                  </Option>
+                ))}
+              </Select>
+            </div>
+          )}
+          <div className="procedures-form-group">
+            <label>التاريخ</label>
             <input
-              onKeyDown={handleKeyDown}
-              type="text"
-              value={recipient}
-              onChange={(e) => setRecipient(e.target.value)}
+              style={{ maxWidth: "200px" }}
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
             />
           </div>
 
@@ -434,33 +469,50 @@ const TransactionPage: React.FC = () => {
           <table>
             <thead>
               <tr>
-                <th>ت ع</th>
-                <th>رقم المعاملة</th>
+                <th>ت</th>
+
                 <th>الاسم</th>
                 <th>التاريخ</th>
+                <th>المبلغ</th>
                 <th>له</th>
                 <th>عليه</th>
                 <th>الرصيد</th>
                 <th>التفاصيل</th>
-                <th>حذف</th>
+                <th>خيارات</th>
               </tr>
             </thead>
             <tbody>
               {personalTransactions.map((t) => (
                 <tr key={t.id}>
                   <td>{t.id}</td>
-                  <td>100</td>
-                  <td>{t.name}</td>
+                  <td>{t.recipient_name}</td>
                   <td>{t.date}</td>
                   <td>{t.amount}</td>
-                  <td>-</td>
-                  <td>{t.balance}</td>
-                  <td>{t.details}</td>
+                  <td>{t.recipient_credit}</td>
+                  <td>{t.recipient_debit}</td>
+                  <td>
+                    {(t.recipient_credit ?? 0) - (t.recipient_debit ?? 0)}
+                  </td>
+                  {/* <td>{t.details}</td> */}
+                  <td>
+                    <p>
+                      {t.report.length > 30
+                        ? t.report.slice(0, 20) + "..."
+                        : t.report}
+                    </p>
+                  </td>
                   <td>
                     <button
                       className="delete-btn"
                       onClick={() => handleDelete(t.id)}>
                       حذف
+                    </button>
+                    <button
+                      style={{ marginRight: "4px" }}
+                      className="details-button"
+                      // onClick={() => handleDelete(t.id)}
+                    >
+                      تفاصيل
                     </button>
                   </td>
                 </tr>

@@ -17,7 +17,10 @@ export function registerTransactionIpcHandlers(mainWindow: BrowserWindow): void 
       transactionData.amount,
       transactionData.report,
       transactionData.procedureId,
-      transactionData.type)
+      transactionData.type,
+      transactionData.transactionType,
+      transactionData.date
+    );
     mainWindow.webContents.send("transaction-added", transaction);
     return transaction;
   });

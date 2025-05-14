@@ -40,9 +40,11 @@ electron.contextBridge.exposeInMainWorld('electron', {
     amount: number,
     report: string,
     procedureId: number,
-    type: "procedure" | "personal"
-  ): Promise<{ id: number }> => electron.ipcRenderer.invoke('add-transaction', { userId, recipient, amount, report, procedureId, type }),
-  getAllTransactions: (): Promise<{ id: number; userId: number; recipient: string; amount: number; report: string; procedureId: number; type: "procedure" | "personal"; date: string }[]> => electron.ipcRenderer.invoke("get-all-transactions"),
+    type: "procedure" | "personal",
+    transactionType: "incoming" | "outgoing",
+    date: string
+  ): Promise<{ id: number }> => electron.ipcRenderer.invoke('add-transaction', { userId, recipient, amount, report, procedureId, type ,transactionType,date}),
+  getAllTransactions: (): Promise<{ id: number; userId: number; recipient: string; amount: number; report: string; procedureId: number; type: "procedure" | "personal";transactionType: "incoming" | "outgoing"; date: string }[]> => electron.ipcRenderer.invoke("get-all-transactions"),
   getTransactionsByUser:(userId:number)=> electron.ipcRenderer.invoke("get-transactions-by-user",userId),
   updateTransaction: (id: number, field: string, value: string | number) =>electron.ipcRenderer.invoke("update-transaction", id, field, value),
   deleteTransaction:(transactionId: number)=>electron.ipcRenderer.invoke("delete-transaction",transactionId),
@@ -112,6 +114,19 @@ electron.contextBridge.exposeInMainWorld('electron', {
   deleteTenant: (tenantId: number): Promise<{ deleted: boolean }> => electron.ipcRenderer.invoke('delete-tenant', tenantId),
   updateTenant: (id: number, field: string, value: string | number): Promise<{ updated: boolean }> => electron.ipcRenderer.invoke('update-tenant', id, field, value),
   updateTenantNames: (tenantId: number, tenantNames: string[]): Promise<{ updated: boolean }> => electron.ipcRenderer.invoke('update-tenant-names', tenantId, tenantNames),
+  addPersonalTransaction: (
+    userId: number,
+    recipient_id: number,
+    amount: number,
+    report: string,
+    transactionType: "incoming" | "outgoing",
+    date: string
+  ): Promise<{ id: number }> => electron.ipcRenderer.invoke('add-personal-transaction', {userId, recipient_id, amount, report,transactionType, date }),
+  getAllPersonalTransactions: (): Promise<{ id: number; userId: number; recipient_id: number; amount: number; report: string; date: string }[]> => electron.ipcRenderer.invoke('get-all-personal-transactions'),
+  getPersonalTransactionById: (id: number): Promise<{ id: number; userId: number; recipient: string; amount: number; report: string; date: string } | null> => electron.ipcRenderer.invoke('get-personal-transaction-by-id', id),
+  deletePersonalTransaction: (id: number): Promise<{ deleted: boolean }> => electron.ipcRenderer.invoke('delete-personal-transaction', id),
+  updatePersonalTransaction: (id: number, field: string, value: string | number): Promise<{ updated: boolean }> => electron.ipcRenderer.invoke('update-personal-transaction', id, field, value),
+  getPersonalTransactionsByDateRange: (startDate: string, endDate: string): Promise<{ id: number; userId: number; recipient: string; amount: number; report: string; date: string }[]> => electron.ipcRenderer.invoke('get-personal-transactions-by-date-range', startDate, endDate),
 } satisfies Window['electron']);
 
 function ipcInvoke<Key extends keyof EventPayloadMapping>(

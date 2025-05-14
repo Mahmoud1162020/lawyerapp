@@ -9,7 +9,9 @@ export async function addTransaction(
   amount: number,
   report: string,
   procedureId: number,
-  type: "procedure" | "personal"
+  type: "procedure" | "personal",
+  transactionType: "incoming" | "outgoing",
+  date: string
 ): Promise<{ id: number }> {
   console.log("🔹 addTransaction() Triggered");
 
@@ -22,13 +24,15 @@ export async function addTransaction(
     amount: ${amount},
     report: ${report},
     procedureId: ${procedureId},
-    type: ${type}
+    type: ${type},
+    transactionType: ${transactionType},
+    date: ${date}
   `);
 
   try {
     const result = await db.run(
-      "INSERT INTO transactions (user_id, recipient, amount, report, procedureId, type) VALUES (?, ?, ?, ?, ?, ?)",
-      [user_id, recipient, amount, report, procedureId, type]
+      "INSERT INTO transactions (user_id, recipient, amount, report, procedureId, type,transactionType,date) VALUES (?, ?, ?, ?, ?, ?,?,?)",
+      [user_id, recipient, amount, report, procedureId, type,transactionType,date]
     );
 
     console.log("✅ Transaction Added Successfully");
