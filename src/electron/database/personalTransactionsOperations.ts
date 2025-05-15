@@ -5,7 +5,7 @@ import { initializeDatabase } from "./userOperations.js"; // Import database ini
 // Add a New Personal Transaction
 export async function addPersonalTransaction(
   user_id: number,
-  recipient_id: number,
+  customer_id: number,
   amount: number,
   report: string,
   transactionType: "incoming" | "outgoing",
@@ -18,7 +18,7 @@ export async function addPersonalTransaction(
   // 🛑 Debug Log
   console.log(`Attempting to insert:
     user_id: ${user_id},
-    recipient: ${recipient_id},
+    recipient: ${customer_id},
     amount: ${amount},
     report: ${report},
     date: ${date},
@@ -26,13 +26,27 @@ export async function addPersonalTransaction(
   `);
 
   try {
+    const customerDebit = await db.get(
+      `SELECT debit FROM customersaccount WHERE id = ?`,
+      [customer_id]
+    );
     const result = await db.run(
-      `INSERT INTO personaltransactions (user_id, recipient_id, amount, report, type,transactionType, date) 
-       VALUES (?, ?, ?, ?, 'personal',?, ?)`,
-      [user_id, recipient_id, amount, report, transactionType,date]
+      `INSERT INTO personaltransactions (user_id, customer_id, amount, report, type,transactionType, date,customer_debit) 
+       VALUES (?, ?, ?, ?, 'personal',?, ?,?)`,
+      [user_id, customer_id, amount, report, transactionType,date,customerDebit?.debit+amount]
     );
 
+
+ 
+    await db.run(
+      `UPDATE customersaccount 
+       SET debit = debit + ? 
+       WHERE id = ?`,
+      [amount, customer_id]
+    );
     console.log("✅ Personal Transaction Added Successfully");
+    // Fetch the current debit value of the customer
+  
     return { id: result.lastID! };
   } catch (error) {
     console.error("❌ SQLite Insert Error:", error);
@@ -46,15 +60,13 @@ export async function getAllPersonalTransactions(): Promise<PersonalTransaction[
 
   try {
     const res = await db.all(` SELECT personaltransactions.*, 
-         customersaccount.name AS recipient_name, 
-         customersaccount.accountNumber AS recipient_accountNumber, 
-         customersaccount.accountType AS recipient_accountType, 
-         customersaccount.phone AS recipient_phone, 
-         customersaccount.address AS recipient_address,
-         customersaccount.debit AS recipient_debit,
-         customersaccount.credit AS recipient_credit
+         customersaccount.name AS customer_name, 
+         customersaccount.accountNumber AS customer_accountNumber, 
+         customersaccount.accountType AS customer_accountType, 
+         customersaccount.phone AS customer_phone, 
+         customersaccount.address AS customer_address
   FROM personaltransactions
-  JOIN customersaccount ON personaltransactions.recipient_id = customersaccount.id
+  JOIN customersaccount ON personaltransactions.customer_id = customersaccount.id
   WHERE personaltransactions.type = 'personal' `);
     console.log("Fetched Personal Transactions:", res);
     return res;
@@ -111,7 +123,7 @@ export async function updatePersonalTransaction(
   const db = await initializeDatabase();
 
   // 🛑 Security Check: Prevent SQL Injection by allowing only specific fields
-  const allowedFields = ["recipient", "amount", "report", "date"];
+  const allowedFields = [ "amount", "report", "date"];
   if (!allowedFields.includes(field)) {
     console.error(`❌ Invalid field: ${field}`);
     throw new Error("Invalid field");
@@ -146,6 +158,30 @@ export async function getPersonalTransactionsByDateRange(
     [startDate, endDate]
   );
 }
+
+
+export async function getPersonalTransactionById(id: number): Promise<PersonalTransaction | null> {
+  const db = await initializeDatabase();
+  const transaction = await db.get(
+    `SELECT personaltransactions.*, 
+         customersaccount.name AS customer_name, 
+         customersaccount.accountNumber AS customer_accountNumber, 
+         customersaccount.accountType AS customer_accountType, 
+         customersaccount.phone AS customer_phone, 
+         customersaccount.address AS customer_address
+  FROM personaltransactions
+  JOIN customersaccount ON personaltransactions.customer_id = customersaccount.id
+  WHERE personaltransactions.type = 'personal' AND personaltransactions.id = ?`,
+    [id]
+  );
+  if (!transaction) {
+    console.error(`❌ Transaction with ID ${id} not found`);
+    return null;
+  }
+  return transaction;
+}
+
+
 
 //// personaltransactions Functions ////
 

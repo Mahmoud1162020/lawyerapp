@@ -38,19 +38,19 @@ type Statistics = {
   type PersonalTransaction= {
     id: number;
     userId: number;
-    recipient_id: string;
+    customer_id: string;
     amount: number;
     report: string;
     type: "procedure" | "personal";
     transactionType: "incoming" | "outgoing";
     date: string;
-    recipient_name?:string;
-    recipient_accountNumber?: string;
-    recipient_accountType?: string;
-    recipient_phone?:string;
-    recipient_address?: string;
-    recipient_debit?: number;
-    recipient_credit?: number;
+    customer_name?:string;
+    customer_accountNumber?: string;
+    customer_accountType?: string;
+    customer_phone?:string;
+    customer_address?: string;
+    customer_debit?: number;
+    customer_credit?: number;
   }
   type Procedure={ 
     id: number;
@@ -155,9 +155,9 @@ type Statistics = {
       deleteTenant: (id: number)=>Promise<{ deleted: boolean }>,
       updateTenant: (id: number, field: string, value: string | number)=>Promise<{ updated: boolean }>,
       updateTenantNames:(tenantId: number,tenantNames: numbers[])=>Promise<{ updated: boolean }>,
-      addPersonalTransaction: (userId: number,recipient_id: number,amount: number,report: string,transactionType:"incoming"|"outgoing",date: string)=>Promise<{ id: number }>,
-      getAllPersonalTransactions: ()=>Promise<{ id: number; userId: number; recipient_id: number; amount: number; report: string; date: string }[]>,
-      getPersonalTransactionById: (id: number)=>Promise<{ id: number; userId: number; recipient: string; amount: number; report: string; date: string } | null>,
+      addPersonalTransaction: (userId: number,customer_id: number,amount: number,report: string,transactionType:"incoming"|"outgoing",date: string)=>Promise<{ id: number }>,
+      getAllPersonalTransactions: ()=>Promise<{ id: number; userId: number; customer_id: number; amount: number; report: string; date: string }[]>,
+      getPersonalTransactionById: (id: number)=>Promise< PersonalTransaction | null>,
       updatePersonalTransaction: (id: number, field: string, value: string | number)=>Promise<{ updated: boolean }>,
       deletePersonalTransaction: (id: number)=>Promise<{ deleted: boolean }>,
       getPersonalTransactionsByDateRange: (startDate: string, endDate: string)=>Promise<{ id: number; userId: number; recipient: string; amount: number; report: string; date: string }[]>,

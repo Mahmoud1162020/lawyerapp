@@ -7,6 +7,7 @@ import {
   searchPersonalTransactions,
   updatePersonalTransaction,
   getPersonalTransactionsByDateRange,
+  getPersonalTransactionById,
 } from "../database/personalTransactionsOperations.js";
 
 export function registerPersonalTransactionIpcHandlers(mainWindow: BrowserWindow): void {
@@ -15,7 +16,7 @@ export function registerPersonalTransactionIpcHandlers(mainWindow: BrowserWindow
     try {
       const transaction = await addPersonalTransaction(
         transactionData.userId,
-        transactionData.recipient_id,
+        transactionData.customer_id,
         transactionData.amount,
         transactionData.report,
         transactionData.transactionType,
@@ -38,6 +39,20 @@ export function registerPersonalTransactionIpcHandlers(mainWindow: BrowserWindow
   ipcMain.handle("get-personal-transactions-by-user", async (_event, userId: number) => {
     return await getPersonalTransactionsByUser(userId);
   });
+
+ipcMain.handle("get-personal-transaction-by-id", async (_event, transactionId: number) => {
+    try {
+      const transaction = await getPersonalTransactionById(transactionId);
+      if (!transaction) {
+        throw new Error("Transaction not found");
+      }
+      return transaction;
+    } catch (error) {
+      console.error("❌ Failed to get personal transaction by ID:", error);
+      throw error;
+    }
+  });
+
 
   // Delete a personal transaction
   ipcMain.handle("delete-personal-transaction", async (_event, transactionId: number) => {

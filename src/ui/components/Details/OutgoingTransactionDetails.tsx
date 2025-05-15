@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Input, Button, Select } from "antd";
 import "./OutgoingTransactionDetailsStyle.css";
@@ -8,6 +8,7 @@ const { Option } = Select;
 export default function OutgoingTransactionDetails() {
   const { id } = useParams(); // Get the transaction ID from the URL
   console.log("ID------>", id);
+  const location = useLocation();
 
   const navigate = useNavigate();
   const [user, setUser] = useState<
@@ -182,7 +183,11 @@ export default function OutgoingTransactionDetails() {
         </Button>
         <Button
           className="transaction-cancel-button"
-          onClick={() => navigate(-1)}>
+          onClick={() =>
+            navigate("/cash", {
+              state: { selectedType: location.state?.selectedType },
+            })
+          }>
           إلغاء
         </Button>
       </div>

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import "./OutgoingContent.css";
 import ConfirmModal from "../../Modal/ConfirmModal";
-import { Link, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Button, Select } from "antd";
 
 // toast.configure(); // Initialize toast notifications
@@ -17,15 +17,11 @@ const TransactionPage: React.FC = () => {
   const [report, setReport] = useState("");
   const [selectedType, setSelectedType] = useState("معاملة"); // Default selection
   const [searchQuery, setSearchQuery] = useState("");
-  const [userInfo, setUserInfo] = useState<User | null>(null);
   const [date, setDate] = useState<string>(
     new Date().toISOString().slice(0, 10)
   ); // State to manage the date input
   const [updateFlag, setUpdateFlag] = useState(false); // State to track updates
-  const [editableDates, setEditableDates] = useState<{ [key: number]: string }>(
-    {}
-  );
-
+  const location = useLocation();
   const [allProcedures, setAllProcedures] = useState<Procedure[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState<number | null>(
@@ -33,11 +29,6 @@ const TransactionPage: React.FC = () => {
   );
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [fieldToUpdate, setFieldToUpdate] = useState<{
-    id: number;
-    field: string;
-    value: string | number;
-  } | null>(null);
 
   const [personalTransactions, setPersonalTransactions] =
     useState<PersonalTransaction[]>();
@@ -47,6 +38,13 @@ const TransactionPage: React.FC = () => {
       handleSave(); // Trigger the save function when Enter is pressed
     }
   };
+
+  useEffect(() => {
+    if (location.state && location?.state?.selectedType === "شخصي") {
+      console.log("location", location.state.selectedType);
+      setSelectedType(location?.state?.selectedType);
+    }
+  }, [location]);
 
   const getAllCustomersAccounts = async () => {
     try {
@@ -103,7 +101,6 @@ const TransactionPage: React.FC = () => {
                 initialDates[t.id] = t.date; // Store the DB date
               }
             );
-            setEditableDates(initialDates);
           });
       }
     });
@@ -112,7 +109,15 @@ const TransactionPage: React.FC = () => {
   useEffect(() => {
     const fetchPersonalTransactions = async () => {
       try {
-        const transactions = await window.electron.getAllPersonalTransactions();
+        const rawTransactions =
+          await window.electron.getAllPersonalTransactions();
+        const transactions: PersonalTransaction[] = rawTransactions.map(
+          (t: any | null) => ({
+            ...t,
+            type: t.type ?? "outgoing", // or set appropriate default
+            transactionType: t.transactionType ?? "personal", // or set appropriate default
+          })
+        );
         console.log("Fetched Personal Transactions:", transactions);
         setPersonalTransactions(transactions);
       } catch (error) {
@@ -182,57 +187,23 @@ const TransactionPage: React.FC = () => {
     }
   };
 
-  const handleUpdateField = async (
-    id: number,
-    field: string,
-    value: string | number
-  ) => {
-    try {
-      // Show modal to confirm the edit
-      setIsModalOpen(true);
-      setFieldToUpdate({ id, field, value }); // Store the field info for later use
-      console.log("====================================");
-      console.log(fieldToUpdate?.field);
-      console.log("====================================");
-    } catch (error) {
-      toast.error("❌ فشل تحديث البيانات!");
-      console.error(`Error updating ${field}:`, error);
-    }
-  };
-
-  const handleConfirm = () => {
-    // Proceed with the edit action (update the transaction)
-    if (!fieldToUpdate) return;
-    const { id, field, value } = fieldToUpdate;
-
-    // Perform the update operation
-    const newValue =
-      field === "date" ? new Date(value).toISOString().slice(0, 10) : value;
-
-    window.electron
-      .updateTransaction(id, field, newValue)
-      .then((result) => {
-        if (result.updated) {
-          toast.success("تم تحديث البيانات بنجاح!", { autoClose: 3000 });
-        } else {
-          toast.warn(
-            "⚠️ لم يتم العثور على المعاملة أو لم يتم تحديث أي بيانات."
-          );
-        }
-        setIsModalOpen(false); // Close the modal after confirmation
-      })
-      .catch((error) => {
-        toast.error(" فشل تحديث البيانات!");
-        console.error(`Error updating ${field}:`, error);
-        setIsModalOpen(false); // Close the modal on error
-      });
-  };
-
-  const handleCancel = () => {
-    // Cancel the edit and close the modal
-    setUpdateFlag(!updateFlag);
-    setIsModalOpen(false);
-  };
+  // const handleUpdateField = async (
+  //   id: number,
+  //   field: string,
+  //   value: string | number
+  // ) => {
+  //   try {
+  //     // Show modal to confirm the edit
+  //     setIsModalOpen(true);
+  //     setFieldToUpdate({ id, field, value }); // Store the field info for later use
+  //     console.log("====================================");
+  //     console.log(fieldToUpdate?.field);
+  //     console.log("====================================");
+  //   } catch (error) {
+  //     toast.error("❌ فشل تحديث البيانات!");
+  //     console.error(`Error updating ${field}:`, error);
+  //   }
+  // };
 
   const handleDelete = (id: number) => {
     setTransactionToDelete(id);
@@ -245,9 +216,11 @@ const TransactionPage: React.FC = () => {
       setTransactions(transactions.filter((t) => t.id !== transactionToDelete));
       await window.electron.deleteTransaction(transactionToDelete);
     } else {
-      // setPersonalTransactions(
-      //   personalTransactions.filter((t) => t.id !== transactionToDelete)
-      // );
+      console.log("transactionToDelete", transactionToDelete);
+      await window.electron.deletePersonalTransaction(transactionToDelete);
+      setPersonalTransactions(
+        (personalTransactions ?? []).filter((t) => t.id !== transactionToDelete)
+      );
     }
 
     toast.success("تم حذف المعاملة بنجاح!", { autoClose: 3000 });
@@ -268,16 +241,12 @@ const TransactionPage: React.FC = () => {
     <div className="transaction-container">
       <ConfirmModal
         show={isModalOpen}
-        message={`هل أنت متأكد أنك تريد التحديث؟`}
-        onConfirm={fieldToUpdate ? handleConfirm : () => {}}
-        onCancel={handleCancel}
-      />
-      <ConfirmModal
-        show={isModalOpen}
         message="هل أنت متأكد أنك تريد الحذف؟"
-        onConfirm={
-          transactionToDelete !== null ? handleConfirmDelete : handleConfirm
-        }
+        onConfirm={() => {
+          if (transactionToDelete !== null) {
+            handleConfirmDelete();
+          }
+        }}
         onCancel={() => {
           setTransactionToDelete(null);
           setIsModalOpen(false);
@@ -453,7 +422,9 @@ const TransactionPage: React.FC = () => {
                       <Button
                         type="default"
                         onClick={() =>
-                          navigate(`/outgoing-transaction-details/${t.id}`)
+                          navigate(`/outgoing-transaction-details/${t.id}`, {
+                            state: { selectedType },
+                          })
                         }>
                         تفاصيل
                       </Button>
@@ -482,17 +453,15 @@ const TransactionPage: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {personalTransactions.map((t) => (
+              {(personalTransactions ?? []).map((t) => (
                 <tr key={t.id}>
                   <td>{t.id}</td>
-                  <td>{t.recipient_name}</td>
+                  <td>{t.customer_name}</td>
                   <td>{t.date}</td>
                   <td>{t.amount}</td>
-                  <td>{t.recipient_credit}</td>
-                  <td>{t.recipient_debit}</td>
-                  <td>
-                    {(t.recipient_credit ?? 0) - (t.recipient_debit ?? 0)}
-                  </td>
+                  <td>{t.customer_credit}</td>
+                  <td>{t.customer_debit}</td>
+                  <td>{(t.customer_credit ?? 0) - (t.customer_debit ?? 0)}</td>
                   {/* <td>{t.details}</td> */}
                   <td>
                     <p>
@@ -508,10 +477,15 @@ const TransactionPage: React.FC = () => {
                       حذف
                     </button>
                     <button
-                      style={{ marginRight: "4px" }}
                       className="details-button"
-                      // onClick={() => handleDelete(t.id)}
-                    >
+                      onClick={() =>
+                        navigate(
+                          `/outgoing-personal-transaction-details/${t.id}`,
+                          {
+                            state: { selectedType },
+                          }
+                        )
+                      }>
                       تفاصيل
                     </button>
                   </td>

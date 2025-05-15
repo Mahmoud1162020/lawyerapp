@@ -116,14 +116,14 @@ electron.contextBridge.exposeInMainWorld('electron', {
   updateTenantNames: (tenantId: number, tenantNames: string[]): Promise<{ updated: boolean }> => electron.ipcRenderer.invoke('update-tenant-names', tenantId, tenantNames),
   addPersonalTransaction: (
     userId: number,
-    recipient_id: number,
+    customer_id: number,
     amount: number,
     report: string,
     transactionType: "incoming" | "outgoing",
     date: string
-  ): Promise<{ id: number }> => electron.ipcRenderer.invoke('add-personal-transaction', {userId, recipient_id, amount, report,transactionType, date }),
-  getAllPersonalTransactions: (): Promise<{ id: number; userId: number; recipient_id: number; amount: number; report: string; date: string }[]> => electron.ipcRenderer.invoke('get-all-personal-transactions'),
-  getPersonalTransactionById: (id: number): Promise<{ id: number; userId: number; recipient: string; amount: number; report: string; date: string } | null> => electron.ipcRenderer.invoke('get-personal-transaction-by-id', id),
+  ): Promise<{ id: number }> => electron.ipcRenderer.invoke('add-personal-transaction', {userId, customer_id, amount, report,transactionType, date }),
+  getAllPersonalTransactions: (): Promise<{ id: number; userId: number; customer_id: number; amount: number; report: string; date: string }[]> => electron.ipcRenderer.invoke('get-all-personal-transactions'),
+  getPersonalTransactionById: (id: number): Promise<PersonalTransaction | null> => electron.ipcRenderer.invoke('get-personal-transaction-by-id', id),
   deletePersonalTransaction: (id: number): Promise<{ deleted: boolean }> => electron.ipcRenderer.invoke('delete-personal-transaction', id),
   updatePersonalTransaction: (id: number, field: string, value: string | number): Promise<{ updated: boolean }> => electron.ipcRenderer.invoke('update-personal-transaction', id, field, value),
   getPersonalTransactionsByDateRange: (startDate: string, endDate: string): Promise<{ id: number; userId: number; recipient: string; amount: number; report: string; date: string }[]> => electron.ipcRenderer.invoke('get-personal-transactions-by-date-range', startDate, endDate),

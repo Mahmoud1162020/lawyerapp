@@ -14,6 +14,7 @@ import Register from "./components/Register";
 import ProcedureDetails from "./components/Details/ProcedureDetails";
 import TenantsDetails from "./components/Details/TenantsDetails";
 import OutgoingTransactionDetails from "./components/Details/OutgoingTransactionDetails";
+import OutgoingPersonalTransactionDetails from "./components/Details/OutgoigPersonalTransactionDetails";
 
 function App() {
   useEffect(() => {
@@ -38,6 +39,10 @@ function App() {
         <Route
           path="/outgoing-transaction-details/:id"
           element={<OutgoingTransactionDetails />}
+        />
+        <Route
+          path="/outgoing-personal-transaction-details/:id"
+          element={<OutgoingPersonalTransactionDetails />}
         />
         <Route path="/details/:id" element={<CustomerDetails />} />
         {/* Add other routes here */}

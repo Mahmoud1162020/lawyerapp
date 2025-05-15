@@ -215,14 +215,16 @@ async function applyMigrations(db: Database) {
       CREATE TABLE IF NOT EXISTS personaltransactions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL,
-      recipient_id INTEGER NOT NULL, 
+      customer_id INTEGER NOT NULL, 
       amount REAL NOT NULL,
+      customer_debit REAL DEFAULT 0,
+      customer_credit REAL DEFAULT 0,
       report TEXT,
       type TEXT CHECK(type IN ('procedure', 'personal')) NOT NULL,
       date TEXT DEFAULT (datetime('now', 'localtime')), 
       transactionType TEXT CHECK(transactionType IN ('incoming', 'outgoing')) NOT NULL,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-      FOREIGN KEY (recipient_id) REFERENCES customersaccount(id) ON DELETE CASCADE
+      FOREIGN KEY (customer_id) REFERENCES customersaccount(id) ON DELETE CASCADE
       );
     `);
     await db.run(`UPDATE meta SET value = '12' WHERE key = 'db_version'`);
