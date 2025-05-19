@@ -1,0 +1,52 @@
+.procedure-transactions-table {
+  margin: 20px auto;
+  width: 100%;
+  max-width: 100%;
+  border-collapse: collapse;
+  background-color: #6d4c66; /* Matches the theme from OutgoingContent.css */
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  color: white;
+  font-family: Arial, sans-serif;
+  direction: rtl; /* Right-to-left direction for Arabic */
+}
+
+.procedure-transactions-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.procedure-transactions-table th,
+.procedure-transactions-table td {
+  padding: 12px 15px;
+  text-align: center;
+  border-bottom: 1px solid #ddd;
+  border-width: 1px;
+  border-style: solid;
+  background-color: #b0b0b0; /* Matches the table cell background from OutgoingContent.css */
+}
+
+.procedure-transactions-table th {
+  background-color: #ff9800; /* Orange header background */
+  color: white;
+  font-weight: bold;
+}
+
+.procedure-transactions-table tr:hover {
+  background-color: #f1f1f1; /* Light hover effect */
+  color: black;
+}
+
+.procedure-transactions-table .btn {
+  background-color: #f44336; /* Red delete button */
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.procedure-transactions-table .btn:hover {
+  background-color: #e53935; /* Darker red on hover */
+}

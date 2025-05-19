@@ -1,7 +1,7 @@
 import React from "react";
 import "./styles.css";
 import OutgoingConten from "../contents/outgoingContent/OutgoingContent";
-import IncomingPage from "../contents/incomingContent/IncomingContent";
+import IncomingContent from "../contents/incomingContent/IncomingContent";
 import InternalEntry from "../contents/internalContent/InternalEntry";
 
 interface TabContentProps {
@@ -17,7 +17,7 @@ export default function TabContent({ activeTab }: TabContentProps) {
     ),
     incoming: (
       <div className="tab-content">
-        <IncomingPage />
+        <IncomingContent />
       </div>
     ),
     internal: (

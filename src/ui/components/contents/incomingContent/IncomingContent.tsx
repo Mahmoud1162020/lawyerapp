@@ -3,11 +3,26 @@ import { toast } from "react-toastify";
 import "../outgoingContent/OutgoingContent.css";
 import ConfirmModal from "../../Modal/ConfirmModal";
 import { Link } from "react-router-dom";
+import PersonalTransactions from "./PersonalTransactions";
+import ProcedureTransactions from "./ProcedureTransactions";
+import TenantTransactions from "./TenantTransactions";
+import { Select } from "antd";
 
+interface CustomerAccount {
+  id: number;
+  name: string;
+  accountNumber: string;
+  accountType: string;
+  phone: string;
+  address: string;
+  date: string;
+  details: string | null;
+}
+const { Option } = Select;
 const IncomingPage: React.FC = () => {
   const [amount, setAmount] = useState<number | "">("");
   const [transactionNumber, setTransactionNumber] = useState<string>("");
-  const [recipient, setRecipient] = useState("");
+  const [customer, setCustomer] = useState<number>();
   const [currency, setCurrency] = useState("دينار"); // Default currency
   const [selectedType, setSelectedType] = useState("شخصي"); // Default selection
   const [searchQuery, setSearchQuery] = useState("");
@@ -15,18 +30,77 @@ const IncomingPage: React.FC = () => {
   const [transactionToDelete, setTransactionToDelete] = useState<number | null>(
     null
   );
+  const [customersAccount, setCustomersAccount] = React.useState<
+    CustomerAccount[]
+  >([]);
+  const [personalTransactions, setPersonalTransactions] = React.useState<
+    PersonalTransaction[]
+  >([]);
+  const [userInfo, setUserInfo] = useState<User | null>();
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [personalTransactions, setPersonalTransactions] = useState([
+
+  const [procedureTransactions, setProcedureTransactions] = useState([
     {
       id: 1,
-      name: "mahmood",
-      amount: 500,
-      balance: 1000,
-      details: "تفاصيل",
+      transactionId: "12345",
+      recipient: "Ahmed",
+      amount: 1000,
+      currency: "دينار",
       date: "2024-01-01",
     },
   ]);
+  const getUserInfo = async () => {
+    try {
+      const user = await window.electron.getUser();
+      setUserInfo(user);
+      console.log("Fetched user info:", user);
+    } catch (error) {
+      console.error("Error fetching user info:", error);
+      toast.error(
+        "حدث خطأ أثناء جلب معلومات المستخدم. يرجى المحاولة مرة أخرى.",
+        {
+          autoClose: 3000,
+        }
+      );
+    }
+  };
+  const fetchCustomersAccount = async () => {
+    try {
+      const response: CustomerAccount[] =
+        await window.electron.getAllCustomersAccounts();
+      console.log("Fetched customers account:", response);
+
+      setCustomersAccount(response);
+    } catch (error) {
+      console.error("Error fetching customers account:", error);
+      toast.error("حدث خطأ أثناء جلب حسابات العملاء. يرجى المحاولة مرة أخرى.", {
+        autoClose: 3000,
+      });
+    }
+  };
+
+  const fetchPersonlalTransactions = async () => {
+    try {
+      const response: PersonalTransaction[] =
+        await window.electron.getAllPersonalTransactions();
+      console.log("Fetched personal transactions:", response);
+
+      setPersonalTransactions(response);
+    } catch (error) {
+      console.error("Error fetching personal transactions:", error);
+      toast.error(
+        "حدث خطأ أثناء جلب المعاملات الشخصية. يرجى المحاولة مرة أخرى.",
+        { autoClose: 3000 }
+      );
+    }
+  };
+
+  useEffect(() => {
+    getUserInfo();
+    fetchCustomersAccount();
+    fetchPersonlalTransactions();
+  }, []);
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
@@ -36,29 +110,25 @@ const IncomingPage: React.FC = () => {
 
   const handleSave = async () => {
     try {
-      if (!recipient || !amount) {
+      if (!customer || !amount) {
         toast.error("يرجى ملء جميع الحقول المطلوبة!", { autoClose: 3000 });
         return;
       }
 
       if (selectedType === "شخصي") {
-        setPersonalTransactions([
-          ...personalTransactions,
-          {
-            id: personalTransactions.length + 1,
-            name: recipient,
-            amount: Number(amount),
-            balance: 1000,
-            details: "تفاصيل",
-            date: new Date().toISOString().slice(0, 10),
-          },
-        ]);
+        // userId: number, customer_id: number, amount: number, report: string, transactionType: "incoming" | "outgoing", date: string
+        const newPersonalTransaction = {
+          userId: userInfo?.id,
+          customer_id: customer,
+        };
+        console.log("newPersonalTransaction", newPersonalTransaction);
 
-        toast.success("تمت إضافة العملية الشخصية بنجاح!", { autoClose: 3000 });
+        // await window.electron.addPersonalTransaction({});
+        toast.success("تمت إضافة المعاملة الشخصية بنجاح!", { autoClose: 3000 });
       } else {
         const newTransaction = {
           id: transactions.length + 1,
-          recipient,
+          recipient: customer,
           transactionId: transactionNumber,
           amount: Number(amount),
           currency,
@@ -66,10 +136,10 @@ const IncomingPage: React.FC = () => {
         };
         setTransactions([...transactions, newTransaction]);
 
-        toast.success("تمت إضافة العملية بنجاح!", { autoClose: 3000 });
+        toast.success("تمت إضافة المعاملة بنجاح!", { autoClose: 3000 });
       }
 
-      setRecipient("");
+      setCustomer("");
       setAmount("");
       setTransactionNumber("");
     } catch (error) {
@@ -92,24 +162,27 @@ const IncomingPage: React.FC = () => {
       setPersonalTransactions(
         personalTransactions.filter((t) => t.id !== transactionToDelete)
       );
+    }
+    if (selectedType === "معاملة") {
+      setTransactions(transactions.filter((t) => t.id !== transactionToDelete));
     } else {
       setTransactions(transactions.filter((t) => t.id !== transactionToDelete));
     }
 
-    toast.success("تم حذف العملية بنجاح!", { autoClose: 3000 });
+    toast.success("تم حذف المعاملة بنجاح!", { autoClose: 3000 });
 
     setTransactionToDelete(null);
     setIsModalOpen(false);
   };
 
-  const filteredTransactions = transactions.filter(
-    (t) =>
-      t.recipient.includes(searchQuery) || t.transactionId.includes(searchQuery)
-  );
+  // const filteredTransactions = transactions.filter(
+  //   (t) =>
+  //     t.recipient.includes(searchQuery) || t.transactionId.includes(searchQuery)
+  // );
 
-  const filteredPersonalTransactions = personalTransactions.filter((t) =>
-    t.name.includes(searchQuery)
-  );
+  // const filteredPersonalTransactions = personalTransactions.filter((t) =>
+  //   t.name.includes(searchQuery)
+  // );
 
   return (
     <div className="transaction-container">
@@ -128,7 +201,7 @@ const IncomingPage: React.FC = () => {
         <div className="search-section">
           <input
             type="text"
-            placeholder="ابحث بالاسم أو رقم العملية"
+            placeholder="ابحث بالاسم أو رقم المعاملة"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -139,17 +212,18 @@ const IncomingPage: React.FC = () => {
           <button
             className="save-btn"
             onClick={handleSave}
-            disabled={!recipient || !amount}>
+            disabled={!customer || !amount}>
             حفظ
           </button>
 
           <div className="input-group">
-            <label>اختر العملية</label>
+            <label>اختر المعاملة</label>
             <select
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}>
               <option value="شخصي">شخصي</option>
-              <option value="عملية">عملية</option>
+              <option value="معاملة">معاملة</option>
+              <option value="ايجار">ايجار</option>
             </select>
           </div>
 
@@ -165,9 +239,9 @@ const IncomingPage: React.FC = () => {
             />
           </div>
 
-          {selectedType === "عملية" && (
+          {selectedType === "معاملة" && (
             <div className="input-group">
-              <label>ادخل رقم العملية</label>
+              <label>ادخل رقم المعاملة</label>
               <input
                 type="text"
                 value={transactionNumber}
@@ -179,15 +253,25 @@ const IncomingPage: React.FC = () => {
 
           <div className="input-group">
             <label>ادخل الاسم</label>
-            <input
+            <Select
+              allowClear
+              value={customer}
+              onChange={(value) => setCustomer(value as number)}>
+              {customersAccount.map((ca) => (
+                <Option key={ca.id} value={ca.id}>
+                  {ca.name}
+                </Option>
+              ))}
+            </Select>
+            {/* <input
               onKeyDown={handleKeyDown}
               type="text"
-              value={recipient}
-              onChange={(e) => setRecipient(e.target.value)}
-            />
+              value={customer}
+              onChange={(e) => setCustomer(e.target.value)}
+            /> */}
           </div>
 
-          {selectedType === "عملية" && (
+          {
             <div className="input-group">
               <label>اختر العملة</label>
               <select
@@ -197,89 +281,28 @@ const IncomingPage: React.FC = () => {
                 <option value="دولار">دولار</option>
               </select>
             </div>
-          )}
+          }
         </div>
       </div>
 
-      {/* Display Transactions Table */}
-      {selectedType === "عملية" ? (
-        <div className="transactions-table">
-          <table>
-            <thead>
-              <tr>
-                <th>ت ع</th>
-                <th>رقم العملية</th>
-                <th>الاسم</th>
-                <th>التاريخ</th>
-                <th>له</th>
-                <th>عليه</th>
-                <th>العملة</th>
-                <th>خيارات</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredTransactions.map((t) => (
-                <tr key={t.id}>
-                  <td>{t.id}</td>
-                  <td>{t.transactionId}</td>
-                  <td>{t.recipient}</td>
-                  <td>{t.date}</td>
-                  <td>{t.amount}</td>
-                  <td>-</td>
-                  <td>{t.currency}</td>
-                  <td>
-                    <button className="btn" onClick={() => handleDelete(t.id)}>
-                      حذف
-                    </button>
-                    <Link
-                      className="btn"
-                      to="/transaction-details"
-                      state={{ item: t }}>
-                      تفاصيل
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <div className="personal-table">
-          <table>
-            <thead>
-              <tr>
-                <th>ت ع</th>
-                <th>الاسم</th>
-                <th>التاريخ</th>
-                <th>له</th>
-                <th>عليه</th>
-                <th>الرصيد</th>
-                <th>التفاصيل</th>
-                <th>حذف</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredPersonalTransactions.map((t) => (
-                <tr key={t.id}>
-                  <td>{t.id}</td>
-                  <td>{t.name}</td>
-                  <td>{t.date}</td>
-                  <td>{t.amount}</td>
-                  <td>-</td>
-                  <td>{t.balance}</td>
-                  <td>{t.details}</td>
-                  <td>
-                    <button
-                      className="delete-btn"
-                      onClick={() => handleDelete(t.id)}>
-                      حذف
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      {selectedType === "شخصي" && (
+        <PersonalTransactions
+          personalTransactions={personalTransactions}
+          setPersonalTransactions={setPersonalTransactions}
+          onDelete={handleDelete}
+        />
+      )}
+      {selectedType === "ايجار" && (
+        <TenantTransactions
+          transactions={personalTransactions}
+          onDelete={handleDelete}
+        />
+      )}
+      {selectedType === "معاملة" && (
+        <ProcedureTransactions
+          transactions={procedureTransactions}
+          onDelete={handleDelete}
+        />
       )}
     </div>
   );

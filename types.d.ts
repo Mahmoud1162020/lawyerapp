@@ -13,6 +13,9 @@ type Statistics = {
       address: string;
       date: string;
       details: string | null;
+      debit: number;
+      credit: number;
+
   }
   type StaticData = {
     totalStorage: number;

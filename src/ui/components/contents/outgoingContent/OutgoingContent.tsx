@@ -458,7 +458,7 @@ const TransactionPage: React.FC = () => {
                   <td>{t.id}</td>
                   <td>{t.customer_name}</td>
                   <td>{t.date}</td>
-                  <td>{t.amount}</td>
+                  <td>{t.transactionType === "outgoing" ? t.amount : 0}</td>
                   <td>{t.customer_credit}</td>
                   <td>{t.customer_debit}</td>
                   <td>{(t.customer_credit ?? 0) - (t.customer_debit ?? 0)}</td>
