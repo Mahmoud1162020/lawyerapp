@@ -3,7 +3,7 @@ import "./ProcedureTransactions.css";
 
 interface ProcedureTransaction {
   id: number;
-  transactionId: string;
+  procedureId: string;
   recipient: string;
   date: string;
   amount: number;
@@ -15,7 +15,12 @@ interface Props {
   onDelete: (id: number) => void;
 }
 
-const ProcedureTransactions: React.FC<Props> = ({ transactions, onDelete }) => {
+const ProcedureTransactions: React.FC<Props> = ({
+  transactions: allProcedures,
+  onDelete,
+}) => {
+  console.log("allProcedures", allProcedures);
+
   return (
     <div className="procedure-transactions-table">
       <table>
@@ -24,26 +29,30 @@ const ProcedureTransactions: React.FC<Props> = ({ transactions, onDelete }) => {
             <th>ت ع</th>
             <th>رقم المعاملة</th>
             <th>الاسم</th>
+            <th>المبلغ</th>
             <th>التاريخ</th>
-            <th>له</th>
-            <th>عليه</th>
-            <th>العملة</th>
             <th>خيارات</th>
           </tr>
         </thead>
         <tbody>
-          {transactions.map((t) => (
+          {allProcedures?.map((t) => (
             <tr key={t.id}>
               <td>{t.id}</td>
-              <td>{t.transactionId}</td>
+              <td>{t.procedureId}</td>
               <td>{t.recipient}</td>
-              <td>{t.date}</td>
               <td>{t.amount}</td>
-              <td>-</td>
-              <td>{t.currency}</td>
+              <td>{t.date}</td>
+
               <td>
-                <button className="btn" onClick={() => onDelete(t.id)}>
+                <button
+                  className="delete-button"
+                  onClick={() => onDelete(t.id)}>
                   حذف
+                </button>{" "}
+                <button
+                  className="details-button"
+                  onClick={() => onDelete(t.id)}>
+                  تفاصيل
                 </button>
               </td>
             </tr>

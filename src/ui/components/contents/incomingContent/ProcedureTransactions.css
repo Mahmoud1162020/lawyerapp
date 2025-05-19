@@ -33,10 +33,7 @@
   font-weight: bold;
 }
 
-.procedure-transactions-table tr:hover {
-  background-color: #f1f1f1; /* Light hover effect */
-  color: black;
-}
+/*  */
 
 .procedure-transactions-table .btn {
   background-color: #f44336; /* Red delete button */

@@ -30,6 +30,7 @@ const IncomingPage: React.FC = ({ activeTab }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [report, setReport] = useState("");
   const [updateFlag, setUpdateFlag] = useState(false);
+  const [customerName, setCustomerName] = useState("");
   const [transactionToDelete, setTransactionToDelete] = useState<number | null>(
     null
   );
@@ -45,7 +46,8 @@ const IncomingPage: React.FC = ({ activeTab }) => {
   const [userInfo, setUserInfo] = useState<User | null>();
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-
+  const [allProcedures, setAllProcedures] = useState<Procedure[]>();
+  const [procedurId, setProcedureId] = useState<number | null>(null);
   const [procedureTransactions, setProcedureTransactions] = useState([
     {
       id: 1,
@@ -122,6 +124,67 @@ const IncomingPage: React.FC = ({ activeTab }) => {
   }, [updateFlag]);
 
   useEffect(() => {
+    const fetchAllProcedures = async () => {
+      try {
+        const response = await window.electron.getAllProcedures();
+        console.log("Fetched all procedures:", response);
+        setAllProcedures(response);
+      } catch (error) {
+        console.error("Error fetching all procedures:", error);
+        toast.error(
+          "حدث خطأ أثناء جلب جميع الإجراءات. يرجى المحاولة مرة أخرى.",
+          {
+            autoClose: 3000,
+          }
+        );
+      }
+    };
+
+    fetchAllProcedures();
+  }, []);
+
+  useEffect(() => {
+    const fetchProcedureTransactions = async () => {
+      try {
+        window.electron.getUser().then((user: User) => {
+          console.log("====================================");
+          console.log(user);
+          console.log("====================================");
+          if (user) {
+            window.electron
+              .getTransactionsByUser(user.id)
+              .then((dbTransactions) => {
+                // Filter transactions to include only "incoming" transactions
+                const incomingTransactions = (
+                  Array.isArray(dbTransactions) ? dbTransactions : []
+                ).filter((t: Transaction) => t.transactionType === "incoming");
+
+                setProcedureTransactions(incomingTransactions);
+
+                // Log the filtered transactions
+                incomingTransactions.forEach((t: Transaction) => {
+                  console.log("====================================");
+                  console.log(t.date);
+                  console.log("====================================");
+                });
+              });
+          }
+        });
+      } catch (error) {
+        console.error("Error fetching all procedure transactions:", error);
+        toast.error(
+          "حدث خطأ أثناء جلب جميع معاملات الإجراءات. يرجى المحاولة مرة أخرى.",
+          {
+            autoClose: 3000,
+          }
+        );
+      }
+    };
+
+    fetchProcedureTransactions();
+  }, [updateFlag]);
+
+  useEffect(() => {
     getUserInfo();
     fetchCustomersAccount();
   }, []);
@@ -133,8 +196,10 @@ const IncomingPage: React.FC = ({ activeTab }) => {
   };
 
   const handleSave = async () => {
+    console.log("Saving transaction...");
+
     try {
-      if (!customer || !amount) {
+      if (!amount) {
         toast.error("يرجى ملء جميع الحقول المطلوبة!", { autoClose: 3000 });
         return;
       }
@@ -170,23 +235,30 @@ const IncomingPage: React.FC = ({ activeTab }) => {
           setUpdateFlag(!updateFlag);
         }
         toast.success("تمت إضافة المعاملة الشخصية بنجاح!", { autoClose: 3000 });
-      } else {
-        const newTransaction = {
-          id: transactions.length + 1,
-          recipient: customer,
-          transactionId: transactionNumber,
-          amount: Number(amount),
-          currency,
-          date: new Date().toISOString().slice(0, 10),
-        };
-        setTransactions([...transactions, newTransaction]);
+      } else if (selectedType === "معاملة") {
+        console.log("Saving procedure transaction...");
+        const transaction = await window.electron.addTransaction(
+          Number(userInfo?.id),
+          (customerName as string) ?? "",
+          Number(amount),
+          report,
+          Number(procedurId),
+          "procedure",
+          "incoming",
+          transactionDate
+        );
+        console.log("Transaction added:", transaction);
 
+        if (transaction.id) {
+          setUpdateFlag(!updateFlag); // Trigger update
+        }
         toast.success("تمت إضافة المعاملة بنجاح!", { autoClose: 3000 });
       }
 
-      setCustomer("");
+      setCustomerName("");
       setAmount("");
       setTransactionNumber("");
+      setProcedureId(null);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "حدث خطأ غير متوقع!";
@@ -255,10 +327,7 @@ const IncomingPage: React.FC = ({ activeTab }) => {
 
         {/* Form Section */}
         <div className="form-section">
-          <button
-            className="save-btn"
-            onClick={handleSave}
-            disabled={!customer || !amount}>
+          <button className="save-btn" onClick={handleSave} disabled={!amount}>
             حفظ
           </button>
           <div className="input-group">
@@ -294,32 +363,46 @@ const IncomingPage: React.FC = ({ activeTab }) => {
           {selectedType === "معاملة" && (
             <div className="input-group">
               <label>ادخل رقم المعاملة</label>
-              <input
+              <Select
+                allowClear
+                value={procedurId}
+                onChange={(value) => setProcedureId(value as number)}>
+                {allProcedures?.map((p) => (
+                  <Option key={p.id} value={p.id}>
+                    {p.id}
+                  </Option>
+                ))}
+              </Select>
+
+              {/* <input
                 type="text"
                 value={transactionNumber}
                 onChange={(e) => setTransactionNumber(e.target.value)}
                 onKeyDown={handleKeyDown}
-              />
+              /> */}
             </div>
           )}
           <div className="input-group">
             <label>ادخل الاسم</label>
-            <Select
-              allowClear
-              value={customer}
-              onChange={(value) => setCustomer(value as number)}>
-              {customersAccount.map((ca) => (
-                <Option key={ca.id} value={ca.id}>
-                  {ca.name}
-                </Option>
-              ))}
-            </Select>
-            {/* <input
-              onKeyDown={handleKeyDown}
-              type="text"
-              value={customer}
-              onChange={(e) => setCustomer(e.target.value)}
-            /> */}
+            {selectedType === "شخصي" ? (
+              <Select
+                allowClear
+                value={customer}
+                onChange={(value) => setCustomer(value as number)}>
+                {customersAccount.map((ca) => (
+                  <Option key={ca.id} value={ca.id}>
+                    {ca.name}
+                  </Option>
+                ))}
+              </Select>
+            ) : (
+              <input
+                onKeyDown={handleKeyDown}
+                type="text"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+              />
+            )}
           </div>
           <div className="input-group">
             <label>التفاصيل</label>

@@ -87,9 +87,11 @@ const TransactionPage: React.FC = ({ activeTab, operationType }) => {
         window.electron
           .getTransactionsByUser(user.id)
           .then((dbTransactions) => {
-            setTransactions(
+            const incomingTransactions = (
               Array.isArray(dbTransactions) ? dbTransactions : []
-            );
+            ).filter((t: Transaction) => t.transactionType === "outgoing");
+
+            setTransactions(incomingTransactions);
             const initialDates: { [key: number]: string } = {};
             ////
 
