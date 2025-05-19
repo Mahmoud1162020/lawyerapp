@@ -1,11 +1,17 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./styles.css";
 import TabContent from "./TabContent";
 import FinancialTable from "../Tables/FinancialTable";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export default function CashTab() {
   const [activeTab, setActiveTab] = useState<string>("outgoing");
-
+  const location = useLocation();
+  const navigate = useNavigate();
+  useEffect(() => {
+    console.log("Active tab changed:", location.state);
+    if (location.state?.activeTab) setActiveTab(location.state?.activeTab);
+  }, []);
   const tabs = [
     { id: "outgoing", label: "صادر" },
     { id: "incoming", label: "وارد" },

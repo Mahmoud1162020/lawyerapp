@@ -220,7 +220,7 @@ async function applyMigrations(db: Database) {
       customer_debit REAL DEFAULT 0,
       customer_credit REAL DEFAULT 0,
       report TEXT,
-      type TEXT CHECK(type IN ('procedure', 'personal')) NOT NULL,
+      type TEXT CHECK(type IN ('procedure', 'personal','rent')) NOT NULL,
       date TEXT DEFAULT (datetime('now', 'localtime')), 
       transactionType TEXT CHECK(transactionType IN ('incoming', 'outgoing')) NOT NULL,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,

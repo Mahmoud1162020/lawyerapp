@@ -7,12 +7,12 @@ import {
 import { useEffect, useState } from "react";
 import { Input, Button } from "antd";
 import { toast } from "react-toastify";
-// import "./OutgoingDetails.css";
+import "./IncomingPersonalTransactionDetails.css";
 
-export default function OutgoingPersonalTransactionDetails() {
+export default function IncomingPersonalTransactionDetails() {
   const { id } = useParams(); // Get the transaction ID from the URL
   const location = useLocation();
-  console.log("Transaction ID:", location.state);
+  console.log("Transaction ID:", id, location.state);
 
   const navigate: NavigateFunction = useNavigate();
   const [record, setRecord] = useState<PersonalTransaction>(
@@ -55,7 +55,9 @@ export default function OutgoingPersonalTransactionDetails() {
         record.date
       );
       toast.success("تم حفظ التعديلات بنجاح");
-      navigate(-1); // Navigate back to the previous page
+      navigate(location.state?.from || "/cash", {
+        state: { selectedType: location.state?.selectedType },
+      });
     } catch (error) {
       toast.error("فشل حفظ التعديلات");
     }

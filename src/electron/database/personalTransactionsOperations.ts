@@ -26,24 +26,37 @@ export async function addPersonalTransaction(
   `);
 
   try {
-    const customerDebit = await db.get(
+    const customerAccount = await db.get(
       `SELECT debit FROM customersaccount WHERE id = ?`,
       [customer_id]
     );
     const result = await db.run(
       `INSERT INTO personaltransactions (user_id, customer_id, amount, report, type,transactionType, date,customer_debit) 
        VALUES (?, ?, ?, ?, 'personal',?, ?,?)`,
-      [user_id, customer_id, amount, report, transactionType,date,customerDebit?.debit+amount]
+      [user_id, customer_id, amount, report, transactionType,date,transactionType==="outgoing"?customerAccount?.debit+amount:customerAccount?.credit+amount]
     );
 
 
  
-    await db.run(
+  if(transactionType==="outgoing"){
+      await db.run(
       `UPDATE customersaccount 
        SET debit = debit + ? 
        WHERE id = ?`,
       [amount, customer_id]
     );
+  }else if(transactionType==="incoming"){
+      await db.run(
+      `UPDATE customersaccount 
+       SET credit = credit + ? 
+       WHERE id = ?`,
+      [amount, customer_id]
+    );
+  }else{
+    console.log("❌ Invalid transaction type");
+    throw new Error("Invalid transaction type");
+    
+  }
     console.log("✅ Personal Transaction Added Successfully");
     // Fetch the current debit value of the customer
   
@@ -64,7 +77,9 @@ export async function getAllPersonalTransactions(): Promise<PersonalTransaction[
          customersaccount.accountNumber AS customer_accountNumber, 
          customersaccount.accountType AS customer_accountType, 
          customersaccount.phone AS customer_phone, 
-         customersaccount.address AS customer_address
+         customersaccount.address AS customer_address,
+         customersaccount.debit AS customer_debit,
+         customersaccount.credit AS customer_credit
   FROM personaltransactions
   JOIN customersaccount ON personaltransactions.customer_id = customersaccount.id
   WHERE personaltransactions.type = 'personal' `);
@@ -123,17 +138,49 @@ export async function updatePersonalTransaction(
   const db = await initializeDatabase();
 
   // 🛑 Security Check: Prevent SQL Injection by allowing only specific fields
-  const allowedFields = [ "amount", "report", "date"];
+  const allowedFields = ["amount", "report", "date"];
   if (!allowedFields.includes(field)) {
     console.error(`❌ Invalid field: ${field}`);
     throw new Error("Invalid field");
   }
 
   try {
+    // Fetch the existing transaction details
+    const existingTransaction = await db.get(
+      `SELECT amount, transactionType, customer_id FROM personaltransactions WHERE id = ? AND type = 'personal'`,
+      [id]
+    );
+
+    if (!existingTransaction) {
+      throw new Error(`Transaction with ID ${id} not found`);
+    }
+
+    const { amount: oldAmount, transactionType, customer_id } = existingTransaction;
+
+    // Update the transaction
     const result = await db.run(
       `UPDATE personaltransactions SET ${field} = ? WHERE id = ? AND type = 'personal'`,
       [value, id]
     );
+
+    // If the updated field is "amount", adjust the customer's account balance
+    if (field === "amount") {
+      const amountDifference = Number(value) - Number(oldAmount);
+
+      if (transactionType === "outgoing") {
+        // Update the customer's debit
+        await db.run(
+          `UPDATE customersaccount SET debit = debit + ? WHERE id = ?`,
+          [amountDifference, customer_id]
+        );
+      } else if (transactionType === "incoming") {
+        // Update the customer's credit
+        await db.run(
+          `UPDATE customersaccount SET credit = credit + ? WHERE id = ?`,
+          [amountDifference, customer_id]
+        );
+      }
+    }
 
     console.log(`✅ Personal Transaction ID ${id} updated:`, field, "=", value);
     return { updated: result.changes! > 0 };
@@ -168,7 +215,9 @@ export async function getPersonalTransactionById(id: number): Promise<PersonalTr
          customersaccount.accountNumber AS customer_accountNumber, 
          customersaccount.accountType AS customer_accountType, 
          customersaccount.phone AS customer_phone, 
-         customersaccount.address AS customer_address
+         customersaccount.address AS customer_address,
+          customersaccount.debit AS customer_debit,
+          customersaccount.credit AS customer_credit
   FROM personaltransactions
   JOIN customersaccount ON personaltransactions.customer_id = customersaccount.id
   WHERE personaltransactions.type = 'personal' AND personaltransactions.id = ?`,

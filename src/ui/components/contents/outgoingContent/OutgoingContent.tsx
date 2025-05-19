@@ -7,7 +7,7 @@ import { Button, Select } from "antd";
 
 // toast.configure(); // Initialize toast notifications
 const { Option } = Select;
-const TransactionPage: React.FC = () => {
+const TransactionPage: React.FC = ({ activeTab, operationType }) => {
   const navigate = useNavigate();
   const [customerAccounts, setCustomerAccounts] = useState<Customer[]>([]);
   const [amount, setAmount] = useState<number | "">("");
@@ -40,11 +40,11 @@ const TransactionPage: React.FC = () => {
   };
 
   useEffect(() => {
-    if (location.state && location?.state?.selectedType === "شخصي") {
+    if (location.state && location?.state?.activeTab === "outgoing") {
       console.log("location", location.state.selectedType);
       setSelectedType(location?.state?.selectedType);
     }
-  }, [location]);
+  }, []);
 
   const getAllCustomersAccounts = async () => {
     try {
@@ -111,15 +111,14 @@ const TransactionPage: React.FC = () => {
       try {
         const rawTransactions =
           await window.electron.getAllPersonalTransactions();
-        const transactions: PersonalTransaction[] = rawTransactions.map(
-          (t: any | null) => ({
-            ...t,
-            type: t.type ?? "outgoing", // or set appropriate default
-            transactionType: t.transactionType ?? "personal", // or set appropriate default
-          })
+
+        // Filter transactions with transactionType "outgoing" and type "personal"
+        const filteredTransactions = rawTransactions.filter(
+          (t: any) => t.transactionType === "outgoing" && t.type === "personal"
         );
-        console.log("Fetched Personal Transactions:", transactions);
-        setPersonalTransactions(transactions);
+
+        console.log("Filtered Personal Transactions:", filteredTransactions);
+        setPersonalTransactions(filteredTransactions);
       } catch (error) {
         console.log("Error fetching data from the database:", error);
       }
@@ -127,7 +126,6 @@ const TransactionPage: React.FC = () => {
 
     fetchPersonalTransactions();
   }, [updateFlag]);
-
   const handleSave = async () => {
     try {
       if (!amount) {
@@ -443,11 +441,9 @@ const TransactionPage: React.FC = () => {
                 <th>ت</th>
 
                 <th>الاسم</th>
-                <th>التاريخ</th>
+
                 <th>المبلغ</th>
-                <th>له</th>
-                <th>عليه</th>
-                <th>الرصيد</th>
+                <th>التاريخ</th>
                 <th>التفاصيل</th>
                 <th>خيارات</th>
               </tr>
@@ -457,11 +453,9 @@ const TransactionPage: React.FC = () => {
                 <tr key={t.id}>
                   <td>{t.id}</td>
                   <td>{t.customer_name}</td>
-                  <td>{t.date}</td>
                   <td>{t.transactionType === "outgoing" ? t.amount : 0}</td>
-                  <td>{t.customer_credit}</td>
-                  <td>{t.customer_debit}</td>
-                  <td>{(t.customer_credit ?? 0) - (t.customer_debit ?? 0)}</td>
+                  <td>{t.date}</td>
+
                   {/* <td>{t.details}</td> */}
                   <td>
                     <p>
@@ -482,7 +476,11 @@ const TransactionPage: React.FC = () => {
                         navigate(
                           `/outgoing-personal-transaction-details/${t.id}`,
                           {
-                            state: { selectedType },
+                            state: {
+                              selectedType,
+                              from: location.pathname,
+                              activeTab: activeTab,
+                            },
                           }
                         )
                       }>

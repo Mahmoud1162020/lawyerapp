@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import "../outgoingContent/OutgoingContent.css";
 import ConfirmModal from "../../Modal/ConfirmModal";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import PersonalTransactions from "./PersonalTransactions";
 import ProcedureTransactions from "./ProcedureTransactions";
 import TenantTransactions from "./TenantTransactions";
@@ -19,16 +19,22 @@ interface CustomerAccount {
   details: string | null;
 }
 const { Option } = Select;
-const IncomingPage: React.FC = () => {
+const IncomingPage: React.FC = ({ activeTab }) => {
   const [amount, setAmount] = useState<number | "">("");
   const [transactionNumber, setTransactionNumber] = useState<string>("");
+  const location = useLocation();
   const [customer, setCustomer] = useState<number>();
   const [currency, setCurrency] = useState("دينار"); // Default currency
   const [selectedType, setSelectedType] = useState("شخصي"); // Default selection
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [report, setReport] = useState("");
+  const [updateFlag, setUpdateFlag] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState<number | null>(
     null
+  );
+  const [transactionDate, setTransactionDate] = useState(
+    new Date().toISOString().slice(0, 10)
   );
   const [customersAccount, setCustomersAccount] = React.useState<
     CustomerAccount[]
@@ -80,26 +86,44 @@ const IncomingPage: React.FC = () => {
     }
   };
 
-  const fetchPersonlalTransactions = async () => {
-    try {
-      const response: PersonalTransaction[] =
-        await window.electron.getAllPersonalTransactions();
-      console.log("Fetched personal transactions:", response);
-
-      setPersonalTransactions(response);
-    } catch (error) {
-      console.error("Error fetching personal transactions:", error);
-      toast.error(
-        "حدث خطأ أثناء جلب المعاملات الشخصية. يرجى المحاولة مرة أخرى.",
-        { autoClose: 3000 }
-      );
+  useEffect(() => {
+    if (location.state && location?.state?.activeTab === "incoming") {
+      console.log("location", location.state.selectedType);
+      setSelectedType(location?.state?.selectedType);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    const fetchPersonalTransactions = async () => {
+      try {
+        const rawTransactions =
+          await window.electron.getAllPersonalTransactions();
+
+        // First, map to ensure all required fields are present for PersonalTransaction type
+        const mappedTransactions = rawTransactions.map((t: any) => ({
+          ...t,
+          type: t.type ?? "personal",
+          transactionType: t.transactionType ?? "incoming",
+        }));
+
+        // Then filter transactions with transactionType "incoming" and type "personal"
+        const filteredTransactions = mappedTransactions.filter(
+          (t: any) => t.transactionType === "incoming" && t.type === "personal"
+        );
+
+        console.log("Filtered Personal Transactions:", filteredTransactions);
+        setPersonalTransactions(filteredTransactions);
+      } catch (error) {
+        console.log("Error fetching data from the database:", error);
+      }
+    };
+
+    fetchPersonalTransactions();
+  }, [updateFlag]);
 
   useEffect(() => {
     getUserInfo();
     fetchCustomersAccount();
-    fetchPersonlalTransactions();
   }, []);
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -117,13 +141,34 @@ const IncomingPage: React.FC = () => {
 
       if (selectedType === "شخصي") {
         // userId: number, customer_id: number, amount: number, report: string, transactionType: "incoming" | "outgoing", date: string
-        const newPersonalTransaction = {
-          userId: userInfo?.id,
-          customer_id: customer,
-        };
-        console.log("newPersonalTransaction", newPersonalTransaction);
+        const userId = userInfo?.id ?? 0;
+        const customer_id = customer;
+        const transactionAmount = Number(amount);
+        const transactionReport = report;
+        const transactionType = "incoming";
+        const transactionDate = new Date().toISOString().slice(0, 10);
 
-        // await window.electron.addPersonalTransaction({});
+        console.log("newPersonalTransaction", {
+          userId,
+          customer_id,
+          transactionAmount,
+          transactionReport,
+          transactionType,
+          transactionDate,
+        });
+
+        const result = await window.electron.addPersonalTransaction(
+          userId,
+          customer_id,
+          transactionAmount,
+          transactionReport,
+          transactionType,
+          transactionDate
+        );
+        console.log("Transaction added:", result);
+        if (result.id) {
+          setUpdateFlag(!updateFlag);
+        }
         toast.success("تمت إضافة المعاملة الشخصية بنجاح!", { autoClose: 3000 });
       } else {
         const newTransaction = {
@@ -155,10 +200,11 @@ const IncomingPage: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (transactionToDelete === null) return;
 
     if (selectedType === "شخصي") {
+      await window.electron.deletePersonalTransaction(transactionToDelete);
       setPersonalTransactions(
         personalTransactions.filter((t) => t.id !== transactionToDelete)
       );
@@ -215,7 +261,6 @@ const IncomingPage: React.FC = () => {
             disabled={!customer || !amount}>
             حفظ
           </button>
-
           <div className="input-group">
             <label>اختر المعاملة</label>
             <select
@@ -226,7 +271,6 @@ const IncomingPage: React.FC = () => {
               <option value="ايجار">ايجار</option>
             </select>
           </div>
-
           <div className="input-group">
             <label>ادخل المبلغ</label>
             <input
@@ -238,7 +282,15 @@ const IncomingPage: React.FC = () => {
               }
             />
           </div>
-
+          <div className="input-group">
+            <label>اختر العملة</label>
+            <select
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}>
+              <option value="دينار">دينار</option>
+              <option value="دولار">دولار</option>
+            </select>
+          </div>
           {selectedType === "معاملة" && (
             <div className="input-group">
               <label>ادخل رقم المعاملة</label>
@@ -250,7 +302,6 @@ const IncomingPage: React.FC = () => {
               />
             </div>
           )}
-
           <div className="input-group">
             <label>ادخل الاسم</label>
             <Select
@@ -270,18 +321,23 @@ const IncomingPage: React.FC = () => {
               onChange={(e) => setCustomer(e.target.value)}
             /> */}
           </div>
-
-          {
-            <div className="input-group">
-              <label>اختر العملة</label>
-              <select
-                value={currency}
-                onChange={(e) => setCurrency(e.target.value)}>
-                <option value="دينار">دينار</option>
-                <option value="دولار">دولار</option>
-              </select>
-            </div>
-          }
+          <div className="input-group">
+            <label>التفاصيل</label>
+            <input
+              type="text"
+              value={report}
+              onChange={(e) => setReport(e.target.value)}
+              onKeyDown={handleKeyDown}
+            />
+          </div>
+          <div className="input-group">
+            <label>اختر التاريخ</label>
+            <input
+              type="date"
+              value={transactionDate}
+              onChange={(e) => setTransactionDate(e.target.value)}
+            />
+          </div>
         </div>
       </div>
 
@@ -290,6 +346,8 @@ const IncomingPage: React.FC = () => {
           personalTransactions={personalTransactions}
           setPersonalTransactions={setPersonalTransactions}
           onDelete={handleDelete}
+          selectedType={selectedType}
+          activeTab={activeTab}
         />
       )}
       {selectedType === "ايجار" && (
