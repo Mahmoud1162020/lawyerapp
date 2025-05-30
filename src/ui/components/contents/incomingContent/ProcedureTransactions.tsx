@@ -1,5 +1,6 @@
 import React from "react";
 import "./ProcedureTransactions.css";
+import { useNavigate } from "react-router-dom";
 
 interface ProcedureTransaction {
   id: number;
@@ -10,17 +11,21 @@ interface ProcedureTransaction {
   currency: string;
 }
 
-interface Props {
-  transactions: ProcedureTransaction[];
+interface ProcedureTransactionsProps {
+  procedureTransactions: Transaction[];
   onDelete: (id: number) => void;
+  selectedType?: string;
+  activeTab?: string;
 }
 
-const ProcedureTransactions: React.FC<Props> = ({
-  transactions: allProcedures,
+const ProcedureTransactions: React.FC<ProcedureTransactionsProps> = ({
+  procedureTransactions,
   onDelete,
+  selectedType,
+  activeTab,
 }) => {
-  console.log("allProcedures", allProcedures);
-
+  console.log("allProcedures", procedureTransactions);
+  const navigate = useNavigate();
   return (
     <div className="procedure-transactions-table">
       <table>
@@ -35,7 +40,7 @@ const ProcedureTransactions: React.FC<Props> = ({
           </tr>
         </thead>
         <tbody>
-          {allProcedures?.map((t) => (
+          {procedureTransactions?.map((t) => (
             <tr key={t.id}>
               <td>{t.id}</td>
               <td>{t.procedureId}</td>
@@ -51,7 +56,15 @@ const ProcedureTransactions: React.FC<Props> = ({
                 </button>{" "}
                 <button
                   className="details-button"
-                  onClick={() => onDelete(t.id)}>
+                  onClick={() =>
+                    navigate(`/procedure-incoming-details/${t.id}`, {
+                      state: {
+                        selectedType,
+                        from: location.pathname,
+                        activeTab: activeTab,
+                      },
+                    })
+                  }>
                   تفاصيل
                 </button>
               </td>

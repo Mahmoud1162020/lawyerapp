@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import "../outgoingContent/OutgoingContent.css";
 import ConfirmModal from "../../Modal/ConfirmModal";
 import { Link, useLocation } from "react-router-dom";
@@ -48,16 +49,9 @@ const IncomingPage: React.FC = ({ activeTab }) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [allProcedures, setAllProcedures] = useState<Procedure[]>();
   const [procedurId, setProcedureId] = useState<number | null>(null);
-  const [procedureTransactions, setProcedureTransactions] = useState([
-    {
-      id: 1,
-      transactionId: "12345",
-      recipient: "Ahmed",
-      amount: 1000,
-      currency: "دينار",
-      date: "2024-01-01",
-    },
-  ]);
+  const [procedureTransactions, setProcedureTransactions] = useState<
+    Transaction[]
+  >([]);
   const getUserInfo = async () => {
     try {
       const user = await window.electron.getUser();
@@ -237,22 +231,32 @@ const IncomingPage: React.FC = ({ activeTab }) => {
         toast.success("تمت إضافة المعاملة الشخصية بنجاح!", { autoClose: 3000 });
       } else if (selectedType === "معاملة") {
         console.log("Saving procedure transaction...");
-        const transaction = await window.electron.addTransaction(
-          Number(userInfo?.id),
-          (customerName as string) ?? "",
-          Number(amount),
-          report,
-          Number(procedurId),
-          "procedure",
-          "incoming",
-          transactionDate
-        );
-        console.log("Transaction added:", transaction);
-
-        if (transaction.id) {
-          setUpdateFlag(!updateFlag); // Trigger update
-        }
         toast.success("تمت إضافة المعاملة بنجاح!", { autoClose: 3000 });
+        try {
+          const transaction = await window.electron.addTransaction(
+            Number(userInfo?.id),
+            (customerName as string) ?? "",
+            Number(amount),
+            report,
+            Number(procedurId),
+            "procedure",
+            "incoming",
+            transactionDate
+          );
+          console.log("Transaction added:", transaction);
+
+          if (transaction.id) {
+            console.log("Transaction added:", transaction);
+
+            setUpdateFlag(!updateFlag); // Trigger update
+            toast.success("تمت إضافة المعاملة بنجاح!", { autoClose: 3000 });
+          }
+        } catch (error) {
+          console.error("Error saving procedure transaction:", error);
+          toast.error("فشل إضافة المعاملة. يرجى المحاولة مرة أخرى.", {
+            autoClose: 3000,
+          });
+        }
       }
 
       setCustomerName("");
@@ -275,22 +279,36 @@ const IncomingPage: React.FC = ({ activeTab }) => {
   const handleConfirmDelete = async () => {
     if (transactionToDelete === null) return;
 
-    if (selectedType === "شخصي") {
-      await window.electron.deletePersonalTransaction(transactionToDelete);
-      setPersonalTransactions(
-        personalTransactions.filter((t) => t.id !== transactionToDelete)
-      );
-    }
-    if (selectedType === "معاملة") {
-      setTransactions(transactions.filter((t) => t.id !== transactionToDelete));
-    } else {
-      setTransactions(transactions.filter((t) => t.id !== transactionToDelete));
-    }
+    try {
+      if (selectedType === "شخصي") {
+        await window.electron.deletePersonalTransaction(transactionToDelete);
+        setPersonalTransactions(
+          personalTransactions.filter((t) => t.id !== transactionToDelete)
+        );
+      } else if (selectedType === "معاملة") {
+        console.log(transactionToDelete);
+        await window.electron.deleteTransaction(transactionToDelete);
+        setProcedureTransactions(
+          procedureTransactions.filter((t) => t.id !== transactionToDelete)
+        );
+      } else {
+        setTransactions(
+          transactions.filter((t) => t.id !== transactionToDelete)
+        );
+      }
 
-    toast.success("تم حذف المعاملة بنجاح!", { autoClose: 3000 });
+      // Show success toast after deletion is complete
+      toast.success("تم حذف المعاملة بنجاح!", { autoClose: 3000 });
 
-    setTransactionToDelete(null);
-    setIsModalOpen(false);
+      // Reset deletion state
+      setTransactionToDelete(null);
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error("Error deleting transaction:", error);
+      toast.error("فشل حذف المعاملة. يرجى المحاولة مرة أخرى.", {
+        autoClose: 3000,
+      });
+    }
   };
 
   // const filteredTransactions = transactions.filter(
@@ -313,7 +331,7 @@ const IncomingPage: React.FC = ({ activeTab }) => {
           setIsModalOpen(false);
         }}
       />
-
+      <ToastContainer />
       {/* Search Section */}
       <div>
         <div className="search-section">
@@ -441,8 +459,10 @@ const IncomingPage: React.FC = ({ activeTab }) => {
       )}
       {selectedType === "معاملة" && (
         <ProcedureTransactions
-          transactions={procedureTransactions}
+          procedureTransactions={procedureTransactions}
           onDelete={handleDelete}
+          selectedType={selectedType}
+          activeTab={activeTab}
         />
       )}
     </div>
