@@ -65,8 +65,40 @@ type Statistics = {
     phone: string;
     owners: { id: number; name: string }[] 
   }
-  
-  
+  type TenantTransaction = {
+    contractStatus: string;
+    startDate: string;
+    tenantIds: number[];
+    propertyId: number;
+    endDate: string;
+    entitlement: number;
+    contractNumber: string;
+    installmentCount: number;
+    leasedUsage: string;
+    propertyType: string;
+  };
+  type TenantResponse = {
+    id: number;
+    contractStatus: string;
+    startDate: string;
+    tenantNames: string[];
+    propertyNumber: number;
+    endDate: string;
+    entitlement: number;
+    contractNumber: string;
+    installmentCount: number;
+    leasedUsage: string;
+    propertyType: string;
+    propertyDetails: {
+      id: number;
+      propertyTitle: string;
+      propertyNumber: string;
+      address: string;
+      price: number;
+      date: string;
+      details: string | null;
+    };
+  };
   type View = 'CPU' | 'RAM' | 'STORAGE';
   
   type FrameWindowAction = 'CLOSE' | 'MAXIMIZE' | 'MINIMIZE';
@@ -154,7 +186,7 @@ type Statistics = {
         date: string
         details: string | null
       } }[]>,
-      getTenantById: (id: number)=>Promise<{ id: number; contractStatus: string; startDate: string; tenantNames: string[]; propertyNumber: number; endDate: string; entitlement: number; contractNumber: string; installmentCount: number; leasedUsage: string; propertyType: string } | null>,
+      getTenantById: (id: number)=>Promise<{ id: number; contractStatus: string; startDate: string; tenantNames: [{ id: number; name: string; }]; propertyNumber: number; endDate: string; entitlement: number; contractNumber: string; installmentCount: number; leasedUsage: string; propertyType: string } | null>,
       deleteTenant: (id: number)=>Promise<{ deleted: boolean }>,
       updateTenant: (id: number, field: string, value: string | number)=>Promise<{ updated: boolean }>,
       updateTenantNames:(tenantId: number,tenantNames: numbers[])=>Promise<{ updated: boolean }>,
@@ -164,6 +196,13 @@ type Statistics = {
       updatePersonalTransaction: (id: number, field: string, value: string | number)=>Promise<{ updated: boolean }>,
       deletePersonalTransaction: (id: number)=>Promise<{ deleted: boolean }>,
       getPersonalTransactionsByDateRange: (startDate: string, endDate: string)=>Promise<{ id: number; userId: number; recipient: string; amount: number; report: string; date: string }[]>,
+    //tenants transactions
+      addTenantTransaction:(tenantId: number,propertyId: number,customerId: number,transaction: { amount: number; date: string; isPaid: boolean; description?: string })=>Promise<void>
+      getTenantTransactions:(tenantId: number)=>Promise<TenantTransaction[]>,
+      getAllTenantTransactions: ()=>Promise<TenantTransaction[]>,
+      deleteTenantTransaction:(transactionId: number)=>Promise<void>,
+      getTenatnTransactionById:(transactionId: number)=>Promise<TenantTransaction | null>
+      updateTenantTransaction:(transactionId: number,updatedTransaction: { amount: number; date: string; isPaid: boolean })=>Promise<void>
     };
 
   }

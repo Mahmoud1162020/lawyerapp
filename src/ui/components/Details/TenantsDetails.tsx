@@ -23,7 +23,7 @@ export default function TenantsDetails() {
     leasedUsage: string;
     propertyType: string;
   }>({
-    tenantName: [],
+    tenantName: [{ id: 0, name: "" }], // Initialize with an empty object
     contractNumber: "",
     startDate: "",
     endDate: "",
@@ -31,7 +31,9 @@ export default function TenantsDetails() {
     leasedUsage: "",
     propertyType: "",
   });
-
+  console.log("====================================");
+  console.log(record);
+  console.log("====================================");
   const getAllCustomersAccounts = async () => {
     try {
       const customersAccounts = await window.electron.getAllCustomersAccounts();
@@ -49,10 +51,7 @@ export default function TenantsDetails() {
 
       if (response) {
         setRecord({
-          tenantName: response.tenantNames.map((name, index) => ({
-            id: index + 1,
-            name,
-          })), // Map strings to objects with id and name
+          tenantName: response.tenantNames, // Map strings to objects with id and name
           contractNumber: response.contractNumber,
           startDate: response.startDate.slice(0, 10), // Extract YYYY-MM-DD
           endDate: response.endDate.slice(0, 10), // Extract YYYY-MM-DD
@@ -179,12 +178,20 @@ export default function TenantsDetails() {
         <Select
           mode="multiple"
           allowClear
-          value={record.tenantName.map((tn) => tn.id)} // Use IDs for the dropdown value
+          value={record.tenantName.map((tn) => {
+            console.log("====================================");
+            console.log(tn);
+            console.log("====================================");
+            return tn.id;
+          })} // Use IDs for the dropdown value
           onChange={(values) => {
             console.log("Selected Tenant IDs:", values);
             // Update tenantName with selected IDs and their corresponding names
             const updatedTenantNames = values
               .map((id) => {
+                console.log("====================================");
+                console.log("Selected Tenant ID:", id);
+                console.log("====================================");
                 const tenant = customersAccounts.find(
                   (account) => account.id === id
                 );
@@ -194,11 +201,16 @@ export default function TenantsDetails() {
             setRecord({ ...record, tenantName: updatedTenantNames });
           }}
           style={{ width: "100%" }}>
-          {customersAccounts.map((account) => (
-            <Option key={account.id} value={account.id}>
-              {account.name}
-            </Option>
-          ))}
+          {customersAccounts.map((account) => {
+            console.log("====================================");
+            console.log("Account:", account);
+            console.log("====================================");
+            return (
+              <Option key={account.id} value={account.id}>
+                {account.name}
+              </Option>
+            );
+          })}
         </Select>
       </div>
       <div className="tenants-form-group">

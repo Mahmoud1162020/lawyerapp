@@ -38,8 +38,8 @@ async function applyMigrations(db: Database) {
         username TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
         role TEXT DEFAULT 'user',
-        debit REAL DEFAULT 0, -- New column for debit
-        credit REAL DEFAULT 0 -- New column for credit
+        debit REAL DEFAULT 0,
+        credit REAL DEFAULT 0
       );
     `);
     await db.run(`INSERT INTO meta (key, value) VALUES ('db_version', '1') ON CONFLICT(key) DO UPDATE SET value='1'`);
@@ -118,7 +118,10 @@ async function applyMigrations(db: Database) {
         address TEXT NOT NULL,
         price REAL NOT NULL,
         date TEXT DEFAULT (datetime('now', 'localtime')),
-        details TEXT
+        details TEXT,
+        isSold INTEGER DEFAULT 0, -- New column to indicate if the property is sold
+        soldDate TEXT, -- New column to store the date when the property was sold,
+        isRented INTEGER DEFAULT 0 -- New column to indicate if the property is rented
       );
     `);
     await db.run(`UPDATE meta SET value = '6' WHERE key = 'db_version'`);
@@ -186,6 +189,8 @@ async function applyMigrations(db: Database) {
         contractNumber TEXT NOT NULL UNIQUE,
         installmentCount INTEGER NOT NULL,
         leasedUsage TEXT NOT NULL,
+        installmentsDue TEXT DEFAULT '[]', -- New column for installments due
+        installmentAmount REAL DEFAULT 0, -- New column for installment amount
         propertyType TEXT NOT NULL,
         FOREIGN KEY (propertyId) REFERENCES realstates(id) ON DELETE CASCADE
       );
@@ -231,8 +236,35 @@ async function applyMigrations(db: Database) {
     console.log("Database updated to version 12: Added 'personaltransactions' table.");
     currentVersion = 12;
   }
-
- 
+  if (currentVersion < 13) {
+  await db.exec(`
+    ALTER TABLE realstates ADD COLUMN debit TEXT DEFAULT '[]';
+    ALTER TABLE realstates ADD COLUMN credit TEXT DEFAULT '[]';
+  `);
+  await db.run(`UPDATE meta SET value = '13' WHERE key = 'db_version'`);
+  console.log("Database updated to version 13: Added 'debit' and 'credit' columns to 'realstates' table.");
+  currentVersion = 13;
+}
+if (currentVersion < 14) {
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS tenantsTransactions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      propertyId INTEGER NOT NULL, -- Foreign key to realstates table
+      tenantId INTEGER NOT NULL, -- Foreign key to tenants table
+      customerId INTEGER NOT NULL, -- Foreign key to customersaccount table
+      amount REAL NOT NULL, -- Transaction amount
+      date TEXT DEFAULT (datetime('now', 'localtime')), -- Transaction date
+      isPaid INTEGER DEFAULT 0, -- Indicates if the transaction is paid (0 = false, 1 = true)
+      description TEXT, -- Optional description for the transaction
+      FOREIGN KEY (propertyId) REFERENCES realstates(id) ON DELETE CASCADE,
+      FOREIGN KEY (tenantId) REFERENCES tenants(id) ON DELETE CASCADE,
+      FOREIGN KEY (customerId) REFERENCES customersaccount(id) ON DELETE CASCADE
+    );
+  `);
+  await db.run(`UPDATE meta SET value = '14' WHERE key = 'db_version'`);
+  console.log("Database updated to version 14: Added 'tenantsTransactions' table.");
+  currentVersion = 14;
+}
 }
 
 async function getDatabaseVersion(db: Database): Promise<number> {

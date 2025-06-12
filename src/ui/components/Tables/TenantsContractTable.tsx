@@ -18,7 +18,7 @@ export default function TenantsContractTable() {
   const [tenantName, setTenantName] = useState<number[]>([]); // ادخل اسم المستأجر
   const [propertyNumber, setPropertyNumber] = useState(""); // ادخل رقم العقار
   const [endDate, setEndDate] = useState(""); // ادخل تاريخ نهاية العقد
-  const [entitlement, setEntitlement] = useState(""); // ادخل الاستحقاق (مثال: الزراعي)
+  const [entitlement, setEntitlement] = useState(0); // ادخل الاستحقاق (مثال: الزراعي)
   const [contractNumber, setContractNumber] = useState(""); // ادخل رقم العقد
   const [installmentCount, setInstallmentCount] = useState(""); // عدد الدفعات
   const [leasedUsage, setLeasedUsage] = useState(""); // ادخل استخدام المأجور (مثال: الزراعي)
@@ -194,7 +194,7 @@ export default function TenantsContractTable() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSearchChange = (field: string, value: string) => {
+  const handleSearchChange = (field: string, value: string | string[]) => {
     setSearchFilters((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -265,7 +265,7 @@ export default function TenantsContractTable() {
       setTenantName([]);
       setPropertyNumber("");
       setEndDate("");
-      setEntitlement("");
+      setEntitlement(0);
       setContractNumber("");
       setInstallmentCount("");
       setLeasedUsage("");
@@ -349,7 +349,7 @@ export default function TenantsContractTable() {
               mode="multiple"
               allowClear
               showSearch // Enables search functionality
-              placeholder="اختر اصحاب العقار"
+              placeholder=""
               value={tenantName}
               onChange={(values) => setTenantName(values)}
               filterOption={(input, option) =>
@@ -416,10 +416,10 @@ export default function TenantsContractTable() {
           <div className="contracts-form-group">
             <label>ادخل الاستحقاق</label>
             <input
-              type="text"
+              type="number"
               value={entitlement}
-              onChange={(e) => setEntitlement(e.target.value)}
-              placeholder="الزراعي"
+              onChange={(e) => setEntitlement(Number(e.target.value))}
+              placeholder=""
             />
           </div>
           <div className="contracts-form-group">
@@ -446,7 +446,7 @@ export default function TenantsContractTable() {
               type="text"
               value={leasedUsage}
               onChange={(e) => setLeasedUsage(e.target.value)}
-              placeholder="الزراعي"
+              placeholder=""
             />
           </div>
           <div className="contracts-form-group">
@@ -455,7 +455,7 @@ export default function TenantsContractTable() {
               type="text"
               value={propertyType}
               onChange={(e) => setPropertyType(e.target.value)}
-              placeholder="عدد الدفعات"
+              placeholder=""
             />
           </div>
         </div>
@@ -504,7 +504,11 @@ export default function TenantsContractTable() {
                   <input
                     type="text"
                     placeholder="بحث"
-                    value={searchFilters.tenantName}
+                    value={
+                      Array.isArray(searchFilters.tenantName)
+                        ? searchFilters.tenantName.join(", ")
+                        : searchFilters.tenantName
+                    }
                     onBlur={handleSearchBlur}
                     onChange={(e) =>
                       handleSearchChange(

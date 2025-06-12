@@ -1,6 +1,4 @@
-import { ipcMain } from "electron";
 import { initializeDatabase } from "../userOperations.js"; // Import the database initialization
-import { ErrorFn } from "./ErrorHandlerOperations.js";
 
 // Add a New Tenant
 export async function addTenant(
@@ -15,8 +13,6 @@ export async function addTenant(
   leasedUsage: string,
   propertyType: string
 ): Promise<{ id: number }> {
-  console.log("🔹 addTenant() Triggered=====",propertyId);
-
   const db = await initializeDatabase();
 
   try {
@@ -39,18 +35,36 @@ export async function addTenant(
       ]
     );
 
-    const tenantId = result.lastID!;
+    // Calculate installment amount
+    const installmentAmount = entitlement / installmentCount;
 
-    // Validate tenantIds before iterating
-    if (!Array.isArray(tenantIds)) {
-      throw new TypeError("tenantIds must be an array");
+    // Calculate installment dates
+    const start = new Date(startDate);
+    const totalInstallments = installmentCount;
+    const installmentsDue: { date: string; amount: number; isPaid: boolean }[] = [];
+
+    for (let i = 0; i < totalInstallments; i++) {
+      const installmentDate = new Date(start);
+      installmentDate.setMonth(installmentDate.getMonth() + i); // Increment by months
+      installmentsDue.push({
+        date: installmentDate.toISOString().split("T")[0],
+        amount: installmentAmount,
+        isPaid: false, // Default value for isPaid
+      });
     }
+
+    // Save installmentsDue and installmentAmount to tenants table
+    await db.run(
+      `UPDATE tenants SET installmentsDue = ?, installmentAmount = ? WHERE id = ?`,
+      [JSON.stringify(installmentsDue), installmentAmount, result.lastID]
+    );
+
+    const tenantId = result.lastID!;
 
     // Insert tenant IDs into the tenant_names table
     for (const customerId of tenantIds) {
       await db.run(
-        `INSERT INTO tenant_names (tenant_id, customer_id) 
-         VALUES (?, ?)`,
+        `INSERT INTO tenant_names (tenant_id, customer_id) VALUES (?, ?)`,
         [tenantId, customerId]
       );
     }
@@ -59,8 +73,6 @@ export async function addTenant(
     return { id: tenantId };
   } catch (error) {
     console.error("❌ SQLite Insert Error:", error);
-  ipcMain.emit("error",error)
-
     throw error;
   }
 }
@@ -171,7 +183,7 @@ export async function getTenantById(
   // Map the results to get the names
   tenant.tenantNames = tenantNamesResult.map((row) => row);
 
-console.log("tenant.tenantNames",tenant.tenantNames);
+console.log("tenant",tenant);
   // Fetch the property details
   const propertyDetails = await db.get(
     `

@@ -1,21 +1,35 @@
 import React from "react";
 import "./TenantTransactions.css";
+import { useNavigate } from "react-router-dom";
 
 interface TenantTransaction {
-  id: number;
-  name: string;
+  transactionId: number;
+  customerName: string;
   date: string;
   amount: number;
   balance: number;
   details: string;
+  description: string;
 }
 
 interface Props {
-  transactions: TenantTransaction[];
+  tenansTransactions: TenantTransaction[];
   onDelete: (id: number) => void;
+  selectedType: string;
+  activeTab: string;
 }
 
-const TenantTransactions: React.FC<Props> = ({ transactions, onDelete }) => {
+const TenantTransactions: React.FC<Props> = ({
+  tenansTransactions,
+  onDelete,
+  selectedType,
+  activeTab,
+}) => {
+  const navigate = useNavigate();
+  console.log("TenantTransactions component rendered with props:", {
+    tenansTransactions,
+  });
+
   return (
     <div className="tenant-transactions-table">
       <table>
@@ -23,27 +37,46 @@ const TenantTransactions: React.FC<Props> = ({ transactions, onDelete }) => {
           <tr>
             <th>ت ع</th>
             <th>الاسم</th>
+            <th>المبلغ</th>
             <th>التاريخ</th>
-            <th>له</th>
-            <th>عليه</th>
-            <th>الرصيد</th>
+            {/* <th>الرصيد</th> */}
+            {/* <th>المدين</th>
+            {/* <th>له</th>
+            <th>عليه</th> */}
+            {/* <th>الرصيد</th> */}
             <th>التفاصيل</th>
-            <th>حذف</th>
+            <th>خيارات</th>
           </tr>
         </thead>
         <tbody>
-          {transactions.map((t) => (
-            <tr key={t.id}>
-              <td>{t.id}</td>
-              <td>{t.name}</td>
-              <td>{t.date}</td>
+          {tenansTransactions?.map((t) => (
+            <tr key={t.transactionId}>
+              <td>{t.transactionId}</td>
+              <td>{t.customerName}</td>
               <td>{t.amount}</td>
-              <td>-</td>
-              <td>{t.balance}</td>
-              <td>{t.details}</td>
+              <td>{t.date}</td>
+              {/* <td>-</td> */}
+              {/* <td>{t.balance}</td> */}
+              <td>{t.description}</td>
               <td>
-                <button className="delete-btn" onClick={() => onDelete(t.id)}>
+                <button
+                  className="delete-btn"
+                  onClick={() => onDelete(t.transactionId)}>
                   حذف
+                </button>{" "}
+                <button
+                  className="delete-btn"
+                  style={{ backgroundColor: "green" }}
+                  onClick={() =>
+                    navigate(`/tenant-transaction-details/${t.transactionId}`, {
+                      state: {
+                        selectedType,
+                        from: location.pathname,
+                        activeTab: activeTab,
+                      },
+                    })
+                  }>
+                  تفاصيل
                 </button>
               </td>
             </tr>

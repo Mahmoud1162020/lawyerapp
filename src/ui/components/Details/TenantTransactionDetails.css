@@ -1,0 +1,129 @@
+.tenant-transaction-details {
+  padding: 20px;
+  font-family: "Tajawal", Arial, sans-serif; /* Use an Arabic-friendly font */
+  direction: rtl; /* Right-to-left alignment for Arabic */
+  text-align: right; /* Align text to the right */
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.tenant-transaction-details h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #333;
+  font-size: 24px;
+}
+
+.tenant-transaction-details table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.tenant-transaction-details th,
+.tenant-transaction-details td {
+  border: 1px solid #ddd;
+  padding: 12px;
+  text-align: right; /* Align table content to the right */
+  font-size: 16px;
+  color: #555;
+}
+
+.tenant-transaction-details th {
+  background-color: #f4f4f4;
+  font-weight: bold;
+  color: #333;
+}
+
+.tenant-transaction-details td {
+  background-color: #fff;
+}
+
+.tenant-transaction-details input,
+.tenant-transaction-details textarea,
+.tenant-transaction-details select {
+  width: 100%;
+  padding: 8px;
+  font-size: 16px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.actions {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.actions button {
+  margin: 0 10px;
+  padding: 10px 20px;
+  font-size: 16px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.save-btn {
+  background-color: #28a745;
+  color: white;
+}
+
+.save-btn:hover {
+  background-color: #218838;
+}
+
+.cancel-btn {
+  background-color: #dc3545;
+  color: white;
+}
+
+.cancel-btn:hover {
+  background-color: #c82333;
+}
+
+.edit-btn {
+  background-color: #007bff;
+  color: white;
+}
+
+.edit-btn:hover {
+  background-color: #0056b3;
+}
+
+.back-btn {
+  display: block;
+  margin: 20px auto;
+  padding: 10px 20px;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.back-btn:hover {
+  background-color: #5a6268;
+}
+
+@media (max-width: 768px) {
+  .tenant-transaction-details table {
+    font-size: 14px;
+  }
+
+  .tenant-transaction-details th,
+  .tenant-transaction-details td {
+    padding: 8px;
+  }
+
+  .back-btn {
+    font-size: 14px;
+    padding: 8px 16px;
+  }
+}

@@ -3,7 +3,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "../outgoingContent/OutgoingContent.css";
 import ConfirmModal from "../../Modal/ConfirmModal";
-import { Link, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import PersonalTransactions from "./PersonalTransactions";
 import ProcedureTransactions from "./ProcedureTransactions";
 import TenantTransactions from "./TenantTransactions";
@@ -35,6 +35,8 @@ const IncomingPage: React.FC = ({ activeTab }) => {
   const [transactionToDelete, setTransactionToDelete] = useState<number | null>(
     null
   );
+  const [contractId, setContractId] = useState<number | null>(null);
+  const [realStates, setRealStates] = useState<any[]>([]); // Assuming RealState type is defined elsewhere
   const [transactionDate, setTransactionDate] = useState(
     new Date().toISOString().slice(0, 10)
   );
@@ -44,7 +46,10 @@ const IncomingPage: React.FC = ({ activeTab }) => {
   const [personalTransactions, setPersonalTransactions] = React.useState<
     PersonalTransaction[]
   >([]);
+  const [tenansTransactions, setTenansTransactions] = useState<any[]>([]); // Assuming Transaction type is defined elsewhere
+  const [tenants, setTenants] = useState<TenantResponse[]>([]); // Assuming Transaction type is defined elsewhere
   const [userInfo, setUserInfo] = useState<User | null>();
+  const [realStateValue, setRealStateValue] = useState<number | null>(null);
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [allProcedures, setAllProcedures] = useState<Procedure[]>();
@@ -52,6 +57,7 @@ const IncomingPage: React.FC = ({ activeTab }) => {
   const [procedureTransactions, setProcedureTransactions] = useState<
     Transaction[]
   >([]);
+  const [customerObject, setCustomerObject] = useState(null);
   const getUserInfo = async () => {
     try {
       const user = await window.electron.getUser();
@@ -88,6 +94,25 @@ const IncomingPage: React.FC = ({ activeTab }) => {
       setSelectedType(location?.state?.selectedType);
     }
   }, []);
+
+  useEffect(() => {
+    const fetchAllTenantsTransactions = async () => {
+      try {
+        const response = await window.electron.getAllTenantTransactions();
+        console.log("Fetched all tenants transactions:", response);
+        setTenansTransactions(response);
+      } catch (error) {
+        console.error("Error fetching all tenants transactions:", error);
+        toast.error(
+          "حدث خطأ أثناء جلب معاملات المستأجرين. يرجى المحاولة مرة أخرى.",
+          {
+            autoClose: 3000,
+          }
+        );
+      }
+    };
+    fetchAllTenantsTransactions();
+  }, [updateFlag]);
 
   useEffect(() => {
     const fetchPersonalTransactions = async () => {
@@ -137,6 +162,10 @@ const IncomingPage: React.FC = ({ activeTab }) => {
     fetchAllProcedures();
   }, []);
 
+  console.log("====================================");
+  console.log(customer);
+  console.log("====================================");
+
   useEffect(() => {
     const fetchProcedureTransactions = async () => {
       try {
@@ -183,6 +212,42 @@ const IncomingPage: React.FC = ({ activeTab }) => {
     fetchCustomersAccount();
   }, []);
 
+  useEffect(() => {
+    const fetchTenants = async () => {
+      try {
+        const response = await window.electron.getAllTenants();
+        console.log("Fetched tenants transactions:", response);
+        setTenants(response);
+      } catch (error) {
+        console.error("Error fetching tenants transactions:", error);
+        toast.error(
+          "حدث خطأ أثناء جلب معاملات المستأجرين. يرجى المحاولة مرة أخرى.",
+          {
+            autoClose: 3000,
+          }
+        );
+      }
+    };
+    const fetchRealState = async () => {
+      try {
+        const response = await window.electron.getAllRealStates();
+        console.log("Fetched real state transactions:", response);
+        setRealStates(response);
+      } catch (error) {
+        console.error("Error fetching real state transactions:", error);
+        toast.error(
+          "حدث خطأ أثناء جلب معاملات العقارات. يرجى المحاولة مرة أخرى.",
+          {
+            autoClose: 3000,
+          }
+        );
+      }
+    };
+
+    fetchTenants();
+    fetchRealState();
+  }, [updateFlag]);
+
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
       handleSave(); // Trigger the save function when Enter is pressed
@@ -205,7 +270,6 @@ const IncomingPage: React.FC = ({ activeTab }) => {
         const transactionAmount = Number(amount);
         const transactionReport = report;
         const transactionType = "incoming";
-        const transactionDate = new Date().toISOString().slice(0, 10);
 
         console.log("newPersonalTransaction", {
           userId,
@@ -257,6 +321,38 @@ const IncomingPage: React.FC = ({ activeTab }) => {
             autoClose: 3000,
           });
         }
+      } else if (selectedType === "ايجار") {
+        console.log("Saving tenant transaction...");
+        const userId = userInfo?.id ?? 0;
+        const customer_id = customerObject?.id ?? 0;
+        const transactionAmount = Number(amount);
+        const transactionReport = report;
+        const transactionType = "incoming";
+        const propertyId = realStateValue ?? 0;
+        const contractIdValue = contractId ?? 0;
+        console.log("newTenantTransaction", {
+          userId,
+          customer_id,
+          transactionAmount,
+          transactionReport,
+          transactionType,
+          transactionDate,
+          propertyId,
+          contractId: contractIdValue,
+        });
+
+        // Call addTenantTransaction with correct arguments
+        const result = await window.electron.addTenantTransaction(
+          contractId ?? 0,
+          realStateValue ?? 0,
+          customerObject?.id ?? 0,
+          {
+            amount: Number(amount),
+            date: transactionDate,
+            isPaid: true, // Default to unpaid
+          }
+        );
+        console.log("Tenant transaction added:", result);
       }
 
       setCustomerName("");
@@ -291,18 +387,18 @@ const IncomingPage: React.FC = ({ activeTab }) => {
         setProcedureTransactions(
           procedureTransactions.filter((t) => t.id !== transactionToDelete)
         );
-      } else {
-        setTransactions(
-          transactions.filter((t) => t.id !== transactionToDelete)
-        );
+      } else if (selectedType === "ايجار") {
+        console.log("Deleting tenant transaction:", transactionToDelete);
+
+        await window.electron.deleteTenantTransaction(transactionToDelete);
       }
 
       // Show success toast after deletion is complete
       toast.success("تم حذف المعاملة بنجاح!", { autoClose: 3000 });
-
       // Reset deletion state
       setTransactionToDelete(null);
       setIsModalOpen(false);
+      setUpdateFlag(!updateFlag); // Trigger update to refresh the list
     } catch (error) {
       console.error("Error deleting transaction:", error);
       toast.error("فشل حذف المعاملة. يرجى المحاولة مرة أخرى.", {
@@ -319,6 +415,15 @@ const IncomingPage: React.FC = ({ activeTab }) => {
   // const filteredPersonalTransactions = personalTransactions.filter((t) =>
   //   t.name.includes(searchQuery)
   // );
+
+  console.log("====================================");
+  console.log("customerObject", customerObject);
+  console.log("realStateValue", realStates);
+  console.log("tenants", tenants);
+
+  console.log("====================================");
+
+  // Find related real states for the selected customerObject
 
   return (
     <div className="transaction-container">
@@ -369,7 +474,7 @@ const IncomingPage: React.FC = ({ activeTab }) => {
               }
             />
           </div>
-          <div className="input-group">
+          {/* <div className="input-group">
             <label>اختر العملة</label>
             <select
               value={currency}
@@ -377,7 +482,7 @@ const IncomingPage: React.FC = ({ activeTab }) => {
               <option value="دينار">دينار</option>
               <option value="دولار">دولار</option>
             </select>
-          </div>
+          </div> */}
           {selectedType === "معاملة" && (
             <div className="input-group">
               <label>ادخل رقم المعاملة</label>
@@ -400,28 +505,170 @@ const IncomingPage: React.FC = ({ activeTab }) => {
               /> */}
             </div>
           )}
-          <div className="input-group">
-            <label>ادخل الاسم</label>
-            {selectedType === "شخصي" ? (
+          {selectedType !== "ايجار" && (
+            <div className="input-group">
+              <label>ادخل الاسم</label>
+              {selectedType === "شخصي" ? (
+                <Select
+                  allowClear
+                  value={customer}
+                  onChange={(value) => setCustomer(value as number)}>
+                  {customersAccount.map((ca) => (
+                    <Option key={ca.id} value={ca.id}>
+                      {ca.name}
+                    </Option>
+                  ))}
+                </Select>
+              ) : (
+                <input
+                  onKeyDown={handleKeyDown}
+                  type="text"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                />
+              )}
+            </div>
+          )}
+
+          {selectedType === "ايجار" && (
+            <div className="input-group">
+              <label>ادخل اسم المستأجر</label>
               <Select
                 allowClear
-                value={customer}
-                onChange={(value) => setCustomer(value as number)}>
+                value={customerObject?.name}
+                onChange={(value) => {
+                  console.log(customersAccount);
+
+                  const result = customersAccount.filter((ca) => {
+                    return ca.id === value;
+                  });
+                  console.log(result);
+
+                  setCustomerObject(result[0]);
+                }}>
                 {customersAccount.map((ca) => (
                   <Option key={ca.id} value={ca.id}>
                     {ca.name}
                   </Option>
                 ))}
               </Select>
-            ) : (
-              <input
-                onKeyDown={handleKeyDown}
-                type="text"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-              />
-            )}
-          </div>
+            </div>
+          )}
+
+          {selectedType === "ايجار" && (
+            <div className="input-group">
+              <label> رقم العقار </label>
+              <Select
+                allowClear
+                value={realStateValue}
+                onChange={(value) => setRealStateValue(value as number)}>
+                {realStates
+                  .filter((rs) =>
+                    tenants.some(
+                      (t) =>
+                        t.propertyId === rs.id &&
+                        Array.isArray(t.tenantNames) &&
+                        t.tenantNames.includes(customerObject?.name)
+                    )
+                  )
+                  .map((rs) => {
+                    return (
+                      <Option key={rs.id} value={rs.id}>
+                        {rs.propertyTitle}
+                      </Option>
+                    );
+                  })}
+              </Select>
+            </div>
+          )}
+          {selectedType === "ايجار" && (
+            <div className="input-group">
+              <label> رقم العقد </label>
+              <Select
+                allowClear
+                value={contractId}
+                onChange={(value) => {
+                  setContractId(value as number);
+                  console.log("value", value);
+                }}>
+                {tenants
+                  .filter((t) => {
+                    return (
+                      t.tenantNames.includes(customerObject?.name) &&
+                      t.propertyId === realStateValue
+                    );
+                  })
+                  .map((t) => {
+                    return (
+                      <Option key={t.id} value={t.id}>
+                        {t.contractNumber}
+                      </Option>
+                    );
+                  })}
+              </Select>
+            </div>
+          )}
+          {selectedType === "ايجار" && (
+            <div className="input-group">
+              <label> ‏تاريخ الاستحقاق</label>
+              {tenants
+                .filter((t) => t.id === contractId)
+                .map((t) => {
+                  console.log("tenants", t);
+
+                  // Assume installmentsDue is a JSON string array of objects with isPaid and dueDate
+                  type Installment = {
+                    isPaid: boolean;
+                    date?: string;
+                    amount?: number;
+                  };
+                  let unpaidInstallments: Installment[] = [];
+                  try {
+                    unpaidInstallments =
+                      JSON.parse((t as any).installmentsDue)?.filter(
+                        (i: Installment) => !i.isPaid
+                      ) || [];
+                  } catch (e) {
+                    unpaidInstallments = [];
+                  }
+                  // Render an input for each unpaid installment's due date (or a placeholder if not available)
+                  return (
+                    <Select
+                      allowClear
+                      placeholder="اختر تاريخ الاستحقاق"
+                      style={{ width: "100%" }}
+                      // You may want to store the selected installment index or date in state if needed
+                    >
+                      {unpaidInstallments.map((inst) => (
+                        <Option key={inst.date} value={inst.date}>
+                          {inst.date
+                            ? `${inst.date} ${
+                                inst.isPaid === false ? "غير مدفوع" : "مدفوع"
+                              }`
+                            : "بدون تاريخ"}
+                        </Option>
+                      ))}
+                    </Select>
+                  );
+                })}
+            </div>
+          )}
+          {selectedType === "ايجار" && (
+            <div className="input-group">
+              <label> ‏مبلغ الاستحقاق</label>
+              {tenants
+                .filter((t) => {
+                  return (
+                    t.tenantNames.includes(customerObject?.name) &&
+                    t.propertyId === realStateValue
+                  );
+                })
+                .map((t) => {
+                  return <input disabled={true} value={t.installmentAmount} />;
+                })}
+            </div>
+          )}
+
           <div className="input-group">
             <label>التفاصيل</label>
             <input
@@ -453,8 +700,10 @@ const IncomingPage: React.FC = ({ activeTab }) => {
       )}
       {selectedType === "ايجار" && (
         <TenantTransactions
-          transactions={personalTransactions}
+          tenansTransactions={tenansTransactions}
           onDelete={handleDelete}
+          selectedType={selectedType}
+          activeTab={activeTab}
         />
       )}
       {selectedType === "معاملة" && (

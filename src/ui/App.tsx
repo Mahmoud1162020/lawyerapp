@@ -17,6 +17,7 @@ import OutgoingTransactionDetails from "./components/Details/OutgoingTransaction
 import OutgoingPersonalTransactionDetails from "./components/Details/OutgoigPersonalTransactionDetails";
 import IncomingPersonalTransactionDetails from "./components/Details/incomingPersonalTransactionDetails";
 import ProcedureIncomingDetails from "./components/Details/ProcedureIncomingDetails";
+import TenantTransactionDetails from "./components/Details/TenantTransactionDetails";
 
 function App() {
   useEffect(() => {
@@ -38,6 +39,10 @@ function App() {
         tenantContract
         <Route path="/tenantContract/:id" element={<TenantsDetails />} />
         <Route path="/procedure-details/:id" element={<ProcedureDetails />} />
+        <Route
+          path="/tenant-transaction-details/:id"
+          element={<TenantTransactionDetails />}
+        />
         <Route
           path="/outgoing-transaction-details/:id"
           element={<OutgoingTransactionDetails />}
