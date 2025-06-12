@@ -20,7 +20,11 @@ interface CustomerAccount {
   details: string | null;
 }
 const { Option } = Select;
-const IncomingPage: React.FC = ({ activeTab }) => {
+interface IncomingPageProps {
+  activeTab: string;
+}
+
+const IncomingPage: React.FC<IncomingPageProps> = ({ activeTab }) => {
   const [amount, setAmount] = useState<number | "">("");
   const [transactionNumber, setTransactionNumber] = useState<string>("");
   const location = useLocation();

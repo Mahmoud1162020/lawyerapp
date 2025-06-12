@@ -72,7 +72,7 @@ export async function addTenant(
     console.log("✅ Tenant added successfully with associated customer IDs.");
     return { id: tenantId };
   } catch (error) {
-    console.error("❌ SQLite Insert Error:", error);
+    console.error("❌ SQLite Insert Error:=====", error);
     throw error;
   }
 }

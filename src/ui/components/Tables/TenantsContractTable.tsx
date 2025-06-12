@@ -35,9 +35,7 @@ export default function TenantsContractTable() {
       owners: { id: number; name: string }[];
     }[]
   >([]);
-  const [selectedRealState, setSelectedRealState] = useState<
-    { id: number; name: string }[]
-  >([]);
+  // Removed unused selectedRealState state
   // Table data and search/filter states
   const [tableData, setTableData] = useState<
     {
@@ -100,31 +98,31 @@ export default function TenantsContractTable() {
     }
   };
 
-  useEffect(() => {
-    let isMounted = true;
-    const handleError = (error: string) => {
-      console.error("Error from Electron backend:", error);
-      toast.error("رقم العقد موجود مسبقاً", { autoClose: 3000 });
+  // useEffect(() => {
+  //   let isMounted = true;
+  //   const handleError = (error: string) => {
+  //     console.error("Error from Electron backend:", error);
+  //     toast.error("رقم العقد موجود مسبقاً", { autoClose: 3000 });
 
-      if (
-        isMounted &&
-        error.stack.includes(
-          "Error: SQLITE_CONSTRAINT: UNIQUE constraint failed: tenants.contractNumber"
-        )
-      ) {
-        toast.error("رقم العقد موجود مسبقاً", { autoClose: 3000 });
-      }
-    };
+  //     if (
+  //       isMounted &&
+  //       error.includes(
+  //         "Error: SQLITE_CONSTRAINT: UNIQUE constraint failed: tenants.contractNumber"
+  //       )
+  //     ) {
+  //       toast.error("رقم العقد موجود مسبقاً", { autoClose: 3000 });
+  //     }
+  //   };
 
-    // Attach the error listener
-    window.electron.onError(handleError);
+  //   // Attach the error listener
+  //   window.electron.onError(handleError);
 
-    // Cleanup the listener on component unmount
-    return () => {
-      isMounted = false;
-      window.electron.offError(handleError);
-    };
-  }, []);
+  //   // Cleanup the listener on component unmount
+  //   return () => {
+  //     isMounted = false;
+  //     window.electron.offError(handleError);
+  //   };
+  // }, []);
   useEffect(() => {
     getAllCustomersAccounts();
     getAllRealStates();
@@ -271,6 +269,9 @@ export default function TenantsContractTable() {
       setLeasedUsage("");
       setPropertyType("");
     } catch (error) {
+      toast.error("رقم العقد موجود مسبقاً");
+      alert("رقم العقد موجود مسبقاً");
+
       console.error("Error adding tenant contract:", error);
     }
   };
