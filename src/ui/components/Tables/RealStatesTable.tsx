@@ -175,6 +175,7 @@ export default function RealStatesTable() {
         {
           key: addedRealState.id, // Use the ID returned from the backend
           ...newRecord,
+          price: newRecord.price.toString(), // Ensure price is a string
           owners: newRecord.owners.join(", "), // Convert owners array to a comma-separated string for display
         },
       ]);
@@ -341,7 +342,7 @@ export default function RealStatesTable() {
     {
       title: "خيارات",
       key: "actions",
-      render: (_, record) => {
+      render: (_: unknown, record: { key: number }) => {
         console.log("Record:", record.key);
 
         return (
@@ -403,7 +404,10 @@ export default function RealStatesTable() {
                   value={selectedOwners}
                   onChange={(values) => setSelectedOwners(values)}
                   filterOption={(input, option) =>
-                    (option?.children as string)
+                    (typeof option?.children === "string"
+                      ? option.children
+                      : option?.children?.toString() || ""
+                    )
                       .toLowerCase()
                       .includes(input.toLowerCase())
                   } // Custom search logic
@@ -457,7 +461,7 @@ export default function RealStatesTable() {
             </Button>
           </div>
         </Panel>
-        {activeCollapse[1] !== "1" && (
+        {Array.isArray(activeCollapse) && activeCollapse[1] !== "1" && (
           <button
             className="real-states-refresh-button"
             onClick={() =>

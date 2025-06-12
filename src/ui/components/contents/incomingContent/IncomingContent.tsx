@@ -26,10 +26,9 @@ interface IncomingPageProps {
 
 const IncomingPage: React.FC<IncomingPageProps> = ({ activeTab }) => {
   const [amount, setAmount] = useState<number | "">("");
-  const [transactionNumber, setTransactionNumber] = useState<string>("");
   const location = useLocation();
   const [customer, setCustomer] = useState<number>();
-  const [currency, setCurrency] = useState("دينار"); // Default currency
+  // const [currency, setCurrency] = useState("دينار"); // Default currency
   const [selectedType, setSelectedType] = useState("شخصي"); // Default selection
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -40,7 +39,18 @@ const IncomingPage: React.FC<IncomingPageProps> = ({ activeTab }) => {
     null
   );
   const [contractId, setContractId] = useState<number | null>(null);
-  const [realStates, setRealStates] = useState<any[]>([]); // Assuming RealState type is defined elsewhere
+  interface RealState {
+    id: number;
+    propertyTitle: string;
+    propertyNumber: string;
+    address: string;
+    price: number;
+    date: string;
+    details: string | null;
+    owners: { id: number; name: string }[];
+  }
+
+  const [realStates, setRealStates] = useState<RealState[]>([]);
   const [transactionDate, setTransactionDate] = useState(
     new Date().toISOString().slice(0, 10)
   );
@@ -50,18 +60,49 @@ const IncomingPage: React.FC<IncomingPageProps> = ({ activeTab }) => {
   const [personalTransactions, setPersonalTransactions] = React.useState<
     PersonalTransaction[]
   >([]);
-  const [tenansTransactions, setTenansTransactions] = useState<any[]>([]); // Assuming Transaction type is defined elsewhere
-  const [tenants, setTenants] = useState<TenantResponse[]>([]); // Assuming Transaction type is defined elsewhere
+  const [tenansTransactions, setTenansTransactions] = useState<
+    TenantTransaction[] | TenantResponse[]
+  >([]); // Assuming Transaction type is defined elsewhere
+
+  interface TenantResponse {
+    id: number;
+    contractStatus: string;
+    startDate: string;
+    tenantNames: string[];
+    propertyNumber: number;
+    endDate: string;
+    entitlement: number;
+    contractNumber: string;
+    installmentCount: number;
+    leasedUsage: string;
+    propertyType: string;
+    propertyDetails: {
+      id: number;
+      propertyTitle: string;
+      propertyNumber: string;
+      address: string;
+      price: number;
+      date: string;
+      details: string | null;
+    };
+    propertyId: number;
+    installmentAmount?: number;
+    installmentsDue?: string; // Add this property as string (JSON)
+  }
+
+  const [tenants, setTenants] = useState<TenantResponse[]>([]); // Now TenantResponse includes installmentsDue
   const [userInfo, setUserInfo] = useState<User | null>();
   const [realStateValue, setRealStateValue] = useState<number | null>(null);
 
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  // const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [allProcedures, setAllProcedures] = useState<Procedure[]>();
   const [procedurId, setProcedureId] = useState<number | null>(null);
   const [procedureTransactions, setProcedureTransactions] = useState<
     Transaction[]
   >([]);
-  const [customerObject, setCustomerObject] = useState(null);
+  const [customerObject, setCustomerObject] = useState<CustomerAccount | null>(
+    null
+  );
   const getUserInfo = async () => {
     try {
       const user = await window.electron.getUser();
@@ -97,7 +138,7 @@ const IncomingPage: React.FC<IncomingPageProps> = ({ activeTab }) => {
       console.log("location", location.state.selectedType);
       setSelectedType(location?.state?.selectedType);
     }
-  }, []);
+  }, [location.state]);
 
   useEffect(() => {
     const fetchAllTenantsTransactions = async () => {
@@ -125,15 +166,19 @@ const IncomingPage: React.FC<IncomingPageProps> = ({ activeTab }) => {
           await window.electron.getAllPersonalTransactions();
 
         // First, map to ensure all required fields are present for PersonalTransaction type
-        const mappedTransactions = rawTransactions.map((t: any) => ({
-          ...t,
-          type: t.type ?? "personal",
-          transactionType: t.transactionType ?? "incoming",
-        }));
+        const mappedTransactions = rawTransactions.map(
+          (t: PersonalTransaction | unknown) => ({
+            ...(t as PersonalTransaction),
+            type: (t as PersonalTransaction).type ?? "personal",
+            transactionType:
+              (t as PersonalTransaction).transactionType ?? "incoming",
+          })
+        );
 
         // Then filter transactions with transactionType "incoming" and type "personal"
         const filteredTransactions = mappedTransactions.filter(
-          (t: any) => t.transactionType === "incoming" && t.type === "personal"
+          (t: PersonalTransaction) =>
+            t.transactionType === "incoming" && t.type === "personal"
         );
 
         console.log("Filtered Personal Transactions:", filteredTransactions);
@@ -219,9 +264,37 @@ const IncomingPage: React.FC<IncomingPageProps> = ({ activeTab }) => {
   useEffect(() => {
     const fetchTenants = async () => {
       try {
-        const response = await window.electron.getAllTenants();
+        const response: {
+          id: number;
+          contractStatus: string;
+          startDate: string;
+          tenantNames: string[];
+          propertyNumber: number;
+          endDate: string;
+          entitlement: number;
+          contractNumber: string;
+          installmentCount: number;
+          leasedUsage: string;
+          propertyType: string;
+          propertyDetails: {
+            id: number;
+            propertyTitle: string;
+            propertyNumber: string;
+            address: string;
+            price: number;
+            date: string;
+            details: string | null;
+          };
+        }[] = await window.electron.getAllTenants();
         console.log("Fetched tenants transactions:", response);
-        setTenants(response);
+        // Ensure propertyId is present for each tenant object
+        setTenants(
+          response.map((tenant) => ({
+            ...tenant,
+            propertyId:
+              tenant.propertyDetails?.id ?? tenant.propertyNumber ?? 0,
+          }))
+        );
       } catch (error) {
         console.error("Error fetching tenants transactions:", error);
         toast.error(
@@ -270,7 +343,7 @@ const IncomingPage: React.FC<IncomingPageProps> = ({ activeTab }) => {
       if (selectedType === "شخصي") {
         // userId: number, customer_id: number, amount: number, report: string, transactionType: "incoming" | "outgoing", date: string
         const userId = userInfo?.id ?? 0;
-        const customer_id = customer;
+        const customer_id = customer ?? 0;
         const transactionAmount = Number(amount);
         const transactionReport = report;
         const transactionType = "incoming";
@@ -361,7 +434,6 @@ const IncomingPage: React.FC<IncomingPageProps> = ({ activeTab }) => {
 
       setCustomerName("");
       setAmount("");
-      setTransactionNumber("");
       setProcedureId(null);
     } catch (error) {
       const errorMessage =
@@ -544,7 +616,7 @@ const IncomingPage: React.FC<IncomingPageProps> = ({ activeTab }) => {
                   console.log(customersAccount);
 
                   const result = customersAccount.filter((ca) => {
-                    return ca.id === value;
+                    return ca.id === Number(value);
                   });
                   console.log(result);
 
@@ -572,7 +644,8 @@ const IncomingPage: React.FC<IncomingPageProps> = ({ activeTab }) => {
                       (t) =>
                         t.propertyId === rs.id &&
                         Array.isArray(t.tenantNames) &&
-                        t.tenantNames.includes(customerObject?.name)
+                        customerObject?.name !== undefined &&
+                        t.tenantNames.includes(customerObject.name)
                     )
                   )
                   .map((rs) => {
@@ -596,12 +669,12 @@ const IncomingPage: React.FC<IncomingPageProps> = ({ activeTab }) => {
                   console.log("value", value);
                 }}>
                 {tenants
-                  .filter((t) => {
-                    return (
-                      t.tenantNames.includes(customerObject?.name) &&
+                  .filter(
+                    (t) =>
+                      customerObject?.name !== undefined &&
+                      t.tenantNames.includes(customerObject.name) &&
                       t.propertyId === realStateValue
-                    );
-                  })
+                  )
                   .map((t) => {
                     return (
                       <Option key={t.id} value={t.id}>
@@ -629,10 +702,12 @@ const IncomingPage: React.FC<IncomingPageProps> = ({ activeTab }) => {
                   let unpaidInstallments: Installment[] = [];
                   try {
                     unpaidInstallments =
-                      JSON.parse((t as any).installmentsDue)?.filter(
-                        (i: Installment) => !i.isPaid
-                      ) || [];
+                      JSON.parse(
+                        (t as TenantResponse).installmentsDue || "[]"
+                      )?.filter((i: Installment) => !i.isPaid) || [];
                   } catch (e) {
+                    console.log("Error parsing installmentsDue:", e);
+
                     unpaidInstallments = [];
                   }
                   // Render an input for each unpaid installment's due date (or a placeholder if not available)
@@ -663,7 +738,8 @@ const IncomingPage: React.FC<IncomingPageProps> = ({ activeTab }) => {
               {tenants
                 .filter((t) => {
                   return (
-                    t.tenantNames.includes(customerObject?.name) &&
+                    customerObject?.name !== undefined &&
+                    t.tenantNames.includes(customerObject.name) &&
                     t.propertyId === realStateValue
                   );
                 })

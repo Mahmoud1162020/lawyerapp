@@ -7,7 +7,23 @@ import { Button, Select } from "antd";
 
 // toast.configure(); // Initialize toast notifications
 const { Option } = Select;
-const TransactionPage: React.FC = ({ activeTab, operationType }) => {
+interface TransactionPageProps {
+  activeTab: string;
+}
+
+interface personalTransaction {
+  id: number;
+  userId: number;
+  customer_id: number;
+  amount: number;
+  report: string;
+  date: string;
+  transactionType?: string;
+  type?: string; // "personal" or "procedure"
+  customer_name?: string; // Optional field for customer name
+}
+
+const TransactionPage: React.FC<TransactionPageProps> = ({ activeTab }) => {
   const navigate = useNavigate();
   const [customerAccounts, setCustomerAccounts] = useState<Customer[]>([]);
   const [amount, setAmount] = useState<number | "">("");
@@ -31,7 +47,7 @@ const TransactionPage: React.FC = ({ activeTab, operationType }) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
   const [personalTransactions, setPersonalTransactions] =
-    useState<PersonalTransaction[]>();
+    useState<personalTransaction[]>();
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
@@ -50,7 +66,26 @@ const TransactionPage: React.FC = ({ activeTab, operationType }) => {
     try {
       const customersAccounts = await window.electron.getAllCustomersAccounts();
       console.log("Fetched Customers Accounts:", customersAccounts);
-      setCustomerAccounts(customersAccounts);
+      setCustomerAccounts(
+        customersAccounts.map(
+          (customer: {
+            id: number;
+            name: string;
+            accountNumber: string;
+            accountType: string;
+            phone: string;
+            address: string;
+            date: string;
+            details: string | null;
+            debit?: number;
+            credit?: number;
+          }) => ({
+            ...customer,
+            debit: customer.debit ?? 0,
+            credit: customer.credit ?? 0,
+          })
+        )
+      );
     } catch (error) {
       console.log("Error fetching data from the database:", error);
     }
@@ -116,7 +151,8 @@ const TransactionPage: React.FC = ({ activeTab, operationType }) => {
 
         // Filter transactions with transactionType "outgoing" and type "personal"
         const filteredTransactions = rawTransactions.filter(
-          (t: any) => t.transactionType === "outgoing" && t.type === "personal"
+          (t: personalTransaction) =>
+            t.transactionType === "outgoing" && t.type === "personal"
         );
 
         console.log("Filtered Personal Transactions:", filteredTransactions);

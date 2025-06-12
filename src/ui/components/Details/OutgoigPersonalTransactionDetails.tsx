@@ -52,11 +52,13 @@ export default function OutgoingPersonalTransactionDetails() {
       await window.electron.updatePersonalTransaction(
         record.id,
         "date",
-        record.date
+        record.date ?? ""
       );
       toast.success("تم حفظ التعديلات بنجاح");
       navigate(-1); // Navigate back to the previous page
     } catch (error) {
+      console.log("Error saving transaction:", error);
+
       toast.error("فشل حفظ التعديلات");
     }
   };

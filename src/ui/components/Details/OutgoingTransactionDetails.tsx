@@ -11,12 +11,6 @@ export default function OutgoingTransactionDetails() {
   const location = useLocation();
 
   const navigate = useNavigate();
-  const [user, setUser] = useState<
-    {
-      id: number;
-      username: string;
-    }[]
-  >([]);
   const [record, setRecord] = useState<Transaction>({
     id: 1,
     userId: 1,
@@ -25,6 +19,7 @@ export default function OutgoingTransactionDetails() {
     report: "",
     procedureId: 1,
     type: "procedure",
+    transactionType: "outgoing",
     date: "",
   });
 
@@ -42,6 +37,7 @@ export default function OutgoingTransactionDetails() {
           report: response.report || "",
           procedureId: response.procedureId,
           type: response.type,
+          transactionType: response.transactionType || "outgoing",
           date: response.date.slice(0, 10), // Extract YYYY-MM-DD
         });
       } else {

@@ -52,7 +52,7 @@ export default function IncomingPersonalTransactionDetails() {
       await window.electron.updatePersonalTransaction(
         record.id,
         "date",
-        record.date
+        record.date ?? ""
       );
       toast.success("تم حفظ التعديلات بنجاح");
       navigate(location.state?.from || "/cash", {

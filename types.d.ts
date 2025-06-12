@@ -35,7 +35,7 @@ type Statistics = {
     report: string;
     procedureId: number;
     type: "procedure" | "personal";
-    transactionType: "incoming" | "outgoing";
+    transactionType?: "incoming" | "outgoing";
     date: string;
   }
   type PersonalTransaction= {
@@ -44,9 +44,9 @@ type Statistics = {
     customer_id: string;
     amount: number;
     report: string;
-    type: "procedure" | "personal";
-    transactionType: "incoming" | "outgoing";
-    date: string;
+    type?: "procedure" | "personal";
+    transactionType?: "incoming" | "outgoing";
+    date: string?;
     customer_name?:string;
     customer_accountNumber?: string;
     customer_accountType?: string;
@@ -76,6 +76,12 @@ type Statistics = {
     installmentCount: number;
     leasedUsage: string;
     propertyType: string;
+  transactionId?: number;
+  customerName?: string;
+  date?: string;
+  amount?: number;
+  description?: string;
+
   };
   type TenantTransactionDetailsProps= {
   transactionId: number;
@@ -105,6 +111,7 @@ type Statistics = {
     installmentCount: number;
     leasedUsage: string;
     propertyType: string;
+    propertyId: number;
     propertyDetails: {
       id: number;
       propertyTitle: string;

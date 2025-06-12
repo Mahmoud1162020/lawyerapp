@@ -50,11 +50,11 @@ export default function RealStateDetails() {
         setRecord({
           propertyTitle: response.propertyTitle,
           propertyNumber: response.propertyNumber,
-          owners: response.owners.map((owner) => owner.id),
+          owners: response.owners.map((owner) => String(owner.id)),
           address: response.address,
-          price: response.price,
+          price: String(response.price),
           date: response.date.slice(0, 10), // Extract YYYY-MM-DD
-          details: response.details,
+          details: response.details ?? "",
         });
       } else {
         console.error("Record not found");
@@ -135,7 +135,10 @@ export default function RealStateDetails() {
     console.log("Valid Owners:", validOwners);
 
     window.electron
-      .updateRealStateOwners(Number(id), record.owners) // Convert owner IDs to numbers
+      .updateRealStateOwners(
+        Number(id),
+        record.owners.map((ownerId) => Number(ownerId))
+      ) // Convert owner IDs to numbers
       .then(() => {
         console.log("Owners updated successfully");
       })

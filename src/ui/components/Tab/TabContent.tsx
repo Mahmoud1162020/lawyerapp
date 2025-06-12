@@ -8,10 +8,7 @@ interface TabContentProps {
   activeTab: string;
 }
 
-export default function TabContent({
-  activeTab,
-  operationType,
-}: TabContentProps) {
+export default function TabContent({ activeTab }: TabContentProps) {
   const content: Record<string, JSX.Element> = {
     outgoing: (
       <div className="tab-content">

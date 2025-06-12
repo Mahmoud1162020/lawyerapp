@@ -238,9 +238,10 @@ export default function ProceduresTable() {
                   value={selectedOwners}
                   onChange={(values) => setSelectedOwners(values)}
                   filterOption={(input, option) =>
-                    (option?.children as string)
-                      .toLowerCase()
-                      .includes(input.toLowerCase())
+                    (typeof option?.children === "string"
+                      ? String(option.children).toLowerCase()
+                      : ""
+                    ).includes(input.toLowerCase())
                   } // Custom search logic
                 >
                   {customersAccounts.map((owner) => (

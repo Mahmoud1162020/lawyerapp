@@ -27,7 +27,15 @@ const ProcedureIncomingDetails: React.FC = () => {
       try {
         const details = await window.electron.getTransactionById(Number(id));
         if (details) {
-          setTransaction(details);
+          setTransaction({
+            id: details.id,
+            procedureId: String(details.procedureId),
+            recipient: details.recipient,
+            date: details.date,
+            amount: details.amount,
+            currency: "", // No currency property in details, provide default
+            report: details.report,
+          });
         } else {
           toast.error("لم يتم العثور على المعاملة", { autoClose: 3000 });
         }

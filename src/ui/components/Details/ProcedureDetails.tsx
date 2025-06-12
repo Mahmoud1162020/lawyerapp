@@ -24,7 +24,26 @@ export default function ProcedureDetails() {
     try {
       const customersAccounts = await window.electron.getAllCustomersAccounts();
       console.log("Fetched Customers Accounts:", customersAccounts);
-      setCustomerAccounts(customersAccounts);
+      setCustomerAccounts(
+        customersAccounts.map(
+          (customer: {
+            id: number;
+            name: string;
+            accountNumber: string;
+            accountType: string;
+            phone: string;
+            address: string;
+            date: string;
+            details: string | null;
+            debit?: number;
+            credit?: number;
+          }) => ({
+            ...customer,
+            debit: customer.debit ?? 0,
+            credit: customer.credit ?? 0,
+          })
+        )
+      );
     } catch (error) {
       console.log("Error fetching data from the database:", error);
     }
