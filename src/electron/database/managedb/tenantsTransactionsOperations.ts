@@ -171,7 +171,7 @@ export async function deleteTenantTransaction(transactionId: number): Promise<vo
   console.log(`✅ Deleted transaction ID ${transactionId}`);
 }
 
-export async function getTenatnTransactionById(transactionId: number): Promise<TenantTransaction | null> {
+export async function getTenatnTransactionById(transactionId: number): Promise<TenantTransactionDetailsProps | null> {
     const db = await initializeDatabase();
 
   const transaction = await db.get(

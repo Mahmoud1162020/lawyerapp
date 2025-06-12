@@ -2,25 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useParams, useNavigate } from "react-router-dom";
 import "./TenantTransactionDetails.css";
 
-interface TenantTransactionDetailsProps {
-  transactionId: number;
-  customerName: string;
-  date: string;
-  amount: number;
-  isPaid: boolean;
-  description: string;
-  propertyTitle: string;
-  propertyNumber: string;
-  propertyAddress: string;
-  propertyPrice: number;
-  tenantContractNumber: string;
-  tenantStartDate: string;
-  tenantEndDate: string;
-  tenantLeasedUsage: string;
-}
-
 const TenantTransactionDetails: React.FC = () => {
-  const { id: transactionId } = useParams<{ transactionId: string }>();
+  const { transactionId } = useParams<{ transactionId: string }>();
   const location = useLocation();
   const navigate = useNavigate();
   const [transactionDetails, setTransactionDetails] =
@@ -34,8 +17,12 @@ const TenantTransactionDetails: React.FC = () => {
         const response = await window.electron.getTenatnTransactionById(
           Number(transactionId)
         );
-        setTransactionDetails(response);
-        console.log("Fetched transaction details:", response);
+        if (response) {
+          setTransactionDetails(response);
+          console.log("Fetched transaction details:", response);
+        } else {
+          console.error("Transaction not found");
+        }
       } catch (error) {
         console.error("Error fetching transaction details:", error);
       }
@@ -54,6 +41,7 @@ const TenantTransactionDetails: React.FC = () => {
   };
 
   const handleSave = async () => {
+    if (!transactionDetails) return;
     try {
       await window.electron.updateTenantTransaction(
         transactionDetails.transactionId,

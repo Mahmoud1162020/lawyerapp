@@ -7,7 +7,6 @@ import Cash from "./screens/Cash";
 import Management from "./screens/Management";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css"; // Import styles
-import TransactionDetails from "./screens/TransactionDetails";
 import CustomerDetails from "./components/Details/CustomerDetails";
 import RealStateDetails from "./components/Details/RealStateDetails";
 import Register from "./components/Register";
@@ -40,7 +39,7 @@ function App() {
         <Route path="/tenantContract/:id" element={<TenantsDetails />} />
         <Route path="/procedure-details/:id" element={<ProcedureDetails />} />
         <Route
-          path="/tenant-transaction-details/:id"
+          path="/tenant-transaction-details/:transactionId"
           element={<TenantTransactionDetails />}
         />
         <Route

@@ -136,7 +136,7 @@ addTenantTransaction: (
 getTenantTransactions: (tenantId: number): Promise<TenantTransaction[]> => electron.ipcRenderer.invoke('get-tenant-transactions', tenantId),
 getAllTenantTransactions: (): Promise<TenantTransaction[]> => electron.ipcRenderer.invoke('get-all-tenants-transactions'),
 deleteTenantTransaction: (transactionId: number): Promise<void> => electron.ipcRenderer.invoke('delete-tenant-transaction', transactionId),
-getTenatnTransactionById: (transactionId: number): Promise<TenantTransaction | null> => electron.ipcRenderer.invoke('get-tenant-transaction-details', transactionId),
+getTenatnTransactionById: (transactionId: number): Promise<TenantTransactionDetailsProps | null> => electron.ipcRenderer.invoke('get-tenant-transaction-details', transactionId),
 updateTenantTransaction: (
   transactionId: number,
   updatedTransaction: { amount: number; date: string; isPaid: boolean; description?: string }

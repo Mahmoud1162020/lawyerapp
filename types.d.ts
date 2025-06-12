@@ -77,6 +77,22 @@ type Statistics = {
     leasedUsage: string;
     propertyType: string;
   };
+  type TenantTransactionDetailsProps= {
+  transactionId: number;
+  customerName: string;
+  date: string;
+  amount: number;
+  isPaid: boolean;
+  description: string;
+  propertyTitle: string;
+  propertyNumber: string;
+  propertyAddress: string;
+  propertyPrice: number;
+  tenantContractNumber: string;
+  tenantStartDate: string;
+  tenantEndDate: string;
+  tenantLeasedUsage: string;
+}
   type TenantResponse = {
     id: number;
     contractStatus: string;
@@ -201,7 +217,7 @@ type Statistics = {
       getTenantTransactions:(tenantId: number)=>Promise<TenantTransaction[]>,
       getAllTenantTransactions: ()=>Promise<TenantTransaction[]>,
       deleteTenantTransaction:(transactionId: number)=>Promise<void>,
-      getTenatnTransactionById:(transactionId: number)=>Promise<TenantTransaction | null>
+      getTenatnTransactionById:(transactionId: number)=>Promise<TenantTransactionDetailsProps | null>
       updateTenantTransaction:(transactionId: number,updatedTransaction: { amount: number; date: string; isPaid: boolean })=>Promise<void>
     };
 
