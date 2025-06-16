@@ -2,6 +2,7 @@ import { app, BrowserWindow, dialog, ipcMain } from "electron";
 import path from "path";
 import { getPreloadPath } from "../pathResolver.js";
 import { isDev } from "../util.js";
+import { log } from "console";
 
 
 
@@ -17,7 +18,11 @@ export function createMainWindow(): BrowserWindow {
   if (isDev()) {
     mainWindow.loadURL("http://localhost:5123");
   } else {
-    mainWindow.loadFile(path.join(app.getAppPath(), "/dist-react/index.html"));
+    // mainWindow.loadFile(path.join(app.getAppPath(), "/dist-react/index.html"));
+    mainWindow.loadFile(path.join(app.getAppPath(), 'dist-react', 'index.html'));
+// mainWindow.loadFile(path.resolve(app.getAppPath(), 'dist-react', 'index.html'));
+console.log("Loading file:", path.resolve(app.getAppPath(), 'dist-react', 'index.html'));
+
   }
 
   mainWindow.on("close", (e) => {

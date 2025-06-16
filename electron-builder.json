@@ -1,6 +1,11 @@
 {
     "appId": "com.ashursoft.lawyersapp",
-    "files": ["dist-electron", "dist-react"],
+    "files": [
+    "dist-electron/**/*",
+    "dist-react/**/*",
+    "node_modules/**/*",
+    "package.json"
+  ],
     "extraResources": ["dist-electron/preload.cjs", "src/assets/**"],
     "icon": "./desktopIcon.png",
     "mac": {

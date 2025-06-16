@@ -1,12 +1,12 @@
 import { useEffect } from "react";
-import { Routes, BrowserRouter as Router, Route } from "react-router-dom";
+import { Routes, HashRouter as Router, Route } from "react-router-dom"; // <-- Use HashRouter
 import "./App.css";
 import Navbar from "./components/NavBar";
 import Reports from "./screens/Reports";
 import Cash from "./screens/Cash";
 import Management from "./screens/Management";
 import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css"; // Import styles
+import "react-toastify/dist/ReactToastify.css";
 import CustomerDetails from "./components/Details/CustomerDetails";
 import RealStateDetails from "./components/Details/RealStateDetails";
 import Register from "./components/Register";
@@ -35,7 +35,7 @@ function App() {
         <Route path="/cash" element={<Cash />} />
         <Route path="/manage" element={<Management />} />
         <Route path="/real-state-details/:id" element={<RealStateDetails />} />
-        tenantContract
+        {/* tenantContract */}
         <Route path="/tenantContract/:id" element={<TenantsDetails />} />
         <Route path="/procedure-details/:id" element={<ProcedureDetails />} />
         <Route
