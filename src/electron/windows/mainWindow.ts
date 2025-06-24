@@ -2,7 +2,8 @@ import { app, BrowserWindow, dialog, ipcMain } from "electron";
 import path from "path";
 import { getPreloadPath } from "../pathResolver.js";
 import { isDev } from "../util.js";
-import { log } from "console";
+import contextMenu from 'electron-context-menu';
+
 
 
 
@@ -14,6 +15,13 @@ export function createMainWindow(): BrowserWindow {
     width: 800,
     height: 600,
   });
+contextMenu({
+  window: mainWindow, 
+  showSearchWithGoogle: true,
+  
+  showCopyLink: true,
+  showSelectAll: true,
+})
 
   if (isDev()) {
     mainWindow.loadURL("http://localhost:5123");

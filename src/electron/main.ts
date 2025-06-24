@@ -8,6 +8,7 @@ import { registerProcedureIpcHandlers } from "./ipc/ProcedureHandler.js";
 import { registerTenantsIpcHandlers } from "./ipc/TenantsHandler.js";
 import { registerPersonalTransactionIpcHandlers } from "./ipc/personalTransactionsHandler.js";
 import { registerTenantsTransactionsIpcHandlers } from "./ipc/TenantsTransactionsHandler.js";
+import { registerInternalTransactionsIpcHandlers } from "./ipc/InternalTransactionsHandler.js";
 
 app.on("ready", () => {
   const mainWindow = createMainWindow();
@@ -19,6 +20,7 @@ app.on("ready", () => {
   registerProcedureIpcHandlers(mainWindow);
   registerTenantsIpcHandlers(mainWindow);
   registerTenantsTransactionsIpcHandlers(mainWindow);
+  registerInternalTransactionsIpcHandlers(mainWindow);
 });
 
 

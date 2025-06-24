@@ -131,7 +131,7 @@ addTenantTransaction: (
   tenantId: number,
   propertyId: number,
   customerId: number,
-  transaction: { amount: number; date: string; isPaid: boolean; description?: string }
+  transaction: { amount: number; date: string; isPaid: boolean; description?: string,isCredit?: boolean }
 ): Promise<void> => electron.ipcRenderer.invoke('add-tenant-transaction', tenantId, propertyId, customerId, transaction),
 getTenantTransactions: (tenantId: number): Promise<TenantTransaction[]> => electron.ipcRenderer.invoke('get-tenant-transactions', tenantId),
 getAllTenantTransactions: (): Promise<TenantTransaction[]> => electron.ipcRenderer.invoke('get-all-tenants-transactions'),
@@ -141,6 +141,13 @@ updateTenantTransaction: (
   transactionId: number,
   updatedTransaction: { amount: number; date: string; isPaid: boolean; description?: string }
 ): Promise<void> => electron.ipcRenderer.invoke('update-tenant-transaction', transactionId, updatedTransaction),
+addInternalTransaction: (
+  tx: InternalTransaction
+): Promise<number> => electron.ipcRenderer.invoke('add-internal-transaction', tx),
+  getAllInternalTransactions: (): Promise<InternalTransaction[]> => electron.ipcRenderer.invoke('get-all-internal-transactions'),
+  getInternalTransactionById: (id: number): Promise<InternalTransaction | undefined> => electron.ipcRenderer.invoke('get-internal-transaction-by-id', id),
+  updateInternalTransaction: (id: number, tx: Partial<InternalTransaction>): Promise<void> => electron.ipcRenderer.invoke('update-internal-transaction', id, tx),
+  deleteInternalTransaction: (id: number): Promise<void> => electron.ipcRenderer.invoke('delete-internal-transaction', id),
 
 } satisfies Window['electron']);
 

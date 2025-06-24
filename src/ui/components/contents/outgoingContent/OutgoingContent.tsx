@@ -311,7 +311,7 @@ const TransactionPage: React.FC<TransactionPageProps> = ({ activeTab }) => {
           </button>
 
           <div className="input-group">
-            <label>اختر العملية</label>
+            <label>نوع الحساب</label>
             <select
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}>

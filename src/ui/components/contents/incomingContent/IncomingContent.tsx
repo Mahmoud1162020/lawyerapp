@@ -335,8 +335,10 @@ const IncomingPage: React.FC<IncomingPageProps> = ({ activeTab }) => {
     console.log("Saving transaction...");
 
     try {
-      if (!amount) {
-        toast.error("يرجى ملء جميع الحقول المطلوبة!", { autoClose: 3000 });
+      console.log("this is try of saving ", amount);
+
+      if (amount === "" || amount === 0) {
+        alert("يرجى ملء جميع الحقول المطلوبة!");
         return;
       }
 
@@ -427,9 +429,11 @@ const IncomingPage: React.FC<IncomingPageProps> = ({ activeTab }) => {
             amount: Number(amount),
             date: transactionDate,
             isPaid: true, // Default to unpaid
+            isCredit: false, // Default to not credit
           }
         );
         console.log("Tenant transaction added:", result);
+        alert(`تمت إضافة معاملة الإيجار بنجاح!`);
       }
 
       setCustomerName("");
@@ -439,7 +443,7 @@ const IncomingPage: React.FC<IncomingPageProps> = ({ activeTab }) => {
       const errorMessage =
         error instanceof Error ? error.message : "حدث خطأ غير متوقع!";
       toast.error(`❌ خطأ: ${errorMessage}`);
-      console.error("Error saving transaction:", error);
+      alert("Error saving transaction:" + errorMessage);
     }
   };
 
@@ -526,7 +530,7 @@ const IncomingPage: React.FC<IncomingPageProps> = ({ activeTab }) => {
 
         {/* Form Section */}
         <div className="form-section">
-          <button className="save-btn" onClick={handleSave} disabled={!amount}>
+          <button className="save-btn" onClick={handleSave}>
             حفظ
           </button>
           <div className="input-group">

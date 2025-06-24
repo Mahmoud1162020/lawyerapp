@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "npm-run-all --parallel dev:react dev:electron",
     "dev:react": "vite",
-"dev:electron": "npm run transpile:electron && cross-env NODE_ENV=development electron .",
+    "dev:electron": "npm run transpile:electron && cross-env NODE_ENV=development electron .",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
@@ -22,6 +22,7 @@
     "@reduxjs/toolkit": "^2.5.0",
     "antd": "^5.24.9",
     "bcrypt": "^5.1.1",
+    "electron-context-menu": "^4.1.0",
     "electron-store": "^10.0.1",
     "lucide-react": "^0.469.0",
     "moment": "^2.30.1",

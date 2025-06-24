@@ -1,1 +1,2 @@
+-- SQLite
 DELETE FROM internalTransactions;

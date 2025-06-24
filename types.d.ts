@@ -83,6 +83,20 @@ type Statistics = {
   description?: string;
 
   };
+
+
+  type realState = {
+    id: number;
+    propertyTitle: string;
+    propertyNumber: string;
+    address: string;
+    price: number;
+    date: string;
+    details: string | null;
+    owners: { id: number; name: string }[];
+    debit?:[];
+    credit?:[];
+  };
   type TenantTransactionDetailsProps= {
   transactionId: number;
   customerName: string;
@@ -135,6 +149,17 @@ type Statistics = {
   };
   
   type UnsubscribeFunction = () => void;
+
+  type InternalTransaction= {
+  id?: number;
+  fromId:number;
+  toId: number;
+  amount: number;
+  fromType: string;
+  toType: string;
+  date?: string;
+  details?: string;
+}
   
   interface Window {
     electron: {
@@ -220,12 +245,17 @@ type Statistics = {
       deletePersonalTransaction: (id: number)=>Promise<{ deleted: boolean }>,
       getPersonalTransactionsByDateRange: (startDate: string, endDate: string)=>Promise<{ id: number; userId: number; recipient: string; amount: number; report: string; date: string }[]>,
     //tenants transactions
-      addTenantTransaction:(tenantId: number,propertyId: number,customerId: number,transaction: { amount: number; date: string; isPaid: boolean; description?: string })=>Promise<void>
+      addTenantTransaction:(tenantId: number,propertyId: number,customerId: number,transaction: { amount: number; date: string; isPaid: boolean; description?: string,isCredit?:boolean })=>Promise<void>
       getTenantTransactions:(tenantId: number)=>Promise<TenantTransaction[]>,
       getAllTenantTransactions: ()=>Promise<TenantTransaction[]>,
       deleteTenantTransaction:(transactionId: number)=>Promise<void>,
       getTenatnTransactionById:(transactionId: number)=>Promise<TenantTransactionDetailsProps | null>
       updateTenantTransaction:(transactionId: number,updatedTransaction: { amount: number; date: string; isPaid: boolean })=>Promise<void>
+      addInternalTransaction: (tx: InternalTransaction) => Promise<number>;
+      getAllInternalTransactions: () => Promise<InternalTransaction[]>;
+      getInternalTransactionById: (id: number) => Promise<InternalTransaction | undefined>;
+      updateInternalTransaction: (id: number, tx: Partial<InternalTransaction>) => Promise<void>;
+      deleteInternalTransaction: (id: number) => Promise<void>;
     };
 
   }

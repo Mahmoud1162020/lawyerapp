@@ -5,7 +5,7 @@ export async function addTenantTransaction(
   tenantId: number,
   propertyId: number,
   customerId: number,
-  transaction: { amount: number; date: string; isPaid: boolean; description?: string }
+  transaction: { amount: number; date: string; isPaid: boolean; description?: string ,isCredit?: boolean} // isCredit is optional
 ): Promise<void> {
   const db = await initializeDatabase();
 
@@ -37,7 +37,7 @@ export async function addTenantTransaction(
   let updated = false;
 
   for (let i = 0; i < currentArray.length; i++) {
-    if (!currentArray[i].isPaid && currentArray[i].date <= today) {
+    if (!currentArray[i].isPaid && !currentArray[i].isCredit && currentArray[i].date <= today) {
       currentArray[i].isPaid = true;
       updated = true;
       break;
@@ -48,6 +48,26 @@ export async function addTenantTransaction(
     await db.run(`UPDATE tenants SET installmentsDue = ? WHERE id = ?`, [JSON.stringify(currentArray), tenantId]);
     console.log(`✅ Updated installmentsDue for tenant ID ${tenantId}`);
   }
+
+  // Update the realstate's rentamounts array for the given propertyId
+  const realstate = await db.get(`SELECT rentamounts FROM realstates WHERE id = ?`, [propertyId]);
+  if (!realstate) {
+    throw new Error(`Realstate with ID ${propertyId} not found`);
+  }
+
+  const rentamountsArray = JSON.parse(realstate.rentamounts || "[]");
+  console.log(`✅ Retrieved rentamounts array for realstate ID ${propertyId}`,rentamountsArray);
+  
+  rentamountsArray.push({
+    amount: transaction.amount,
+    date: transaction.date,
+    isPaid: transaction.isPaid,
+    description: transaction.description || null,
+    isCredit: transaction.isCredit ? 1 : 0 // Store isCredit as 1 for true, 0 for false
+  });
+
+  await db.run(`UPDATE realstates SET rentamounts = ? WHERE id = ?`, [JSON.stringify(rentamountsArray), propertyId]);
+  console.log(`✅ Added transaction to rentamounts array for realstate ID ${propertyId}`);
 }
 
 // Define a type for tenant transactions

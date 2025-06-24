@@ -1,6 +1,6 @@
 import React from "react";
 import "./ProcedureTransactions.css";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 interface ProcedureTransaction {
   id: number;
@@ -26,6 +26,8 @@ const ProcedureTransactions: React.FC<ProcedureTransactionsProps> = ({
 }) => {
   console.log("allProcedures", procedureTransactions);
   const navigate = useNavigate();
+  const location = useLocation();
+
   return (
     <div className="procedure-transactions-table">
       <table>

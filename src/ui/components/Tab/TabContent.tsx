@@ -2,7 +2,7 @@ import React from "react";
 import "./styles.css";
 import OutgoingConten from "../contents/outgoingContent/OutgoingContent";
 import IncomingContent from "../contents/incomingContent/IncomingContent";
-import InternalEntry from "../contents/internalContent/InternalEntry";
+import InternalTransactions from "../contents/internalContent/InternalTransactions";
 
 interface TabContentProps {
   activeTab: string;
@@ -22,7 +22,7 @@ export default function TabContent({ activeTab }: TabContentProps) {
     ),
     internal: (
       <div className="tab-content">
-        <InternalEntry />
+        <InternalTransactions activeTab={activeTab} />
       </div>
     ),
   };

@@ -1,0 +1,83 @@
+.internal-transaction-details-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.internal-transaction-details-container h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.internal-transaction-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.internal-transaction-table th,
+.internal-transaction-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: center;
+}
+
+.internal-transaction-table th {
+  background-color: #f4f4f4;
+  font-weight: bold;
+}
+
+.internal-transaction-form-group {
+  margin-bottom: 15px;
+}
+
+.internal-transaction-form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.internal-transaction-form-group input,
+.internal-transaction-form-group textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.internal-transaction-save-button,
+.internal-transaction-cancel-button,
+.internal-transaction-edit-button,
+.internal-transaction-back-button {
+  padding: 10px 20px;
+  margin-right: 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.internal-transaction-save-button {
+  background-color: #4caf50;
+  color: white;
+}
+
+.internal-transaction-cancel-button {
+  background-color: #f44336;
+  color: white;
+}
+
+.internal-transaction-edit-button {
+  background-color: #2196f3;
+  color: white;
+}
+
+.internal-transaction-back-button {
+  background-color: #6c757d;
+  color: white;
+}

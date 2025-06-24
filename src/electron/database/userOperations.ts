@@ -265,6 +265,91 @@ if (currentVersion < 14) {
   console.log("Database updated to version 14: Added 'tenantsTransactions' table.");
   currentVersion = 14;
 }
+
+// Add this to your applyMigrations function in userOperations.ts
+
+if (currentVersion < 15) {
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS internalTransactions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      fromId INTEGER NOT NULL,
+      toId INTEGER NOT NULL,
+      amount REAL NOT NULL,
+      fromType TEXT NOT NULL, -- e.g. 'user', 'customer', 'realstate', etc.
+      toType TEXT NOT NULL,   -- e.g. 'user', 'customer', 'realstate', etc.
+      date TEXT DEFAULT (datetime('now', 'localtime')),
+      details TEXT
+      -- Foreign keys are not enforced here because fromId/toId can point to different tables
+    );
+  `);
+  await db.run(`UPDATE meta SET value = '15' WHERE key = 'db_version'`);
+  console.log("Database updated to version 15: Added 'internalTransactions' table.");
+  currentVersion = 15;
+}
+if (currentVersion < 16) {
+  await db.exec(`
+    ALTER TABLE procedures ADD COLUMN debit REAL DEFAULT 0;
+    ALTER TABLE procedures ADD COLUMN credit REAL DEFAULT 0;
+  `);
+  await db.run(`UPDATE meta SET value = '16' WHERE key = 'db_version'`);
+  console.log("Database updated to version 16: Added REAL 'debit' and 'credit' columns to 'realstates' and 'procedures' tables.");
+  currentVersion = 16;
+}
+ if (currentVersion < 17) {
+  // Change 'debit' and 'credit' columns in 'realstates' table from TEXT to REAL
+  // SQLite does not support ALTER COLUMN directly, so we need to:
+  // 1. Create a new temporary table with correct schema
+  // 2. Copy data (convert values if needed)
+  // rentamounts is added as TEXT DEFAULT '[]' to store array as JSON string
+  // 3. Drop old table and rename new one
+  await db.exec(`ALTER TABLE realstates ADD COLUMN rentamounts TEXT DEFAULT '[]';`);
+
+  await db.exec(`
+    PRAGMA foreign_keys=off;
+
+    CREATE TABLE IF NOT EXISTS realstates_temp (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      propertyTitle TEXT NOT NULL,
+      propertyNumber TEXT NOT NULL,
+      address TEXT NOT NULL,
+      price REAL NOT NULL,
+      date TEXT DEFAULT (datetime('now', 'localtime')),
+      details TEXT,
+      isSold INTEGER DEFAULT 0,
+      soldDate TEXT,
+      isRented INTEGER DEFAULT 0,
+      debit REAL DEFAULT 0,
+      credit REAL DEFAULT 0,
+      rentamounts TEXT DEFAULT '[]'
+    );
+
+    INSERT INTO realstates_temp (
+      id, propertyTitle, propertyNumber, address, price, date, details, isSold, soldDate, isRented, debit, credit, rentamounts
+    )
+    SELECT
+      id, propertyTitle, propertyNumber, address, price, date, details, isSold, soldDate, isRented,
+      CASE
+        WHEN typeof(debit) = 'text' THEN 0
+        ELSE debit
+      END as debit,
+      CASE
+        WHEN typeof(credit) = 'text' THEN 0
+        ELSE credit
+      END as credit,
+      rentamounts
+    FROM realstates;
+
+    DROP TABLE realstates;
+
+    ALTER TABLE realstates_temp RENAME TO realstates;
+
+    PRAGMA foreign_keys=on;
+  `);
+  await db.run(`UPDATE meta SET value = '17' WHERE key = 'db_version'`);
+  console.log("Database updated to version 17: Added 'debit' and 'credit' columns to 'realstates' table.");
+  currentVersion = 17;
+}
+
 }
 
 async function getDatabaseVersion(db: Database): Promise<number> {
