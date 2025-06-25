@@ -131,6 +131,7 @@ const InternalTransactions: React.FC<InternatTransactionProps> = ({
       setRecipient(undefined);
       setSender(undefined);
       setAmount("");
+      setDate(new Date().toISOString().split("T")[0]); // Reset to current date
     } catch (error) {
       if (
         error &&
@@ -365,7 +366,7 @@ const InternalTransactions: React.FC<InternatTransactionProps> = ({
           />
         </div>
 
-        <div className="input-group">
+        {/* <div className="input-group">
           <label>اختر التاريخ</label>
           <input
             style={{ maxWidth: "200px" }}
@@ -373,7 +374,7 @@ const InternalTransactions: React.FC<InternatTransactionProps> = ({
             value={date}
             onChange={(e) => setDate(e.target.value)}
           />{" "}
-        </div>
+        </div> */}
         <div className="input-group">
           <label>التفاصيل</label>
           <textarea onChange={(e) => setDetails(e.target.value)} />

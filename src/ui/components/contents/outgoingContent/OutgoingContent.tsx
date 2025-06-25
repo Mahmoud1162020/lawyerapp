@@ -215,6 +215,7 @@ const TransactionPage: React.FC<TransactionPageProps> = ({ activeTab }) => {
       setAmount("");
       setReport("");
       setTransactionNumber("");
+      setDate(new Date().toISOString().split("T")[0]);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "حدث خطأ غير متوقع!";
@@ -320,18 +321,6 @@ const TransactionPage: React.FC<TransactionPageProps> = ({ activeTab }) => {
             </select>
           </div>
 
-          <div className="input-group">
-            <label>ادخل المبلغ</label>
-            <input
-              type="number"
-              value={amount}
-              onKeyDown={handleKeyDown}
-              onChange={(e) =>
-                setAmount(e.target.value ? Number(e.target.value) : "")
-              }
-            />
-          </div>
-
           {selectedType === "معاملة" && (
             <div className="input-group">
               <label>ادخل رقم المعاملة</label>
@@ -380,7 +369,18 @@ const TransactionPage: React.FC<TransactionPageProps> = ({ activeTab }) => {
               </Select>
             </div>
           )}
-          <div className="procedures-form-group">
+          <div className="input-group">
+            <label>ادخل المبلغ</label>
+            <input
+              type="number"
+              value={amount}
+              onKeyDown={handleKeyDown}
+              onChange={(e) =>
+                setAmount(e.target.value ? Number(e.target.value) : "")
+              }
+            />
+          </div>
+          {/* <div className="procedures-form-group">
             <label>التاريخ</label>
             <input
               style={{ maxWidth: "200px" }}
@@ -388,7 +388,7 @@ const TransactionPage: React.FC<TransactionPageProps> = ({ activeTab }) => {
               value={date}
               onChange={(e) => setDate(e.target.value)}
             />
-          </div>
+          </div> */}
 
           <div className="input-group">
             <label>التفاصيل</label>

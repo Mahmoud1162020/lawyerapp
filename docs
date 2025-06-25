@@ -1,0 +1,231 @@
+---
+
+## Main Files & Their Responsibilities
+
+### 1. `userOperations.ts`
+- **Purpose:** Handles all database migrations and user-related operations.
+- **Key Functions:**
+  - `initializeDatabase()`: Opens the SQLite DB, ensures the `meta` table exists, and applies migrations.
+  - `applyMigrations(db)`: Runs all schema upgrades (creates/updates tables as needed).
+  - User management functions: Register, login, delete users, etc.
+
+### 2. `internalTransactionsOperations.ts`
+- **Purpose:** CRUD operations for the `internalTransactions` table.
+- **Key Functions:**
+  - `addInternalTransaction(tx)`: Adds a new internal transaction and updates balances/arrays as needed.
+  - `getAllInternalTransactions()`: Returns all internal transactions.
+  - `getInternalTransactionById(id)`: Returns a single transaction by ID.
+  - `updateInternalTransaction(id, tx)`: Updates a transaction and adjusts balances accordingly.
+  - `deleteInternalTransaction(id)`: Deletes a transaction and rolls back its financial effect.
+
+### 3. `InternalTransactionsHandler.ts`
+- **Purpose:** Exposes IPC handlers for internal transactions to the renderer process.
+- **Key Functions:**
+  - Registers IPC endpoints for add, get, update, and delete operations.
+
+### 4. `TenantTransactionDetails.tsx` & `InternalTransactionDetails.tsx`
+- **Purpose:** React components for displaying and editing transaction details.
+- **Key Features:**
+  - Fetches transaction data by ID.
+  - Displays all fields in a styled table.
+  - Allows editing and saving changes.
+  - Handles validation and error display.
+
+### 5. `IncomingContent.tsx`
+- **Purpose:** Displays incoming transactions for the current user.
+- **Key Features:**
+  - Fetches transactions from the backend.
+  - Filters and displays only "incoming" transactions.
+
+---
+
+## Database Schema
+
+### Main Tables
+
+- **users:** User accounts (id, username, password, role, debit, credit)
+- **customersaccount:** Customer accounts (id, accountNumber, accountType, phone, address, etc.)
+- **realstates:** Real estate properties (id, propertyTitle, propertyNumber, address, price, etc.)
+  - `credit` and `debit` can be either `REAL` (numeric) or `TEXT` (JSON array of transaction objects, e.g. `[{"date":"2025-06-02","amount":500000,"isPaid":false,"isCredit":1}]`)
+- **procedures:** Legal procedures (id, procedureNumber, procedureName, etc.)
+- **tenants:** Tenant contracts (id, contractStatus, startDate, propertyId, etc.)
+- **internalTransactions:** Internal transfers between entities (id, fromType, fromId, toType, toId, amount, date, details)
+
+### Special Notes
+
+- **Polymorphic Relations:**  
+  `internalTransactions` uses `fromType`/`fromId` and `toType`/`toId` to reference different tables (e.g., "realstates", "customersaccount").
+- **JSON Columns:**  
+  Some columns (like `realstates.credit`) may store JSON arrays of transaction objects for detailed tracking.
+
+---
+
+## Function Comments & Explanations
+
+### userOperations.ts
+
+```typescript
+/**
+ * Opens the SQLite database, ensures the meta table exists, and applies all migrations.
+ */
+export async function initializeDatabase(): Promise<Database> { ... }
+
+/**
+ * Applies all schema migrations, creating or updating tables as needed.
+ * Each migration block checks the current version and applies changes.
+ */
+async function applyMigrations(db: Database) { ... }
+```
+
+---
+
+## API (IPC) Endpoints Used in the App
+
+These are the main IPC channels used for communication between the renderer (React) and main (Electron) processes.
+
+### User & Authentication
+
+- **`register-user`**
+
+  - Registers a new user.
+  - **Args:** `{ username, password }`
+  - **Returns:** User object or error.
+
+- **`login-user`**
+
+  - Authenticates a user.
+  - **Args:** `{ username, password }`
+  - **Returns:** User object or error.
+
+- **`delete-user`**
+
+  - Deletes a user by ID.
+  - **Args:** `userId`
+  - **Returns:** Success or error.
+
+- **`get-user`**
+  - Gets the currently logged-in user.
+  - **Returns:** User object.
+
+---
+
+### Transactions
+
+- **`get-transactions-by-user`**
+
+  - Fetches all transactions for a user.
+  - **Args:** `userId`
+  - **Returns:** Array of transactions.
+
+- **`get-tenant-transaction-details`**
+
+  - Fetches details for a tenant transaction by ID.
+  - **Args:** `transactionId`
+  - **Returns:** Transaction details object.
+
+- **`update-tenant-transaction`**
+  - Updates a tenant transaction.
+  - **Args:** Transaction object.
+  - **Returns:** Success or error.
+
+---
+
+### Internal Transactions
+
+- **`add-internal-transaction`**
+
+  - Adds a new internal transaction.
+  - **Args:** InternalTransaction object.
+  - **Returns:** New transaction ID.
+
+- **`get-all-internal-transactions`**
+
+  - Fetches all internal transactions.
+  - **Returns:** Array of internal transactions.
+
+- **`get-internal-transaction-by-id`**
+
+  - Fetches a single internal transaction by ID.
+  - **Args:** `id`
+  - **Returns:** InternalTransaction object.
+
+- **`update-internal-transaction`**
+
+  - Updates an internal transaction.
+  - **Args:** `id`, Partial InternalTransaction object.
+  - **Returns:** Success or error.
+
+- **`delete-internal-transaction`**
+  - Deletes an internal transaction by ID.
+  - **Args:** `id`
+  - **Returns:** Success or error.
+
+---
+
+### Real Estate & Customers
+
+- **`get-realstate-by-id`**
+
+  - Fetches a real estate property by ID.
+  - **Args:** `id`
+  - **Returns:** Realstate object.
+
+- **`update-realstate`**
+
+  - Updates a real estate property.
+  - **Args:** Realstate object.
+  - **Returns:** Success or error.
+
+- **`get-customer-by-id`**
+
+  - Fetches a customer account by ID.
+  - **Args:** `id`
+  - **Returns:** Customer object.
+
+- **`update-customer`**
+  - Updates a customer account.
+  - **Args:** Customer object.
+  - **Returns:** Success or error.
+
+---
+
+### Procedures
+
+- **`get-procedure-by-id`**
+
+  - Fetches a procedure by ID.
+  - **Args:** `id`
+  - **Returns:** Procedure object.
+
+- **`update-procedure`**
+  - Updates a procedure.
+  - **Args:** Procedure object.
+  - **Returns:** Success or error.
+
+---
+
+### General
+
+- **`get-all-users`**
+
+  - Fetches all users.
+  - **Returns:** Array of users.
+
+- **`get-all-customers`**
+
+  - Fetches all customer accounts.
+  - **Returns:** Array of customers.
+
+- **`get-all-realstates`**
+  - Fetches all real estate properties.
+  - **Returns:** Array of realstates.
+
+---
+
+> **Note:**  
+> IPC channel names and arguments may vary depending on your implementation.  
+> For custom or advanced queries, refer to the handler files in `/src/electron/ipc/`.
+
+---
+
+**Keep this section updated as you add or change API endpoints!**

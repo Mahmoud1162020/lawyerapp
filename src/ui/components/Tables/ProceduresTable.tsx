@@ -28,7 +28,7 @@ export default function ProceduresTable() {
   const [procedureNumber, setProcedureNumber] = useState(""); // رقم المعاملة
   const [procedureName, setProcedureName] = useState(""); // اسم المعاملة
   const [description, setDescription] = useState(""); // وصف المعاملة
-  const [date, setDate] = useState(""); // تاريخ المعاملة
+  const [date, setDate] = useState(new Date().toISOString().split("T")[0]); // تاريخ المعاملة
   const [status, setStatus] = useState(""); // الحالة
   const [phone, setPhone] = useState(""); // رقم الهاتف
 
@@ -287,7 +287,7 @@ export default function ProceduresTable() {
                   placeholder="مثال: جديد/مكتمل"
                 />
               </div>
-              <div className="procedures-form-group">
+              {/* <div className="procedures-form-group">
                 <label>التاريخ</label>
                 <input
                   style={{ maxWidth: "200px" }}
@@ -295,7 +295,7 @@ export default function ProceduresTable() {
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
                 />
-              </div>
+              </div> */}
             </div>
             {/* New container for buttons under the inputs */}
             <div className="procedures-form-buttons">

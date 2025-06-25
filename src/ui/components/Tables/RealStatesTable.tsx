@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
-import { Select, Input, Button, DatePicker, Table, Collapse } from "antd";
+import { Select, Input, Button, Table, Collapse } from "antd";
 import "./RealStatesTable.css"; // Add your custom styles here
 import { useNavigate } from "react-router-dom";
 import { IoIosRefresh } from "react-icons/io";
 import ConfirmModal from "../Modal/ConfirmModal";
-import {
-  formatNumberWithCommas,
-  sanitizeNumberInput,
-} from "../../helper/formatting";
+// import {
+//   formatNumberWithCommas,
+//   sanitizeNumberInput,
+// } from "../../helper/formatting";
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -21,8 +21,8 @@ export default function RealStatesTable() {
   const [propertyNumber, setPropertyNumber] = useState(""); // رقم العقار
   const [selectedOwners, setSelectedOwners] = useState<number[]>([]); // Multi-select for owners
   const [address, setAddress] = useState(""); // عنوان العقار
-  const [price, setPrice] = useState(""); // السعر
-  const [date, setDate] = useState(""); // التاريخ
+  const [price, setPrice] = useState(0); // السعر
+  const [date, setDate] = useState(new Date().toISOString().split("T")[0]); // التاريخ
   const [details, setDetails] = useState(""); // الملاحظات
   const [customersAccounts, setCustomersAccounts] = useState<
     {
@@ -138,7 +138,6 @@ export default function RealStatesTable() {
       propertyNumber.trim() === "" ||
       selectedOwners.length === 0 || // Ensure at least one owner is selected
       address.trim() === "" ||
-      price.trim() === "" ||
       date.trim() === ""
     ) {
       alert("الرجاء ملء جميع الحقول");
@@ -151,7 +150,7 @@ export default function RealStatesTable() {
         propertyTitle,
         propertyNumber,
         address,
-        price: parseFloat(price), // Ensure price is stored as a number
+        price: price, // Already a number
         date,
         details,
         owners: selectedOwners, // Array of owner IDs
@@ -185,8 +184,8 @@ export default function RealStatesTable() {
       setPropertyNumber("");
       setSelectedOwners([]);
       setAddress("");
-      setPrice("");
-      setDate("");
+      setPrice(0); // Reset price to 0
+      setDate(new Date().toISOString().split("T")[0]);
       setDetails("");
 
       console.log("New RealState Added:", addedRealState);
@@ -324,16 +323,16 @@ export default function RealStatesTable() {
       dataIndex: "address",
       key: "address",
     },
-    {
-      title: "السعر",
-      dataIndex: "price",
-      key: "price",
-    },
-    {
-      title: "التاريخ",
-      dataIndex: "date",
-      key: "date",
-    },
+    // {
+    //   title: "السعر",
+    //   dataIndex: "price",
+    //   key: "price",
+    // },
+    // {
+    //   title: "التاريخ",
+    //   dataIndex: "date",
+    //   key: "date",
+    // },
     {
       title: "الملاحظات",
       dataIndex: "details",
@@ -387,7 +386,7 @@ export default function RealStatesTable() {
                 />
               </div>
               <div className="real-states-form-group">
-                <label>ادخل رقم العقار</label>
+                <label>ادخل رقم العقار/المقاطعة</label>
                 <Input
                   value={propertyNumber}
                   onChange={(e) => setPropertyNumber(e.target.value)}
@@ -427,22 +426,22 @@ export default function RealStatesTable() {
                   placeholder="عنوان العقار"
                 />
               </div>
-              <div className="real-states-form-group">
+              {/* <div className="real-states-form-group">
                 <label>السعر</label>
                 <Input
                   value={price} // Format for display
                   onChange={(e) => setPrice(e.target.value)} // Store plain number
                   placeholder="السعر"
                 />
-              </div>
-              <div className="real-states-form-group">
+              </div> */}
+              {/* <div className="real-states-form-group">
                 <label>التاريخ</label>
                 <input
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
                 />
-              </div>
+              </div> */}
               <div className="real-states-form-group real-states-full-width">
                 <label>الملاحظات</label>
                 <TextArea
@@ -484,7 +483,7 @@ export default function RealStatesTable() {
         <Table
           dataSource={filteredData}
           columns={columns}
-          pagination={{ pageSize: 5 }}
+          pagination={{ pageSize: 500 }}
           bordered
         />
       </div>

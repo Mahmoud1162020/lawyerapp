@@ -192,7 +192,7 @@ export default function DataTable() {
     <div className="data-table-container">
       <div className="form-container">
         <div className="form-row">
-          <div className="form-group">
+          {/* <div className="form-group">
             <label>رقم الحساب</label>
             <input
               type="text"
@@ -200,7 +200,7 @@ export default function DataTable() {
               onChange={(e) => setAccountNumber(e.target.value)}
               placeholder="123456"
             />
-          </div>
+          </div> */}
 
           <div className="form-group">
             <label>ادخل الاسم</label>
@@ -280,7 +280,7 @@ export default function DataTable() {
           <thead>
             <tr>
               <th>رقم</th>
-              <th>
+              {/* <th>
                 {focusedField === "accountNumber" && (
                   <input
                     type="text"
@@ -297,7 +297,7 @@ export default function DataTable() {
                   onClick={() => handleSearchFocus("accountNumber")}>
                   رقم الحساب
                 </div>
-              </th>
+              </th> */}
               <th>
                 {focusedField === "name" && (
                   <input
@@ -376,7 +376,7 @@ export default function DataTable() {
             {filteredData.map((row) => (
               <tr key={row.id}>
                 <td>{row.id}</td>
-                <td>{row.accountNumber}</td>
+                {/* <td>{row.accountNumber}</td> */}
                 <td>{row.name}</td>
                 <td>{row.accountType}</td>
                 <td>{row.phone}</td>

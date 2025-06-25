@@ -336,14 +336,7 @@ export default function TenantsContractTable() {
               placeholder="جديد"
             />
           </div>
-          <div className="contracts-form-group">
-            <label>ادخل تاريخ بدء العقد</label>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-            />
-          </div>
+
           <div className="contracts-form-group">
             <label>ادخل اسم المستأجر</label>
             <Select
@@ -405,6 +398,14 @@ export default function TenantsContractTable() {
               onChange={(e) => setPropertyNumber(e.target.value)}
               placeholder="07701234567"
             /> */}
+          </div>
+          <div className="contracts-form-group">
+            <label>ادخل تاريخ بدء العقد</label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
           </div>
           <div className="contracts-form-group">
             <label>ادخل تاريخ نهاية العقد</label>

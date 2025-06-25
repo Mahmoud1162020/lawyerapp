@@ -87,7 +87,7 @@ export default function CustomerDetails() {
   return (
     <div className="customer-details-container">
       <h2 className="customer-details-title">تفاصيل الحساب</h2>
-      <div className="customer-details-form-group">
+      {/* <div className="customer-details-form-group">
         <label>رقم الحساب</label>
         <input
           type="text"
@@ -96,7 +96,7 @@ export default function CustomerDetails() {
             setAccount({ ...account, accountNumber: e.target.value })
           }
         />
-      </div>
+      </div> */}
       <div className="customer-details-form-group">
         <label>الاسم</label>
         <input
@@ -136,14 +136,14 @@ export default function CustomerDetails() {
           onChange={(e) => setAccount({ ...account, address: e.target.value })}
         />
       </div>
-      <div className="customer-details-form-group">
+      {/* <div className="customer-details-form-group">
         <label>التاريخ</label>
         <input
           type="date"
           value={account.date}
           onChange={(e) => setAccount({ ...account, date: e.target.value })}
         />
-      </div>
+      </div> */}
       <div className="customer-details-form-group">
         <label>تفاصيل إضافية</label>
         <textarea

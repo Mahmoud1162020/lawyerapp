@@ -439,6 +439,7 @@ const IncomingPage: React.FC<IncomingPageProps> = ({ activeTab }) => {
       setCustomerName("");
       setAmount("");
       setProcedureId(null);
+      setTransactionDate(new Date().toISOString().split("T")[0]); // Reset to today's date
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "حدث خطأ غير متوقع!";
@@ -543,17 +544,7 @@ const IncomingPage: React.FC<IncomingPageProps> = ({ activeTab }) => {
               <option value="ايجار">ايجار</option>
             </select>
           </div>
-          <div className="input-group">
-            <label>ادخل المبلغ</label>
-            <input
-              type="number"
-              value={amount}
-              onKeyDown={handleKeyDown}
-              onChange={(e) =>
-                setAmount(e.target.value ? Number(e.target.value) : "")
-              }
-            />
-          </div>
+
           {/* <div className="input-group">
             <label>اختر العملة</label>
             <select
@@ -634,7 +625,17 @@ const IncomingPage: React.FC<IncomingPageProps> = ({ activeTab }) => {
               </Select>
             </div>
           )}
-
+          <div className="input-group">
+            <label>ادخل المبلغ</label>
+            <input
+              type="number"
+              value={amount}
+              onKeyDown={handleKeyDown}
+              onChange={(e) =>
+                setAmount(e.target.value ? Number(e.target.value) : "")
+              }
+            />
+          </div>
           {selectedType === "ايجار" && (
             <div className="input-group">
               <label> رقم العقار </label>
@@ -762,14 +763,16 @@ const IncomingPage: React.FC<IncomingPageProps> = ({ activeTab }) => {
               onKeyDown={handleKeyDown}
             />
           </div>
-          <div className="input-group">
-            <label>اختر التاريخ</label>
-            <input
-              type="date"
-              value={transactionDate}
-              onChange={(e) => setTransactionDate(e.target.value)}
-            />
-          </div>
+          {selectedType === "ايجار" && (
+            <div className="input-group">
+              <label>اختر التاريخ</label>
+              <input
+                type="date"
+                value={transactionDate}
+                onChange={(e) => setTransactionDate(e.target.value)}
+              />
+            </div>
+          )}
         </div>
       </div>
 
