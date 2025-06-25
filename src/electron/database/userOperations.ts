@@ -237,14 +237,21 @@ async function applyMigrations(db: Database) {
     currentVersion = 12;
   }
   if (currentVersion < 13) {
-  await db.exec(`
-    ALTER TABLE realstates ADD COLUMN debit TEXT DEFAULT '[]';
-    ALTER TABLE realstates ADD COLUMN credit TEXT DEFAULT '[]';
-  `);
+  // Check if columns already exist
+  const columns = await db.all(`PRAGMA table_info(realstates)`);
+  const hasDebit = columns.some(col => col.name === 'debit');
+  const hasCredit = columns.some(col => col.name === 'credit');
+  if (!hasDebit) {
+    await db.exec(`ALTER TABLE realstates ADD COLUMN debit TEXT DEFAULT '[]';`);
+  }
+  if (!hasCredit) {
+    await db.exec(`ALTER TABLE realstates ADD COLUMN credit TEXT DEFAULT '[]';`);
+  }
   await db.run(`UPDATE meta SET value = '13' WHERE key = 'db_version'`);
   console.log("Database updated to version 13: Added 'debit' and 'credit' columns to 'realstates' table.");
   currentVersion = 13;
 }
+
 if (currentVersion < 14) {
   await db.exec(`
     CREATE TABLE IF NOT EXISTS tenantsTransactions (
@@ -287,22 +294,30 @@ if (currentVersion < 15) {
   currentVersion = 15;
 }
 if (currentVersion < 16) {
-  await db.exec(`
-    ALTER TABLE procedures ADD COLUMN debit REAL DEFAULT 0;
-    ALTER TABLE procedures ADD COLUMN credit REAL DEFAULT 0;
-  `);
+  // Check if columns already exist
+  const realstatesColumns = await db.all(`PRAGMA table_info(realstates)`);
+  const proceduresColumns = await db.all(`PRAGMA table_info(procedures)`);
+  const hasRealstatesDebit = realstatesColumns.some(col => col.name === 'debit' && col.type === 'REAL');
+  const hasRealstatesCredit = realstatesColumns.some(col => col.name === 'credit' && col.type === 'REAL');
+  const hasProceduresDebit = proceduresColumns.some(col => col.name === 'debit');
+  const hasProceduresCredit = proceduresColumns.some(col => col.name === 'credit');
+  if (!hasProceduresDebit) {
+    await db.exec(`ALTER TABLE procedures ADD COLUMN debit REAL DEFAULT 0;`);
+  }
+  if (!hasProceduresCredit) {
+    await db.exec(`ALTER TABLE procedures ADD COLUMN credit REAL DEFAULT 0;`);
+  }
   await db.run(`UPDATE meta SET value = '16' WHERE key = 'db_version'`);
   console.log("Database updated to version 16: Added REAL 'debit' and 'credit' columns to 'realstates' and 'procedures' tables.");
   currentVersion = 16;
 }
  if (currentVersion < 17) {
-  // Change 'debit' and 'credit' columns in 'realstates' table from TEXT to REAL
-  // SQLite does not support ALTER COLUMN directly, so we need to:
-  // 1. Create a new temporary table with correct schema
-  // 2. Copy data (convert values if needed)
-  // rentamounts is added as TEXT DEFAULT '[]' to store array as JSON string
-  // 3. Drop old table and rename new one
-  await db.exec(`ALTER TABLE realstates ADD COLUMN rentamounts TEXT DEFAULT '[]';`);
+  // Check if rentamounts column exists before adding
+  const realstatesColumns = await db.all(`PRAGMA table_info(realstates)`);
+  const hasRentAmounts = realstatesColumns.some(col => col.name === 'rentamounts');
+  if (!hasRentAmounts) {
+    await db.exec(`ALTER TABLE realstates ADD COLUMN rentamounts TEXT DEFAULT '[]';`);
+  }
 
   await db.exec(`
     PRAGMA foreign_keys=off;

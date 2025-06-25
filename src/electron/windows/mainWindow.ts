@@ -14,6 +14,7 @@ export function createMainWindow(): BrowserWindow {
     },
     width: 800,
     height: 600,
+
   });
 contextMenu({
   window: mainWindow, 

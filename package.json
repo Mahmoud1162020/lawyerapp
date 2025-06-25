@@ -1,5 +1,5 @@
 {
-  "name": "electron-app",
+  "name": "caseflow",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -61,11 +61,14 @@
     "vite": "^6.0.3"
   },
   "build": {
+    "productName": "CaseFlow",
     "files": [
       "dist-electron/**/*",
       "dist-react/**/*",
       "node_modules/**/*",
       "package.json"
-    ]
+    ],
+    "icon": "desktopIcon.ico"
+
   }
 }
