@@ -58,7 +58,14 @@ electron.contextBridge.exposeInMainWorld('electron', {
     address: string,
     details: string
   ): Promise<{ id: number }> => electron.ipcRenderer.invoke('add-customers-account', {name, accountNumber, accountType, phone, address, details }),
-  getAllCustomersAccounts:():Promise<{ id: number; name : string;accountNumber: string; accountType: string; phone: string; address: string; date: string; details: string | null }[]>=>electron.ipcRenderer.invoke("get-all-customers-accounts"),
+  getAllCustomersAccounts: (): Promise<Customer[]> =>
+    electron.ipcRenderer.invoke("get-all-customers-accounts").then((accounts: any[]) =>
+      accounts.map(account => ({
+        ...account,
+        debit: account.debit ?? 0,
+        credit: account.credit ?? 0
+      }))
+    ),
   getCustomersAccountById: (id: number): Promise<{ id: number;name:string; accountNumber: string; accountType: string; phone: string; address: string; date: string; details: string | null } | null> => electron.ipcRenderer.invoke('get-customers-account-by-id', id),
   deleteCustomersAccount: (id: number): Promise<{ deleted: boolean }> => electron.ipcRenderer.invoke('delete-customers-account', id),
   updateCustomersAccount: (id: number, field: string, value: string | number): Promise<{ updated: boolean }> => electron.ipcRenderer.invoke('update-customers-account', id, field, value),

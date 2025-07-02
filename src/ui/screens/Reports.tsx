@@ -1,48 +1,11 @@
 import React, { useEffect, useState } from "react";
+import { PieChart } from "@mui/x-charts/PieChart";
+import { BarChart } from "@mui/x-charts/BarChart";
 import "./Reports.css";
+import CustomModal from "../components/Modal/CustomModal";
+import InfoModal from "../components/Modal/InfoModal";
 
-const users = [
-  {
-    id: "U001",
-    name: "John Smith",
-    role: "Agent",
-    properties: 12,
-    lastActive: "2024-06-15",
-    status: "Active",
-  },
-  // ... more users
-];
-
-const tenants = [
-  {
-    id: "T001",
-    name: "Alice Cooper",
-    property: "456 Oak Ave",
-    rent: "$2,800",
-    status: "Current",
-    leaseEnd: "2025-03-15",
-  },
-  // ... more tenants
-];
-
-const transactions = [
-  {
-    id: "TX001",
-    type: "Sale",
-    property: "123 Main St",
-    amount: "$450,000",
-    date: "2024-06-15",
-    status: "Completed",
-  },
-  // ... more transactions
-];
-
-const TABS = [
-  { key: "properties", label: "العقارات" },
-  { key: "users", label: "المستخدمون" },
-  { key: "tenants", label: "المستأجرون" },
-  { key: "transactions", label: "المعاملات" },
-];
+// Add Customer type definition here
 
 type RealState = {
   id: number;
@@ -53,26 +16,205 @@ type RealState = {
   date: string;
   details: string | null;
   owners: { id: number; name: string }[];
-  isSold?: boolean;
-  isRented?: boolean;
+  isSold?: number;
+  isRented?: number;
+  credit?: number;
+  debit?: number;
 };
+
+function getMonthKey(dateStr: string) {
+  return dateStr ? dateStr.slice(0, 7) : "unknown";
+}
+
+function getPercentageChange(current: number, previous: number) {
+  if (previous === 0) return current === 0 ? 0 : 100;
+
+  return Math.round(((current - previous) / previous) * 100);
+}
 
 export default function Reports() {
   const [activeTab, setActiveTab] = useState("properties");
   const [realstates, setRealStates] = useState<RealState[]>([]);
-  useEffect(() => {
-    // Simulate fetching data
-    const fetchData = async () => {
-      // Replace with actual data fetching logic
-      const res = await window.electron.getAllRealStates();
-      console.log("Fetched Real States:", res);
+  const [procedures, setProcedures] = useState<Procedure[]>([]); // Replace 'any' with actual Procedure type if available
+  const [tenants, setTenants] = useState<TenantResponse[]>([]); // Replace 'any' with actual Tenant type if available
+  const [barData, setBarData] = useState<any[]>([]);
+  const [chartData, setChartData] = useState<
+    { id: number; value: number; label: string }[]
+  >([]);
+  const [percentChange, setPercentChange] = useState(0);
+  const [customersAccounts, setCustomersAccounts] = useState<Customer[]>([]);
+  const [newUsers, setNewUsers] = useState(0);
+  const [showModal, setShowModal] = useState(false);
+  const [userRelatedInfo, setUserRelatedInfo] = useState<{
+    realStates: realState[];
+    tenants: Tenant[];
+    procedures: Procedure[];
+  }>({
+    realStates: [],
+    tenants: [],
+    procedures: [],
+  });
 
-      setRealStates(res);
+  function valueFormatter(value: number | null) {
+    return `${value}`;
+  }
+
+  useEffect(() => {
+    const fetchCustomersAccounts = async () => {
+      const res = await window.electron.getAllCustomersAccounts();
+      console.log("Fetched customers accounts:", res);
+      if (res) {
+        // Ensure debit and credit fields exist for each customer
+        setCustomersAccounts(res);
+
+        // Group users by month
+        const grouped: Record<string, Customer[]> = {};
+        res.forEach((user: Customer) => {
+          const month = getMonthKey(user.date);
+          if (!grouped[month]) grouped[month] = [];
+          grouped[month].push(user);
+        });
+
+        // Get months sorted descending
+        const months = Object.keys(grouped).sort().reverse();
+        const currentMonth = months[0];
+        const prevMonth = months[1];
+
+        const currentCount = currentMonth ? grouped[currentMonth].length : 0;
+        const prevCount = prevMonth ? grouped[prevMonth].length : 0;
+
+        setNewUsers(currentCount - prevCount);
+      }
+    };
+    fetchCustomersAccounts();
+  }, []);
+  useEffect(() => {
+    const fetchData = async () => {
+      const res = await window.electron.getAllRealStates();
+      // Ensure isSold and isRented are present (default to 0 if missing)
+      const normalized = res.map((rs: RealState) => ({
+        ...rs,
+        isSold: typeof rs.isSold === "number" ? rs.isSold : 0,
+        isRented: typeof rs.isRented === "number" ? rs.isRented : 0,
+      }));
+      setRealStates(normalized);
+
+      // Group by month
+      const grouped: Record<string, RealState[]> = {};
+      res.forEach((rs) => {
+        const month = getMonthKey(rs.date);
+        if (!grouped[month]) grouped[month] = [];
+        grouped[month].push(rs);
+      });
+
+      // Get months sorted descending
+      const months = Object.keys(grouped).sort().reverse();
+
+      const currentMonth = months[0];
+      const prevMonth = months[1];
+
+      const currentCount = currentMonth ? grouped[currentMonth].length : 0;
+
+      const prevCount = prevMonth ? grouped[prevMonth].length : 0;
+
+      setPercentChange(getPercentageChange(currentCount, prevCount));
+
+      // Group by month (or year-month)
+      const monthlyData: Record<
+        string,
+        { متاح: number; مباع: number; مؤجر: number }
+      > = {};
+
+      res.forEach((rs: RealState) => {
+        // Extract month from date (YYYY-MM-DD)
+        const month = rs.date ? rs.date.slice(0, 7) : "unknown";
+        if (!monthlyData[month])
+          monthlyData[month] = { متاح: 0, مباع: 0, مؤجر: 0 };
+        if (rs.isSold) monthlyData[month].مباع += 1;
+        else if (rs.isRented) monthlyData[month].مؤجر += 1;
+        else monthlyData[month].متاح += 1;
+      });
+
+      // Convert to array for BarChart
+      const barArr = Object.entries(monthlyData).map(([month, vals]) => ({
+        month,
+        available: vals.متاح,
+        sold: vals.مباع,
+        rented: vals.مؤجر,
+      }));
+      setBarData(barArr);
+      console.log("Bar data:", barArr);
+
+      // Pie chart data (totals)
+      const totalAvailable = res.filter(
+        (rs: RealState) => !rs.isSold && !rs.isRented
+      ).length;
+      const totalSold = res.filter((rs: RealState) => rs.isSold).length;
+      const totalRented = res.filter((rs: RealState) => rs.isRented).length;
+      setChartData([
+        { id: 0, value: totalAvailable, label: "متاح" },
+        { id: 1, value: totalSold, label: "مباع" },
+        { id: 2, value: totalRented, label: "مؤجر" },
+      ]);
     };
     fetchData();
   }, []);
+  useEffect(() => {
+    const fetchTenants = async () => {
+      const res: TenantResponse[] = await window.electron.getAllTenants();
+      console.log("Fetched tenants:", res);
+      if (res) {
+        setTenants(res);
+      }
+    };
+    fetchTenants();
+  }, []);
+
+  useEffect(() => {
+    const fetchProcedures = async () => {
+      const res: Procedure[] = await window.electron.getAllProcedures();
+      console.log("Fetched procedures:", res);
+
+      if (res) {
+        setProcedures(res);
+        console.log("Fetched procedures:", res);
+      }
+    };
+    fetchProcedures();
+  }, []);
+  const showInfo = async (user: Customer) => {
+    console.log("Show info clicked", user);
+    const userRealStates = realstates.filter((rs) =>
+      rs.owners.some((owner) => owner.id === user.id)
+    );
+    const userTenants = tenants.filter((t) =>
+      t.tenantNames.includes(user.name)
+    );
+    console.log("User Tenants:", userTenants);
+
+    setUserRelatedInfo({
+      realStates: userRealStates,
+      tenants: userTenants,
+      procedures: procedures,
+    });
+
+    // const userTenants = tenants.filter(tenant => tenant.id === user.id);
+
+    // const userProcedures = procedures.filter(proc => proc.customerId === user.id);
+
+    console.log("User RealStates:", userRealStates);
+    // console.log("User Tenants:", userTenants);
+    // console.log("User Procedures:", userProcedures);
+    setShowModal(true);
+  };
+
   return (
     <div className="dashboard-container" dir="rtl">
+      <InfoModal
+        showModal={showModal}
+        setShowModal={setShowModal}
+        info={userRelatedInfo}
+      />
       <div className="dashboard-header">
         <div>
           {/* <h1>لوحة تقارير العقارات</h1>
@@ -87,42 +229,114 @@ export default function Reports() {
       <div className="dashboard-metrics">
         <div className="dashboard-card">
           <div className="dashboard-card-title">إجمالي العقارات</div>
-          <div className="dashboard-card-value">247</div>
-          <div className="dashboard-card-desc">+12% عن الشهر الماضي</div>
+          <div className="dashboard-card-value">{realstates?.length}</div>
+          <div className="dashboard-card-desc">
+            {percentChange >= 0 ? "+" : ""}
+            {percentChange}% عن الشهر الماضي
+          </div>
         </div>
         <div className="dashboard-card">
-          <div className="dashboard-card-title">المستخدمون النشطون</div>
-          <div className="dashboard-card-value">45</div>
-          <div className="dashboard-card-desc">+3 مستخدمين جدد</div>
+          <div className="dashboard-card-title">العملاء </div>
+          <div className="dashboard-card-value">
+            {customersAccounts?.length}
+          </div>
+          <div className="dashboard-card-desc">
+            {newUsers >= 0 ? "+" : ""}
+            {newUsers} عملاء جدد
+          </div>
         </div>
         <div className="dashboard-card">
           <div className="dashboard-card-title">المستأجرون الحاليون</div>
-          <div className="dashboard-card-value">189</div>
-          <div className="dashboard-card-desc">نسبة الإشغال 95%</div>
+          <div className="dashboard-card-value">{tenants.length}</div>
+          <div className="dashboard-card-desc">
+            {(tenants.length / realstates.length) * 100}%
+          </div>
         </div>
         <div className="dashboard-card">
-          <div className="dashboard-card-title">الإيرادات الشهرية</div>
+          <div className="dashboard-card-title"> المعاملات</div>
+          <div className="dashboard-card-value">{procedures.length}</div>
+        </div>
+        {/* <div className="dashboard-card">
+          <div className="dashboard-card-title"> money box</div>
           <div className="dashboard-card-value">$380,000</div>
           <div className="dashboard-card-desc">+18% عن الشهر الماضي</div>
-        </div>
+        </div> */}
+        {/* TODO:add the money box for the owner of office  */}
       </div>
 
       {/* Tabs */}
       <div className="dashboard-tabs">
-        {TABS.map((tab) => (
-          <button
-            key={tab.key}
-            className={activeTab === tab.key ? "active" : ""}
-            onClick={() => setActiveTab(tab.key)}>
-            {tab.label}
-          </button>
-        ))}
+        <button
+          className={activeTab === "properties" ? "active" : ""}
+          onClick={() => setActiveTab("properties")}>
+          العقارات
+        </button>
+        <button
+          className={activeTab === "users" ? "active" : ""}
+          onClick={() => setActiveTab("users")}>
+          المستخدمون
+        </button>
+        <button
+          className={activeTab === "tenants" ? "active" : ""}
+          onClick={() => setActiveTab("tenants")}>
+          المستأجرون
+        </button>
+        <button
+          className={activeTab === "procedures" ? "active" : ""}
+          onClick={() => setActiveTab("procedures")}>
+          المعاملات
+        </button>
       </div>
 
       {/* Tab Content */}
       <div className="dashboard-tab-content">
         {activeTab === "properties" && (
           <>
+            <div
+              style={{
+                display: "flex",
+                gap: "10px",
+                flexDirection: "row-reverse",
+                flexWrap: "wrap",
+                justifyContent: "center",
+                alignItems: "flex-start",
+                width: "100%",
+                margin: "auto",
+              }}>
+              <div
+                style={{
+                  flex: "1 1 350px",
+                  minWidth: 0,
+                  maxWidth: 700,
+                }}>
+                <BarChart
+                  dataset={barData}
+                  xAxis={[{ dataKey: "month" }]}
+                  series={[
+                    { dataKey: "available", label: "متاح", valueFormatter },
+                    { dataKey: "sold", label: "مباع", valueFormatter },
+                    { dataKey: "rented", label: "مؤجر", valueFormatter },
+                  ]}
+                  height={300}
+                  width={600}
+                  sx={{ width: "100%" }}
+
+                  // Responsive width
+                />
+              </div>
+              <div style={{ flex: "0 1 280px", minWidth: 180, maxWidth: 600 }}>
+                <PieChart
+                  series={[
+                    {
+                      data: chartData,
+                    },
+                  ]}
+                  height={300}
+                  sx={{ width: "100%" }}
+                  // Responsive width
+                />
+              </div>
+            </div>
             <h2>العقارات </h2>
             <table className="dashboard-table">
               <thead>
@@ -134,6 +348,9 @@ export default function Reports() {
                   <th>الحالة</th>
                   {/* <th>السعر</th> */}
                   <th>اصحاب العقار</th>
+                  <th>له</th>
+                  <th>عليه</th>
+
                   <th>التاريخ</th>
                 </tr>
               </thead>
@@ -155,6 +372,8 @@ export default function Reports() {
                         ? rs.owners.map((owner) => owner.name).join(", ")
                         : "لا يوجد مالك"}
                     </td>
+                    <td>{rs.credit}</td>
+                    <td>{rs.debit}</td>
                     <td>{rs.date}</td>
                   </tr>
                 ))}
@@ -165,32 +384,31 @@ export default function Reports() {
 
         {activeTab === "users" && (
           <>
-            <h2>إدارة المستخدمين</h2>
+            <h2>العملاء</h2>
             <table className="dashboard-table">
               <thead>
                 <tr>
                   <th>المعرف</th>
                   <th>الاسم</th>
-                  <th>الدور</th>
-                  <th>عدد العقارات</th>
-                  <th>آخر نشاط</th>
-                  <th>الحالة</th>
+                  {/* <th>الدور</th> */}
+                  <th>العنوان</th>
+                  <th>رقم الهاتف</th>
+                  <th>التفاصيل</th>
+                  <th>له</th>
+                  <th>عليه</th>
                 </tr>
               </thead>
               <tbody>
-                {users.map((user) => (
-                  <tr key={user.id}>
+                {customersAccounts.map((user) => (
+                  <tr key={user.id} onClick={() => showInfo(user)}>
                     <td>{user.id}</td>
                     <td>{user.name}</td>
-                    <td>{user.role}</td>
-                    <td>{user.properties}</td>
-                    <td>{user.lastActive}</td>
-                    <td>
-                      <span
-                        className={`badge badge-${user.status.toLowerCase()}`}>
-                        {user.status}
-                      </span>
-                    </td>
+                    {/* <td>{user.role}</td> */}
+                    <td>{user.address}</td>
+                    <td>{user.phone}</td>
+                    <td>{user.details}</td>
+                    <td>{user.credit}</td>
+                    <td>{user.debit}</td>
                   </tr>
                 ))}
               </tbody>
@@ -200,7 +418,7 @@ export default function Reports() {
 
         {activeTab === "tenants" && (
           <>
-            <h2>إدارة المستأجرين</h2>
+            <h2> المستأجرين</h2>
             <table className="dashboard-table">
               <thead>
                 <tr>
@@ -209,6 +427,8 @@ export default function Reports() {
                   <th>العقار</th>
                   <th>الإيجار الشهري</th>
                   <th>الحالة</th>
+                  <th>بداية العقد</th>
+
                   <th>نهاية العقد</th>
                 </tr>
               </thead>
@@ -216,16 +436,20 @@ export default function Reports() {
                 {tenants.map((tenant) => (
                   <tr key={tenant.id}>
                     <td>{tenant.id}</td>
-                    <td>{tenant.name}</td>
-                    <td>{tenant.property}</td>
-                    <td>{tenant.rent}</td>
                     <td>
-                      <span
-                        className={`badge badge-${tenant.status.toLowerCase()}`}>
-                        {tenant.status}
-                      </span>
+                      {tenant.tenantNames && tenant.tenantNames.length > 0
+                        ? (
+                            (typeof tenant.tenantNames === "string"
+                              ? JSON.parse(tenant.tenantNames)
+                              : tenant.tenantNames) as string[]
+                          ).map((i, idx) => <span key={idx}>{i}</span>)
+                        : "N/A"}
                     </td>
-                    <td>{tenant.leaseEnd}</td>
+                    <td>{tenant.propertyDetails.propertyTitle}</td>
+                    <td>{tenant.installmentAmount}</td>
+                    <td>{tenant.contractStatus}</td>
+                    <td>{tenant.startDate}</td>
+                    <td>{tenant.endDate}</td>
                   </tr>
                 ))}
               </tbody>
@@ -233,34 +457,37 @@ export default function Reports() {
           </>
         )}
 
-        {activeTab === "transactions" && (
+        {activeTab === "procedures" && (
           <>
-            <h2>المعاملات الحديثة</h2>
+            <h2>المعاملات </h2>
             <table className="dashboard-table">
               <thead>
                 <tr>
-                  <th>المعرف</th>
-                  <th>النوع</th>
-                  <th>العقار</th>
-                  <th>المبلغ</th>
-                  <th>التاريخ</th>
+                  <th>رقم المعاملة</th>
+                  <th>نوع المعاملة</th>
                   <th>الحالة</th>
+                  <th>تفاصيل</th>
+                  <th>صاحب المعاملة</th>
+                  <th> له</th>
+
+                  <th>عليه</th>
+                  <th>التاريخ</th>
                 </tr>
               </thead>
               <tbody>
-                {transactions.map((transaction) => (
-                  <tr key={transaction.id}>
-                    <td>{transaction.id}</td>
-                    <td>{transaction.type}</td>
-                    <td>{transaction.property}</td>
-                    <td>{transaction.amount}</td>
-                    <td>{transaction.date}</td>
+                {procedures.map((procedure) => (
+                  <tr key={procedure.id}>
+                    <td>{procedure.procedureNumber}</td>
+                    <td>{procedure.procedureName}</td>
+
+                    <td>{procedure.status}</td>
+                    <td>{procedure.description}</td>
                     <td>
-                      <span
-                        className={`badge badge-${transaction.status.toLowerCase()}`}>
-                        {transaction.status}
-                      </span>
+                      {procedure?.owners?.map((po) => po?.name).join(" , ")}
                     </td>
+                    <td>{procedure.credit}</td>
+                    <td>{procedure.debit}</td>
+                    <td>{procedure.date}</td>
                   </tr>
                 ))}
               </tbody>

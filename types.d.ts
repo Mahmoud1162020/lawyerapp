@@ -63,7 +63,9 @@ type Statistics = {
     date: string;
     status: string;
     phone: string;
-    owners: { id: number; name: string }[] 
+    owners: { id: number; name: string }[];
+    debit?: number;
+    credit?: number; 
   }
   type TenantTransaction = {
     contractStatus: string;
@@ -119,6 +121,7 @@ type Statistics = {
     startDate: string;
     tenantNames: string[];
     propertyNumber: number;
+    propertyId?: number;
     endDate: string;
     entitlement: number;
     contractNumber: string;
@@ -126,6 +129,9 @@ type Statistics = {
     leasedUsage: string;
     propertyType: string;
     propertyId: number;
+    details?: string;
+    installmentAmount?: number;
+    installmentsDue?: { date: string; isPaid: boolean }[];
     propertyDetails: {
       id: number;
       propertyTitle: string;
@@ -134,6 +140,12 @@ type Statistics = {
       price: number;
       date: string;
       details: string | null;
+      isSold?: boolean;
+      isRented?: boolean;
+      debit?: number;
+      credit?: number;
+      rentamounts?: string[];
+
     };
   };
   type View = 'CPU' | 'RAM' | 'STORAGE';
@@ -208,7 +220,7 @@ type Statistics = {
         phone: string,
         address: string,
         details: string)=>Promise<{ id: number }>;
-      getAllCustomersAccounts: ()=>Promise<{ id: number; name: string; accountNumber: string; accountType: string; phone: string; address: string; date: string; details: string | null }[]>,
+      getAllCustomersAccounts: ()=>Promise<Customer[]>,
       deleteCustomersAccount: (id: number)=>Promise<{ deleted: boolean }>,
       getCustomersAccountById: (id: number)=> Promise<{ id: number;name:string; accountNumber: string; accountType: string; phone: string; address: string; date: string; details: string | null } | null>,
       updateCustomersAccount: (id: number, field: string, value: string | number)=>Promise<{ updated: boolean }>

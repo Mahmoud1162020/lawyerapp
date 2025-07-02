@@ -59,6 +59,7 @@ export async function addTenant(
       [JSON.stringify(installmentsDue), installmentAmount, result.lastID]
     );
 
+
     const tenantId = result.lastID!;
 
     // Insert tenant IDs into the tenant_names table
@@ -68,6 +69,11 @@ export async function addTenant(
         [tenantId, customerId]
       );
     }
+
+    await db.run(
+      `UPDATE realstates SET isRented = 1 WHERE id = ?`,
+      [propertyId]
+    );
 
     console.log("✅ Tenant added successfully with associated customer IDs.");
     return { id: tenantId };
