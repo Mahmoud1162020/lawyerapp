@@ -48,6 +48,7 @@ export default function TenantsContractTable() {
       contractNumber: string;
       tenantName: string[];
       propertyNumber: string;
+      propertyDetails?: { propertyTitle: string };
     }[]
   >([]);
   const [filteredData, setFilteredData] = useState(tableData);
@@ -287,6 +288,7 @@ export default function TenantsContractTable() {
         await window.electron.deleteTenant(contractToDelete);
         console.log(`Deleted tenant contract with id: ${contractToDelete}`);
         const updatedContracts = await window.electron.getAllTenants();
+
         setTableData(
           updatedContracts.map((contract) => ({
             ...contract,
@@ -501,6 +503,7 @@ export default function TenantsContractTable() {
                   رقم العقار
                 </div>
               </th>
+              <th>اسم العقار</th>
               <th>
                 {focusedField === "tenantName" && (
                   <input
@@ -556,6 +559,7 @@ export default function TenantsContractTable() {
             {filteredData.map((row) => (
               <tr key={row.id}>
                 <td>{row.propertyNumber}</td>
+                <td>{row?.propertyDetails?.propertyTitle}</td>
                 <td>{row.tenantName?.join(", ")}</td>
                 {/* Join tenant names with a comma */}
                 <td>{row.contractNumber}</td>

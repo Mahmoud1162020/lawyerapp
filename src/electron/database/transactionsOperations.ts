@@ -35,6 +35,22 @@ export async function addTransaction(
       [user_id, recipient, amount, report, procedureId, type,transactionType,date]
     );
 
+    if (type === "procedure" && procedureId &&transactionType==="incoming") {
+      // Update the procedure's credit by adding the transaction amount
+      await db.run(
+        "UPDATE procedures SET credit = credit + ? WHERE id = ?",
+        [amount, procedureId]
+      );
+    }
+        if (type === "procedure" && procedureId &&transactionType==="outgoing") {
+      // Update the procedure's credit by adding the transaction amount
+      await db.run(
+        "UPDATE procedures SET debit = debit + ? WHERE id = ?",
+        [amount, procedureId]
+      );
+    }
+
+
     console.log("✅ Transaction Added Successfully");
     return { id: result.lastID! };
   } catch (error) {

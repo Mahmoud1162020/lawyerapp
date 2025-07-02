@@ -9,6 +9,7 @@ import { registerTenantsIpcHandlers } from "./ipc/TenantsHandler.js";
 import { registerPersonalTransactionIpcHandlers } from "./ipc/personalTransactionsHandler.js";
 import { registerTenantsTransactionsIpcHandlers } from "./ipc/TenantsTransactionsHandler.js";
 import { registerInternalTransactionsIpcHandlers } from "./ipc/InternalTransactionsHandler.js";
+import { updateExpiredTenancies } from "./database/managedb/tenantsOperations.js";
 
 app.on("ready", () => {
   const mainWindow = createMainWindow();
@@ -21,6 +22,9 @@ app.on("ready", () => {
   registerTenantsIpcHandlers(mainWindow);
   registerTenantsTransactionsIpcHandlers(mainWindow);
   registerInternalTransactionsIpcHandlers(mainWindow);
+   setInterval(async () => {
+    await updateExpiredTenancies();
+  }, 24 * 60 * 60 * 1000); // every 24 hours
 });
 
 

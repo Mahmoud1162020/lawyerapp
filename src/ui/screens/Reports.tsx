@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { PieChart } from "@mui/x-charts/PieChart";
 import { BarChart } from "@mui/x-charts/BarChart";
 import "./Reports.css";
-import CustomModal from "../components/Modal/CustomModal";
 import InfoModal from "../components/Modal/InfoModal";
 
 // Add Customer type definition here
@@ -46,13 +45,15 @@ export default function Reports() {
   const [newUsers, setNewUsers] = useState(0);
   const [showModal, setShowModal] = useState(false);
   const [userRelatedInfo, setUserRelatedInfo] = useState<{
-    realStates: realState[];
-    tenants: Tenant[];
+    realStates: RealState[];
+    tenants: TenantResponse[];
     procedures: Procedure[];
+    transactions: [];
   }>({
     realStates: [],
     tenants: [],
     procedures: [],
+    transactions: [],
   });
 
   function valueFormatter(value: number | null) {
@@ -196,6 +197,7 @@ export default function Reports() {
       realStates: userRealStates,
       tenants: userTenants,
       procedures: procedures,
+      transaction: [],
     });
 
     // const userTenants = tenants.filter(tenant => tenant.id === user.id);

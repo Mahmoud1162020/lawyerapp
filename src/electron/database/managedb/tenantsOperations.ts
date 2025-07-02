@@ -34,6 +34,7 @@ export async function addTenant(
         propertyType,
       ]
     );
+console.log("endDate",endDate);
 
     // Calculate installment amount
     const installmentAmount = entitlement / installmentCount;
@@ -212,10 +213,16 @@ export async function deleteTenant(id: number): Promise<{ deleted: boolean }> {
   try {
     // Delete from the tenant_names table
     await db.run(`DELETE FROM tenant_names WHERE tenant_id = ?`, [id]);
-
+ await db.run(
+      `UPDATE realstates SET isRented = 0 WHERE id = (
+      SELECT propertyId FROM tenants WHERE id = ?
+      )`,
+      [id]
+    );
     // Delete from the tenants table
     const result = await db.run(`DELETE FROM tenants WHERE id = ?`, [id]);
-
+    // Update the realstates table to set isRented = 0 if the property was rented
+   
     console.log(`✅ Tenant ID ${id} deleted`);
     return { deleted: result.changes! > 0 };
   } catch (error) {
@@ -290,5 +297,25 @@ export async function updateTenantNames(
   } catch (error) {
     console.error("❌ SQLite Update Tenant IDs Error:", error);
     throw error;
+  }
+}
+
+export async function updateExpiredTenancies(): Promise<void> {
+  console.log("this is update Expiration working....");
+  
+  const db = await initializeDatabase();
+  const today = new Date().toISOString().split("T")[0];
+
+  // Find tenants whose endDate is before today
+  const expiredTenants = await db.all(
+    `SELECT propertyId FROM tenants WHERE endDate < ?`,
+    [today]
+  );
+
+  for (const tenant of expiredTenants) {
+    await db.run(
+      `UPDATE realstates SET isRented = 0 WHERE id = ?`,
+      [tenant.propertyId]
+    );
   }
 }
