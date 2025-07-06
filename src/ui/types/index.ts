@@ -3,6 +3,7 @@ export interface RootState {
     subNav:subNavState;
     user: UserState;
     settings: SettingsState;
+    finance: FinanceState;
   }
   
   export interface NavState {
@@ -32,6 +33,12 @@ export interface RootState {
     name: string;
     email: string;
   }
+
+ export interface FinanceState {
+    totalCredit: number;
+    totalDebit: number;
+}
+
   
 //   export interface UserPreferences {
 //     [key: string]: any;

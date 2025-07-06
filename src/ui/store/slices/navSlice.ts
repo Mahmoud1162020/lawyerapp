@@ -6,7 +6,7 @@ const initialState: NavState = {
 
 };
 
-const authSlice = createSlice({
+const navSlice = createSlice({
   name: 'nav',
   initialState,
   reducers: {
@@ -20,5 +20,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { navState} = authSlice.actions;
-export default authSlice.reducer;
+export const { navState} = navSlice.actions;
+export default navSlice.reducer;
