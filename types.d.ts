@@ -89,16 +89,19 @@ type Statistics = {
 
   type realState = {
     id: number;
-    propertyTitle: string;
-    propertyNumber: string;
-    address: string;
-    price: number;
-    date: string;
-    details: string | null;
-    owners: { id: number; name: string }[];
-    debit?:[];
-    credit?:[];
+  propertyTitle: string;
+  propertyNumber: string;
+  address: string;
+  price: number;
+  date: string;
+  details: string | null;
+  owners: { id: number; name: string }[];
+  isSold?: number;
+  isRented?: number;
+  credit?: number;
+  debit?: number;
   };
+  
   type TenantTransactionDetailsProps= {
   transactionId: number;
   customerName: string;
@@ -251,7 +254,7 @@ type Statistics = {
       updateTenant: (id: number, field: string, value: string | number)=>Promise<{ updated: boolean }>,
       updateTenantNames:(tenantId: number,tenantNames: numbers[])=>Promise<{ updated: boolean }>,
       addPersonalTransaction: (userId: number,customer_id: number,amount: number,report: string,transactionType:"incoming"|"outgoing",date: string)=>Promise<{ id: number }>,
-      getAllPersonalTransactions: ()=>Promise<{ id: number; userId: number; customer_id: number; amount: number; report: string; date: string }[]>,
+      getAllPersonalTransactions: ()=>Promise<PersonalTransaction[]>,
       getPersonalTransactionById: (id: number)=>Promise< PersonalTransaction | null>,
       updatePersonalTransaction: (id: number, field: string, value: string | number)=>Promise<{ updated: boolean }>,
       deletePersonalTransaction: (id: number)=>Promise<{ deleted: boolean }>,

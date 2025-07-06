@@ -10,6 +10,7 @@
   justify-content: center;
   z-index: 2000;
   overflow: auto;
+  flex-wrap: wrap;
 }
 .custom-modal-content {
   background: #fff;

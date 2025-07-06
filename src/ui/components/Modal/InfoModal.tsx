@@ -8,6 +8,12 @@ interface InfoModalProps {
     realStates?: realState[];
     procedures: Procedure[];
     tenants: TenantResponse[];
+    transactions: {
+      proceduresTransactions?: Transaction[];
+      personalTransactions?: PersonalTransaction[];
+      internalTransactions?: InternalTransaction[];
+    };
+    customersAccounts?: Customer[]; // Optional, adjust as needed
   }; // Adjust type as needed
 }
 

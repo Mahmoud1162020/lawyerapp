@@ -1,25 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { PieChart } from "@mui/x-charts/PieChart";
 import { BarChart } from "@mui/x-charts/BarChart";
+import { LineChart } from "@mui/x-charts/LineChart";
+
 import "./Reports.css";
 import InfoModal from "../components/Modal/InfoModal";
 
 // Add Customer type definition here
-
-type RealState = {
-  id: number;
-  propertyTitle: string;
-  propertyNumber: string;
-  address: string;
-  price: number;
-  date: string;
-  details: string | null;
-  owners: { id: number; name: string }[];
-  isSold?: number;
-  isRented?: number;
-  credit?: number;
-  debit?: number;
-};
 
 function getMonthKey(dateStr: string) {
   return dateStr ? dateStr.slice(0, 7) : "unknown";
@@ -32,11 +19,25 @@ function getPercentageChange(current: number, previous: number) {
 }
 
 export default function Reports() {
+  const [incomingPercentChange, setIncomingPercentChange] = useState(0);
+  const [outgoingPercentChange, setOutgoingPercentChange] = useState(0);
+  const [totalIncoming, setTotalIncoming] = useState(0);
+  const [totalOutgoing, setTotalOutgoing] = useState(0);
   const [activeTab, setActiveTab] = useState("properties");
-  const [realstates, setRealStates] = useState<RealState[]>([]);
+  const [realstates, setRealStates] = useState<realState[]>([]);
   const [procedures, setProcedures] = useState<Procedure[]>([]); // Replace 'any' with actual Procedure type if available
   const [tenants, setTenants] = useState<TenantResponse[]>([]); // Replace 'any' with actual Tenant type if available
-  const [barData, setBarData] = useState<any[]>([]);
+  const [barData, setBarData] = useState<
+    {
+      month: string;
+      available: number;
+      sold: number;
+      rented: number;
+    }[]
+  >([]);
+  const [lineChartData, setLineChartData] = useState<
+    { date: string; incoming: number; outgoing: number }[]
+  >([]);
   const [chartData, setChartData] = useState<
     { id: number; value: number; label: string }[]
   >([]);
@@ -44,16 +45,27 @@ export default function Reports() {
   const [customersAccounts, setCustomersAccounts] = useState<Customer[]>([]);
   const [newUsers, setNewUsers] = useState(0);
   const [showModal, setShowModal] = useState(false);
+  const [transactions, setTransactions] = useState<{
+    proceduresTransactions: Transaction[]; // Replace with actual transaction type if available
+    personalTransactions: PersonalTransaction[]; // Replace with actual personal transaction type if available
+    internalTransactions: InternalTransaction[]; // Replace with actual internal transaction type if available
+  }>(); // Replace with actual transaction types if available
   const [userRelatedInfo, setUserRelatedInfo] = useState<{
-    realStates: RealState[];
-    tenants: TenantResponse[];
-    procedures: Procedure[];
-    transactions: [];
+    realStates?: realState[];
+    tenants?: TenantResponse[];
+    procedures?: Procedure[];
+    transactions?: {
+      proceduresTransactions: Transaction[];
+      personalTransactions: PersonalTransaction[];
+      internalTransactions: InternalTransaction[];
+    };
+    customersAccounts?: Customer[];
   }>({
     realStates: [],
     tenants: [],
     procedures: [],
-    transactions: [],
+    transactions: transactions,
+    customersAccounts: [],
   });
 
   function valueFormatter(value: number | null) {
@@ -93,7 +105,7 @@ export default function Reports() {
     const fetchData = async () => {
       const res = await window.electron.getAllRealStates();
       // Ensure isSold and isRented are present (default to 0 if missing)
-      const normalized = res.map((rs: RealState) => ({
+      const normalized = res.map((rs: realState) => ({
         ...rs,
         isSold: typeof rs.isSold === "number" ? rs.isSold : 0,
         isRented: typeof rs.isRented === "number" ? rs.isRented : 0,
@@ -101,7 +113,7 @@ export default function Reports() {
       setRealStates(normalized);
 
       // Group by month
-      const grouped: Record<string, RealState[]> = {};
+      const grouped: Record<string, realState[]> = {};
       res.forEach((rs) => {
         const month = getMonthKey(rs.date);
         if (!grouped[month]) grouped[month] = [];
@@ -126,7 +138,7 @@ export default function Reports() {
         { متاح: number; مباع: number; مؤجر: number }
       > = {};
 
-      res.forEach((rs: RealState) => {
+      res.forEach((rs: realState) => {
         // Extract month from date (YYYY-MM-DD)
         const month = rs.date ? rs.date.slice(0, 7) : "unknown";
         if (!monthlyData[month])
@@ -148,10 +160,10 @@ export default function Reports() {
 
       // Pie chart data (totals)
       const totalAvailable = res.filter(
-        (rs: RealState) => !rs.isSold && !rs.isRented
+        (rs: realState) => !rs.isSold && !rs.isRented
       ).length;
-      const totalSold = res.filter((rs: RealState) => rs.isSold).length;
-      const totalRented = res.filter((rs: RealState) => rs.isRented).length;
+      const totalSold = res.filter((rs: realState) => rs.isSold).length;
+      const totalRented = res.filter((rs: realState) => rs.isRented).length;
       setChartData([
         { id: 0, value: totalAvailable, label: "متاح" },
         { id: 1, value: totalSold, label: "مباع" },
@@ -183,6 +195,32 @@ export default function Reports() {
     };
     fetchProcedures();
   }, []);
+
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      const proceduresTransactions = await window.electron.getAllTransactions();
+      const PersonalTransactions =
+        await window.electron.getAllPersonalTransactions();
+      const InternalTransactions =
+        await window.electron.getAllInternalTransactions();
+      console.log("Fetched procedures transactions:", proceduresTransactions);
+      console.log("Fetched personal transactions:", PersonalTransactions);
+      console.log("Fetched internal transactions:", InternalTransactions);
+
+      setTransactions({
+        proceduresTransactions,
+        personalTransactions: PersonalTransactions,
+        internalTransactions: InternalTransactions,
+      });
+      console.log("Fetched transactions:", {
+        proceduresTransactions,
+        personalTransactions: PersonalTransactions,
+        internalTransactions: InternalTransactions,
+      });
+    };
+
+    fetchTransactions();
+  }, []);
   const showInfo = async (user: Customer) => {
     console.log("Show info clicked", user);
     const userRealStates = realstates.filter((rs) =>
@@ -192,12 +230,37 @@ export default function Reports() {
       t.tenantNames.includes(user.name)
     );
     console.log("User Tenants:", userTenants);
+    const userProcedures = procedures.filter((proc) =>
+      proc.owners?.some((owner) => owner.id === user.id)
+    );
+    const userProcedureIds = userProcedures.map((proc) => proc.id);
 
+    // Filter transactions related to the user
+    console.log("User Procedures:", userProcedures);
+
+    const userProceduresTransactions =
+      transactions?.proceduresTransactions?.filter(
+        (t) =>
+          userProcedureIds.includes(t.procedureId) && t.type === "procedure"
+      ) || [];
+    const userPersonalTransactions =
+      transactions?.personalTransactions?.filter(
+        (t) => String(t.customer_id) === user.id.toString()
+      ) || [];
+    const userInternalTransactions =
+      transactions?.internalTransactions?.filter(
+        (t) => t.fromId === user.id || t.toId === user.id
+      ) || [];
     setUserRelatedInfo({
       realStates: userRealStates,
       tenants: userTenants,
-      procedures: procedures,
-      transaction: [],
+      procedures: userProcedures,
+      transactions: {
+        proceduresTransactions: userProceduresTransactions,
+        personalTransactions: userPersonalTransactions,
+        internalTransactions: userInternalTransactions,
+      },
+      customersAccounts: customersAccounts,
     });
 
     // const userTenants = tenants.filter(tenant => tenant.id === user.id);
@@ -209,13 +272,207 @@ export default function Reports() {
     // console.log("User Procedures:", userProcedures);
     setShowModal(true);
   };
+  useEffect(() => {
+    let totalIncoming = 0;
+    let totalOutgoing = 0;
+
+    // Procedure Transactions
+    if (transactions?.proceduresTransactions) {
+      transactions.proceduresTransactions.forEach((t) => {
+        if (t.transactionType === "incoming") totalIncoming += Number(t.amount);
+        else if (t.transactionType === "outgoing")
+          totalOutgoing += Number(t.amount);
+      });
+    }
+
+    if (transactions?.personalTransactions) {
+      transactions.personalTransactions.forEach((t) => {
+        if (t.transactionType === "incoming") totalIncoming += Number(t.amount);
+        else if (t.transactionType === "outgoing")
+          totalOutgoing += Number(t.amount);
+      });
+    }
+    setTotalIncoming(totalIncoming);
+    setTotalOutgoing(totalOutgoing);
+    console.log(totalIncoming, totalOutgoing);
+
+    // // Internal Transactions (assume outgoing if fromId is not null, incoming if toId === null)
+    // if (transactions?.internalTransactions) {
+    //   transactions.internalTransactions.forEach((t) => {
+    //     // You can adjust this logic as needed for your business rules
+    //     if (t.transactionType === "incoming") totalIncoming += Number(t.amount);
+    //     else if (t.transactionType === "outgoing")
+    //       totalOutgoing += Number(t.amount);
+    //     // Or, if you want to count all as both incoming and outgoing:
+    //     // totalIncoming += Number(t.amount);
+    //     // totalOutgoing += Number(t.amount);
+    //   });
+    // }
+  }, [
+    transactions?.personalTransactions,
+    transactions?.proceduresTransactions,
+  ]);
+
+  useEffect(() => {
+    // Local dateTotals and addToDate to avoid dependency warning
+    const dateTotals: Record<string, { incoming: number; outgoing: number }> =
+      {};
+
+    function addToDate(
+      date: string,
+      type: "incoming" | "outgoing",
+      amount: number
+    ) {
+      if (!dateTotals[date]) dateTotals[date] = { incoming: 0, outgoing: 0 };
+      dateTotals[date][type] += amount;
+    }
+
+    transactions?.proceduresTransactions?.forEach((t) => {
+      if (t.date && t.amount) {
+        if (t.transactionType === "incoming")
+          addToDate(t.date, "incoming", Number(t.amount));
+        else if (t.transactionType === "outgoing")
+          addToDate(t.date, "outgoing", Number(t.amount));
+      }
+    });
+
+    // Personal Transactions
+    transactions?.personalTransactions?.forEach((t) => {
+      if (t.date && t.amount) {
+        if (t.transactionType === "incoming")
+          addToDate(t.date, "incoming", Number(t.amount));
+        else if (t.transactionType === "outgoing")
+          addToDate(t.date, "outgoing", Number(t.amount));
+      }
+    });
+
+    // Internal Transactions (optional: treat all as both incoming and outgoing, or use your own logic)
+    transactions?.internalTransactions?.forEach((t) => {
+      if (t.date && t.amount) {
+        // Example: treat all as outgoing
+        addToDate(t.date, "outgoing", Number(t.amount));
+      }
+    });
+    const lineChartData = Object.entries(dateTotals)
+      .map(([date, vals]) => ({
+        date,
+        incoming: vals.incoming,
+        outgoing: vals.outgoing,
+      }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    setLineChartData(lineChartData);
+
+    console.log("Date Totals:", lineChartData);
+
+    // Cleanup: reset line chart data
+    return () => {
+      setLineChartData([]);
+    };
+  }, [
+    transactions?.proceduresTransactions,
+    transactions?.personalTransactions,
+    transactions?.internalTransactions,
+  ]);
+
+  useEffect(() => {
+    // Group incoming and outgoing by month
+    const monthlyTotals: Record<
+      string,
+      { incoming: number; outgoing: number }
+    > = {};
+
+    function addToMonth(
+      date: string,
+      type: "incoming" | "outgoing",
+      amount: number
+    ) {
+      const month = date ? date.slice(0, 7) : "unknown";
+      if (!monthlyTotals[month])
+        monthlyTotals[month] = { incoming: 0, outgoing: 0 };
+      monthlyTotals[month][type] += amount;
+    }
+
+    // Procedure Transactions
+    transactions?.proceduresTransactions?.forEach((t) => {
+      if (t.date && t.amount) {
+        if (t.transactionType === "incoming")
+          addToMonth(t.date, "incoming", Number(t.amount));
+        else if (t.transactionType === "outgoing")
+          addToMonth(t.date, "outgoing", Number(t.amount));
+      }
+    });
+
+    // Personal Transactions
+    transactions?.personalTransactions?.forEach((t) => {
+      if (t.date && t.amount) {
+        if (t.transactionType === "incoming")
+          addToMonth(t.date, "incoming", Number(t.amount));
+        else if (t.transactionType === "outgoing")
+          addToMonth(t.date, "outgoing", Number(t.amount));
+      }
+    });
+
+    // Internal Transactions (optional: treat all as outgoing)
+    transactions?.internalTransactions?.forEach((t) => {
+      if (t.date && t.amount) {
+        addToMonth(t.date, "outgoing", Number(t.amount));
+      }
+    });
+
+    // Get sorted months
+    const months = Object.keys(monthlyTotals).sort().reverse();
+    const currentMonth = months[0];
+    const prevMonth = months[1];
+
+    const currentIncoming = currentMonth
+      ? monthlyTotals[currentMonth].incoming
+      : 0;
+    const prevIncoming = prevMonth ? monthlyTotals[prevMonth].incoming : 0;
+    const currentOutgoing = currentMonth
+      ? monthlyTotals[currentMonth].outgoing
+      : 0;
+    const prevOutgoing = prevMonth ? monthlyTotals[prevMonth].outgoing : 0;
+
+    // Helper for percentage
+    function getPercentageChange(current: number, previous: number) {
+      if (previous === 0) return current === 0 ? 0 : 100;
+      return Math.round(((current - previous) / previous) * 100);
+    }
+
+    const incomingPercentChange = getPercentageChange(
+      currentIncoming,
+      prevIncoming
+    );
+
+    setIncomingPercentChange(incomingPercentChange);
+
+    const outgoingPercentChange = getPercentageChange(
+      currentOutgoing,
+      prevOutgoing
+    );
+    setOutgoingPercentChange(outgoingPercentChange);
+  }, [
+    transactions?.proceduresTransactions,
+    transactions?.personalTransactions,
+    transactions?.internalTransactions,
+  ]);
 
   return (
     <div className="dashboard-container" dir="rtl">
       <InfoModal
         showModal={showModal}
         setShowModal={setShowModal}
-        info={userRelatedInfo}
+        info={{
+          ...userRelatedInfo,
+          procedures: userRelatedInfo.procedures ?? [],
+          tenants: userRelatedInfo.tenants ?? [],
+          transactions: userRelatedInfo.transactions ?? {
+            proceduresTransactions: undefined,
+            personalTransactions: undefined,
+            internalTransactions: undefined,
+          },
+        }}
       />
       <div className="dashboard-header">
         <div>
@@ -258,11 +515,27 @@ export default function Reports() {
           <div className="dashboard-card-title"> المعاملات</div>
           <div className="dashboard-card-value">{procedures.length}</div>
         </div>
-        {/* <div className="dashboard-card">
-          <div className="dashboard-card-title"> money box</div>
-          <div className="dashboard-card-value">$380,000</div>
-          <div className="dashboard-card-desc">+18% عن الشهر الماضي</div>
-        </div> */}
+
+        <div className="dashboard-card">
+          <div className="dashboard-card-title"> الرصيد</div>
+          <div>
+            {" "}
+            <div>
+              <strong> الوارد:</strong> {totalIncoming}
+            </div>
+          </div>
+          <div>
+            <strong> الصادر:</strong> {totalOutgoing}
+          </div>
+          <div className="dashboard-card-desc">
+            <br />
+            {incomingPercentChange >= 0 ? "+" : ""}
+            {incomingPercentChange}% وارد عن الشهر الماضي
+            <br />
+            {outgoingPercentChange >= 0 ? "+" : ""}
+            {outgoingPercentChange}% صادر عن الشهر الماضي
+          </div>
+        </div>
         {/* TODO:add the money box for the owner of office  */}
       </div>
 
@@ -287,6 +560,11 @@ export default function Reports() {
           className={activeTab === "procedures" ? "active" : ""}
           onClick={() => setActiveTab("procedures")}>
           المعاملات
+        </button>
+        <button
+          className={activeTab === "transactions" ? "active" : ""}
+          onClick={() => setActiveTab("transactions")}>
+          الحوالات
         </button>
       </div>
 
@@ -492,6 +770,211 @@ export default function Reports() {
                     <td>{procedure.date}</td>
                   </tr>
                 ))}
+              </tbody>
+            </table>
+          </>
+        )}
+        {activeTab === "transactions" && (
+          <>
+            <div>
+              الحوالات
+              <LineChart
+                dataset={lineChartData}
+                xAxis={[
+                  { dataKey: "date", scaleType: "point", label: "التاريخ" },
+                ]}
+                series={[
+                  {
+                    dataKey: "incoming",
+                    label: "مجموع الحوالات الوارد",
+                    color: "#1976d2",
+                  },
+                  {
+                    dataKey: "outgoing",
+                    label: "مجموع الحوالات الصادر",
+                    color: "#d32f2f",
+                  },
+                ]}
+                height={300}
+                grid={{ vertical: true, horizontal: true }}
+              />
+            </div>
+            <h2>الحوالات</h2>
+
+            {/* Procedure Transactions */}
+            <h3>حوالات المعاملات</h3>
+            <table className="dashboard-table">
+              <thead>
+                <tr>
+                  <th>رقم المعاملة</th>
+                  <th>المستلم</th>
+                  <th>المبلغ</th>
+                  <th>نوع الحوالة</th>
+                  <th>تاريخ الحوالة</th>
+                  <th>تفاصيل</th>
+                </tr>
+              </thead>
+              <tbody>
+                {transactions?.proceduresTransactions?.length ? (
+                  transactions?.proceduresTransactions?.map((t) => (
+                    <tr key={t.id}>
+                      <td>{t.procedureId}</td>
+                      <td>{t.recipient}</td>
+                      <td>{t.amount}</td>
+                      <td>
+                        {t.transactionType === "incoming" ? "وارد" : "صادر"}
+                      </td>
+                      <td>{t.date}</td>
+                      <td>{t.report}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={7} style={{ textAlign: "center" }}>
+                      لا توجد حوالات معاملات
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+
+            {/* Personal Transactions */}
+            <h3>حوالات شخصية</h3>
+            <table className="dashboard-table">
+              <thead>
+                <tr>
+                  <th>رقم الحوالة</th>
+                  <th>الاسم</th>
+                  <th>المبلغ</th>
+                  <th>نوع الحوالة</th>
+                  <th>تاريخ الحوالة</th>
+                  <th>تفاصيل</th>
+                </tr>
+              </thead>
+              <tbody>
+                {transactions?.personalTransactions?.length ? (
+                  transactions.personalTransactions.map((t) => (
+                    <tr key={t.id}>
+                      <td>{t.id}</td>
+                      <td>{t.customer_name}</td>
+                      <td>{t.amount}</td>
+                      <td>
+                        {t.transactionType === "incoming" ? "وارد" : "صادر"}
+                      </td>
+                      <td>{t.date}</td>
+                      <td>{t.report}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={6} style={{ textAlign: "center" }}>
+                      لا توجد حوالات شخصية
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+
+            {/* Internal Transactions */}
+            <h3>حوالات داخلية</h3>
+            <table className="dashboard-table">
+              <thead>
+                <tr>
+                  <th>رقم الحوالة</th>
+                  <th>من</th>
+                  <th>إلى</th>
+                  <th>المبلغ</th>
+                  <th>تاريخ الحوالة</th>
+                  <th>تفاصيل</th>
+                </tr>
+              </thead>
+              <tbody>
+                {transactions?.internalTransactions?.length ? (
+                  transactions.internalTransactions.map((t) => {
+                    // Find from entity
+                    let fromName = "";
+                    let fromType = "";
+                    const fromCustomer = customersAccounts.find(
+                      (c) => c.id === t.fromId
+                    );
+                    const fromRealState = realstates.find(
+                      (r) => r.id === t.fromId
+                    );
+                    const fromProcedure = procedures.find(
+                      (p) => p.id === t.fromId
+                    );
+
+                    if (fromCustomer) {
+                      fromName = fromCustomer.name;
+                      fromType = "عميل";
+                    } else if (fromRealState) {
+                      fromName = fromRealState.propertyTitle;
+                      fromType = "عقار";
+                    } else if (fromProcedure) {
+                      fromName = fromProcedure.procedureName;
+                      fromType = "معاملة";
+                    } else {
+                      fromName = String(t.fromId);
+                      fromType = "";
+                    }
+
+                    // Find to entity
+                    let toName = "";
+                    let toType = "";
+                    const toCustomer = customersAccounts.find(
+                      (c) => c.id === t.toId
+                    );
+                    const toRealState = realstates.find((r) => r.id === t.toId);
+                    const toProcedure = procedures.find((p) => p.id === t.toId);
+
+                    if (toCustomer) {
+                      toName = toCustomer.name;
+                      toType = "عميل";
+                    } else if (toRealState) {
+                      toName = toRealState.propertyTitle;
+                      toType = "عقار";
+                    } else if (toProcedure) {
+                      toName = toProcedure.procedureName;
+                      toType = "معاملة";
+                    } else {
+                      toName = String(t.toId);
+                      toType = "";
+                    }
+
+                    return (
+                      <tr key={t.id}>
+                        <td>{t.id}</td>
+                        <td>
+                          {fromName}
+                          {fromType && (
+                            <span style={{ color: "#888", fontSize: "0.9em" }}>
+                              {" "}
+                              ({fromType})
+                            </span>
+                          )}
+                        </td>
+                        <td>
+                          {toName}
+                          {toType && (
+                            <span style={{ color: "#888", fontSize: "0.9em" }}>
+                              {" "}
+                              ({toType})
+                            </span>
+                          )}
+                        </td>
+                        <td>{t.amount}</td>
+                        <td>{t.date}</td>
+                        <td>{t.details}</td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan={6} style={{ textAlign: "center" }}>
+                      لا توجد حوالات داخلية
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </>

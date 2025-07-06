@@ -129,7 +129,7 @@ electron.contextBridge.exposeInMainWorld('electron', {
     transactionType: "incoming" | "outgoing",
     date: string
   ): Promise<{ id: number }> => electron.ipcRenderer.invoke('add-personal-transaction', {userId, customer_id, amount, report,transactionType, date }),
-  getAllPersonalTransactions: (): Promise<{ id: number; userId: number; customer_id: number; amount: number; report: string; date: string }[]> => electron.ipcRenderer.invoke('get-all-personal-transactions'),
+  getAllPersonalTransactions: (): Promise<PersonalTransaction[]> => electron.ipcRenderer.invoke('get-all-personal-transactions'),
   getPersonalTransactionById: (id: number): Promise<PersonalTransaction | null> => electron.ipcRenderer.invoke('get-personal-transaction-by-id', id),
   deletePersonalTransaction: (id: number): Promise<{ deleted: boolean }> => electron.ipcRenderer.invoke('delete-personal-transaction', id),
   updatePersonalTransaction: (id: number, field: string, value: string | number): Promise<{ updated: boolean }> => electron.ipcRenderer.invoke('update-personal-transaction', id, field, value),

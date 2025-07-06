@@ -442,7 +442,7 @@ const InternalTransactions: React.FC<InternatTransactionProps> = ({
                 console.log("Procedure:", procedure?.procedureName);
               }
               if (entry.toType === "عقار") {
-                const rs = realState.find((p) => p.id === entry.fromId);
+                const rs = realState.find((p) => p.id === entry.toId);
                 To = rs ? rs.propertyTitle + "(عقار)" : "غير معروف";
               }
 
