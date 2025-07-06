@@ -2,6 +2,31 @@ import React from "react";
 import "./TenantTransactions.css";
 import { useNavigate } from "react-router-dom";
 
+interface TenantResponse {
+  id: number;
+  contractStatus: string;
+  startDate: string;
+  tenantNames: string[];
+  propertyNumber: number;
+  endDate: string;
+  entitlement: number;
+  contractNumber: string;
+  installmentCount: number;
+  leasedUsage: string;
+  propertyType: string;
+  propertyDetails: {
+    id: number;
+    propertyTitle: string;
+    propertyNumber: string;
+    address: string;
+    price: number;
+    date: string;
+    details: string | null;
+  };
+  propertyId: number;
+  installmentAmount?: number;
+  installmentsDue?: string; // Add this property as string (JSON)
+}
 interface Props {
   tenansTransactions?: TenantTransaction[] | TenantResponse[];
   onDelete: (id: number) => void;

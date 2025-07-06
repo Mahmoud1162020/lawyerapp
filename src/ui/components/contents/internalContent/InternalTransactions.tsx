@@ -11,8 +11,11 @@ const InternalTransactions: React.FC<InternatTransactionProps> = ({
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
-
+  const [filteredEntries, setFilteredEntries] = useState<InternalTransaction[]>(
+    []
+  );
   const [amount, setAmount] = useState<number | "">("");
+  const [updateFlag, setUpdateFlag] = useState<boolean>(false);
   const [recipient, setRecipient] = useState<
     Customer | Procedure | realState | undefined
   >(undefined);
@@ -100,7 +103,7 @@ const InternalTransactions: React.FC<InternatTransactionProps> = ({
     fetchAllProcedures();
     fetchAllRealStates();
     getAllInternalTransactions();
-  }, []);
+  }, [updateFlag]);
 
   const handleSave = async () => {
     if (!amount || !recipient || !sender) {
@@ -128,6 +131,7 @@ const InternalTransactions: React.FC<InternatTransactionProps> = ({
       }
 
       // setEntries([...entries, newEntry]);
+      setUpdateFlag((prev) => !prev); // Trigger update
       setRecipient(undefined);
       setSender(undefined);
       setAmount("");
@@ -164,9 +168,51 @@ const InternalTransactions: React.FC<InternatTransactionProps> = ({
     }
   };
 
-  // const filteredEntries = entries.filter((entry) =>
-  //   entry.name.includes(searchQuery)
-  // );
+  useEffect(() => {
+    const filteredEntries = entries.filter((entry) => {
+      // Find from/to names/types
+      let fromName = "";
+      if (entry.fromType === "شخصي") {
+        const customer = customersAccounts.find(
+          (account) => account.id === entry.fromId
+        );
+        fromName = customer ? customer.name : "";
+      } else if (entry.fromType === "معاملة") {
+        const procedure = procedures.find((p) => p.id === entry.fromId);
+        fromName = procedure ? procedure.procedureName : "";
+      } else if (entry.fromType === "عقار") {
+        const rs = realState.find((p) => p.id === entry.fromId);
+        fromName = rs ? rs.propertyTitle : "";
+      }
+
+      let toName = "";
+      if (entry.toType === "شخصي") {
+        const customer = customersAccounts.find(
+          (account) => account.id === entry.toId
+        );
+        toName = customer ? customer.name : "";
+      } else if (entry.toType === "معاملة") {
+        const procedure = procedures.find((p) => p.id === entry.toId);
+        toName = procedure ? procedure.procedureName : "";
+      } else if (entry.toType === "عقار") {
+        const rs = realState.find((p) => p.id === entry.toId);
+        toName = rs ? rs.propertyTitle : "";
+      }
+
+      // Search in id, fromName, toName, amount, date, details
+      const q = searchQuery.trim();
+      return (
+        !q ||
+        entry.id?.toString().includes(q) ||
+        fromName.includes(q) ||
+        toName.includes(q) ||
+        (entry.amount && entry.amount.toString().includes(q)) ||
+        (entry.date && entry.date.includes(q)) ||
+        (entry.details && entry.details.includes(q))
+      );
+    });
+    setFilteredEntries(filteredEntries);
+  }, [searchQuery, customersAccounts, entries, procedures, realState]);
   console.log("sender:", sender);
 
   return (
@@ -405,7 +451,7 @@ const InternalTransactions: React.FC<InternatTransactionProps> = ({
             </tr>
           </thead>
           <tbody>
-            {entries?.map((entry) => {
+            {filteredEntries?.map((entry) => {
               console.log("Entry:", entry);
               let From = "";
               if (entry.fromType === "شخصي") {

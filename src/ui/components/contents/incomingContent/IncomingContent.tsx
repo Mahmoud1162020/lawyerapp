@@ -60,6 +60,13 @@ const IncomingPage: React.FC<IncomingPageProps> = ({ activeTab }) => {
   const [personalTransactions, setPersonalTransactions] = React.useState<
     PersonalTransaction[]
   >([]);
+  const [filteredPersonalTransactions, setFilteredPersonalTransactions] =
+    useState<PersonalTransaction[]>([]);
+  const [filteredTenantTransactions, setFilteredTenantTransactions] = useState<
+    TenantTransaction[] | TenantResponse[]
+  >([]);
+  const [filteredProcedureTransactions, setFilteredProcedureTransactions] =
+    useState<Transaction[]>([]);
   const [tenansTransactions, setTenansTransactions] = useState<
     TenantTransaction[] | TenantResponse[]
   >([]); // Assuming Transaction type is defined elsewhere
@@ -434,6 +441,7 @@ const IncomingPage: React.FC<IncomingPageProps> = ({ activeTab }) => {
         );
         console.log("Tenant transaction added:", result);
         alert(`تمت إضافة معاملة الإيجار بنجاح!`);
+        setUpdateFlag(!updateFlag);
       }
 
       setCustomerName("");
@@ -487,24 +495,42 @@ const IncomingPage: React.FC<IncomingPageProps> = ({ activeTab }) => {
       });
     }
   };
+  //Search
+  useEffect(() => {
+    // Personal
+    setFilteredPersonalTransactions(
+      personalTransactions.filter(
+        (t) => t.customer_name?.toString().includes(searchQuery)
+        // ||
+        //   t.customer_id?.toString().includes(searchQuery) ||
+        //   (t.report && t.report.includes(searchQuery))
+      )
+    );
+    // Tenant
+    console.log("tenants", tenansTransactions);
 
-  // const filteredTransactions = transactions.filter(
-  //   (t) =>
-  //     t.recipient.includes(searchQuery) || t.transactionId.includes(searchQuery)
-  // );
+    setFilteredTenantTransactions(
+      (tenansTransactions as TenantTransaction[]).filter((t) =>
+        t.customerName?.includes(searchQuery)
+      )
+    );
+    // Procedure
+    setFilteredProcedureTransactions(
+      procedureTransactions.filter(
+        (t) =>
+          t.id?.toString().includes(searchQuery) ||
+          t.procedureId?.toString().includes(searchQuery) ||
+          (t.recipient && t.recipient.includes(searchQuery))
+      )
+    );
+  }, [
+    searchQuery,
+    personalTransactions,
+    tenansTransactions,
+    procedureTransactions,
+  ]);
 
-  // const filteredPersonalTransactions = personalTransactions.filter((t) =>
-  //   t.name.includes(searchQuery)
-  // );
-
-  console.log("====================================");
-  console.log("customerObject", customerObject);
-  console.log("realStateValue", realStates);
-  console.log("tenants", tenants);
-
-  console.log("====================================");
-
-  // Find related real states for the selected customerObject
+  //
 
   return (
     <div className="transaction-container">
@@ -778,7 +804,7 @@ const IncomingPage: React.FC<IncomingPageProps> = ({ activeTab }) => {
 
       {selectedType === "شخصي" && (
         <PersonalTransactions
-          personalTransactions={personalTransactions}
+          personalTransactions={filteredPersonalTransactions}
           setPersonalTransactions={setPersonalTransactions}
           onDelete={handleDelete}
           selectedType={selectedType}
@@ -787,7 +813,7 @@ const IncomingPage: React.FC<IncomingPageProps> = ({ activeTab }) => {
       )}
       {selectedType === "ايجار" && (
         <TenantTransactions
-          tenansTransactions={tenansTransactions}
+          tenansTransactions={filteredTenantTransactions}
           onDelete={handleDelete}
           selectedType={selectedType}
           activeTab={activeTab}
@@ -795,7 +821,7 @@ const IncomingPage: React.FC<IncomingPageProps> = ({ activeTab }) => {
       )}
       {selectedType === "معاملة" && (
         <ProcedureTransactions
-          procedureTransactions={procedureTransactions}
+          procedureTransactions={filteredProcedureTransactions}
           onDelete={handleDelete}
           selectedType={selectedType}
           activeTab={activeTab}
