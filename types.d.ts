@@ -26,6 +26,9 @@ type Statistics = {
     id:number;
     username:string;
     password:string;
+    role: "superadmin" | "admin" | "user";
+    debit: number;
+    credit: number;
   }
   type Transaction= {
     id: number;
@@ -186,6 +189,9 @@ type Statistics = {
       register: (username: string, password: string) => Promise<void>;
       login: (username: string, password: string) => Promise<User>;
       getUser: () => Promise<User>;
+      getAllUsers: () => Promise<User[]>;
+      updateUser: (userId: number, updates: { username?: string; password?: string; role?: string; debit?: number; credit?: number }) => Promise<void>;
+
       setUser: (user: User) => Promise<void>;
       logout: () => Promise<void>;
       deleteUser: (userId: number) => Promise<{deleted:boolean}>;

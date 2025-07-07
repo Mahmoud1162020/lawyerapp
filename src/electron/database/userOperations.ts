@@ -412,3 +412,52 @@ export async function deleteUser(userId: number): Promise<{ deleted: boolean }> 
   const result = await db.run('DELETE FROM users WHERE id = ?', [userId]);
   return { deleted: result.changes! > 0 };
 }
+
+export async function getAllUsers(): Promise<Array<{ id: number; username: string; role: string; debit: number; credit: number }>> {
+  const db = await initializeDatabase();
+  const users = await db.all('SELECT id, username, role, debit, credit FROM users');
+  return users;
+}
+
+
+export async function updateUser(
+  userId: number,
+  updates: { username?: string; password?: string; role?: string; debit?: number; credit?: number }
+): Promise<{ updated: boolean }> {
+  const db = await initializeDatabase();
+  const fields: string[] = [];
+  const values: any[] = [];
+
+  if (updates.username !== undefined) {
+    fields.push('username = ?');
+    values.push(updates.username);
+  }
+  if (updates.password !== undefined) {
+    const hashedPassword = await bcrypt.hash(updates.password, saltRounds);
+    fields.push('password = ?');
+    values.push(hashedPassword);
+  }
+  if (updates.role !== undefined) {
+    fields.push('role = ?');
+    values.push(updates.role);
+  }
+  if (updates.debit !== undefined) {
+    fields.push('debit = ?');
+    values.push(updates.debit);
+  }
+  if (updates.credit !== undefined) {
+    fields.push('credit = ?');
+    values.push(updates.credit);
+  }
+
+  if (fields.length === 0) {
+    return { updated: false };
+  }
+
+  values.push(userId);
+  const result = await db.run(
+    `UPDATE users SET ${fields.join(', ')} WHERE id = ?`,
+    values
+  );
+  return { updated: result.changes! > 0 };
+}

@@ -1,6 +1,7 @@
 import { ipcMain, BrowserWindow } from "electron";
-import { registerUser, loginUser, deleteUser } from "../database/userOperations.js";
+import { registerUser, loginUser, deleteUser, updateUser } from "../database/userOperations.js";
 import Store from "electron-store";
+import { getAllUsers } from "../database/userOperations.js";
 const store = new Store();
 
 
@@ -60,3 +61,18 @@ export function registerIpcHandlers(mainWindow: BrowserWindow): void {
     return result;
   });
 }
+
+ipcMain.handle("get-all-users", async () => {
+  const users = await getAllUsers();
+  return users;
+});
+
+
+ipcMain.handle(
+  "update-user",
+  async (_event, userId: number, updates: { username?: string; password?: string; role?: string; debit?: number; credit?: number }) => {
+    
+    const result = await updateUser(userId, updates);
+    return result;
+  }
+);

@@ -2,13 +2,13 @@ import React, { useEffect, useState } from "react";
 import LoginModal from "./Modal/LoginModal";
 import { LogOut } from "lucide-react";
 
-interface UserStatus {
+interface UserStatusProps {
   isLoggedIn: boolean;
   username?: string;
 }
 
 const UserStatus: React.FC = () => {
-  const [userStatus, setUserStatus] = useState<UserStatus>({
+  const [userStatus, setUserStatus] = useState<UserStatusProps>({
     isLoggedIn: false,
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -29,7 +29,7 @@ const UserStatus: React.FC = () => {
 
   useEffect(() => {
     // Listen for user status updates
-    window.electron.onUserStatusUpdate((status: UserStatus) => {
+    window.electron.onUserStatusUpdate((status: UserStatusProps) => {
       setUserStatus(status);
     });
   }, []);
@@ -53,6 +53,7 @@ const UserStatus: React.FC = () => {
             isOpen={!userStatus.isLoggedIn}
             onClose={() => setIsModalOpen(false)}
             onLogin={handleLogin}
+            userStatus={userStatus}
           />
 
           {/* <button onClick={() => window.electron.login("username", "password")}>

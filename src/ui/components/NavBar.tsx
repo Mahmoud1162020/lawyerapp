@@ -1,11 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Menu, X, FileText, Users, CircleDollarSign } from "lucide-react";
 import "./NavBar.css";
-import { useAppDispatch, useAppSelector } from "../store";
+import { useAppDispatch } from "../store";
 import { navState } from "../store/slices/navSlice";
 import UserStatus from "./UserStatus";
 import { Link } from "react-router-dom";
-import { addCredit, addDebit } from "../store/slices/financeSlice";
 
 const navItems = [
   { name: "ادارة", href: "/manage", icon: Users, itemId: 2 },
@@ -15,18 +14,7 @@ const navItems = [
 
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
-
   const dispatch = useAppDispatch();
-  const { navName } = useAppSelector((state) => state.nav);
-  const { totalCredit, totalDebit } = useAppSelector((state) => state.finance);
-
-  console.log("====navName======>", totalCredit, totalDebit, navName);
-  // const handleExit = async () => {
-  //   console.log("====================================");
-  //   console.log("Exit");
-  //   console.log("====================================");
-  //   window.electron.logout(); // Send the exit event to the main process
-  // };
   const handleSubmit = async (item: number) => {
     try {
       console.log(item);

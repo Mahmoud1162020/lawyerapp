@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Routes, HashRouter as Router, Route } from "react-router-dom"; // <-- Use HashRouter
 import "./App.css";
 import Navbar from "./components/NavBar";
@@ -18,14 +18,36 @@ import IncomingPersonalTransactionDetails from "./components/Details/incomingPer
 import ProcedureIncomingDetails from "./components/Details/ProcedureIncomingDetails";
 import TenantTransactionDetails from "./components/Details/TenantTransactionDetails";
 import InternatTransactionDetails from "./components/Details/InternatTransactionDetails";
+import SuperAdmin from "./screens/SuperAdmin";
 
 function App() {
+  const [showAdminModal, setShowAdminModal] = useState(false);
   useEffect(() => {
     const unsub = window.electron.subscribeStatistics((stats) =>
       console.log("===>", stats)
     );
     return unsub;
   }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Example: log the pressed key
+      if (event.ctrlKey && event.key === "Escape") {
+        console.log("Control + Escape pressed", event);
+        setShowAdminModal((prev) => !prev);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
+  if (showAdminModal) {
+    return <SuperAdmin />;
+  }
   return (
     <Router>
       <Navbar />

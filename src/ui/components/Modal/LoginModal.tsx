@@ -7,14 +7,20 @@ interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
   onLogin: () => void;
+  userStatus: {
+    isLoggedIn: boolean;
+    username?: string;
+  };
 }
 
 const LoginModal: React.FC<LoginModalProps> = ({
   isOpen,
   onClose,
   onLogin,
+  userStatus,
 }) => {
   if (!isOpen) return null;
+  console.log(userStatus);
 
   return (
     <div className="modal-overlay">
@@ -22,7 +28,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
         <h2>تسجيل الدخول</h2>
         <p>يرجى تسجيل الدخول لمتابعة استخدام التطبيق.</p>
         <div className="modal-buttons">
-          <Login />
+          {!userStatus.isLoggedIn && <Login />}
           <Register />
           {/* <button className="login-btn" onClick={onLogin}>
             تسجيل الدخول

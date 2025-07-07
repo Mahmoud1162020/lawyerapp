@@ -28,6 +28,9 @@ electron.contextBridge.exposeInMainWorld('electron', {
   login: (username: string, password: string) => electron.ipcRenderer.invoke('login', { username, password }),
   logout: () => electron.ipcRenderer.invoke('logout'),
   getUser: () => electron.ipcRenderer.invoke('get-user'),
+  getAllUsers: () => electron.ipcRenderer.invoke('get-all-users'),
+  updateUser: (userId: number, updates: { username?: string; password?: string; role?: string; debit?: number; credit?: number }) => electron.ipcRenderer.invoke('update-user', userId, updates),
+ 
   setUser: (user: User) => electron.ipcRenderer.invoke('set-user', user),
   deleteUser: (userId: number) => electron.ipcRenderer.invoke('delete-user', userId),
   onUserStatusUpdate: (callback: (status: UserStatus) => void) => {
