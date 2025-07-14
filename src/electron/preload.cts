@@ -161,8 +161,7 @@ addInternalTransaction: (
   createActivationCode: (code: string, duration: number, status:string,activatedBy?: number): Promise<void> => electron.ipcRenderer.invoke('create-activation-code', code, duration,status, activatedBy),
   getActivationCodes: (): Promise<ActivationCode[]> => electron.ipcRenderer.invoke('get-activation-codes'),
   activateCode: (code: string, userId: number): Promise<void> => electron.ipcRenderer.invoke('activate-code', code, userId),
-  
-
+  updateUserPermissions: (userId: number, permissions: Record<string, boolean>): Promise<{ updated: boolean }> => electron.ipcRenderer.invoke('update-user-permissions', userId, permissions),
 } satisfies Window['electron']);
 
 function ipcInvoke<Key extends keyof EventPayloadMapping>(

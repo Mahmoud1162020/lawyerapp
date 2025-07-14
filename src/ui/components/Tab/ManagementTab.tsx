@@ -12,8 +12,8 @@ export default function Home() {
 
   const tabs = [
     {
-      id: "time",
-      label: new Date().toLocaleDateString(),
+      id: "admin",
+      label: "المدير",
     },
 
     { id: "Tenants", label: "المستأجرين", itemId: 0 },
@@ -35,7 +35,9 @@ export default function Home() {
   return (
     <div className="page-container">
       <div className="tab-card">
-        <div className="tab-header">
+        <div
+          className="tab-header"
+          style={{ display: "flex", justifyContent: "space-between" }}>
           {tabs.map((tab) => (
             <button
               key={tab.id}

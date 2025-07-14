@@ -29,6 +29,7 @@ type Statistics = {
     role: "superadmin" | "admin" | "user";
     debit: number;
     credit: number;
+    permissions?: string; // JSON string of permissions
   }
   type Transaction= {
     id: number;
@@ -292,6 +293,8 @@ type Statistics = {
       createActivationCode: (code: string, duration: number,status:string, activatedBy?: number) => Promise<void>;
       getActivationCodes: () => Promise<ActivationCode[]>;
       activateCode: (code: string, userId: number) => Promise<void>;
+
+      updateUserPermissions: (userId: number, permissions: Record<string, boolean>) => Promise<{ updated: boolean }>;
     };
 
   }

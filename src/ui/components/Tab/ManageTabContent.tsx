@@ -1,4 +1,5 @@
 import { useAppSelector } from "../../store";
+import Admin from "../Admin";
 import CustomersAccount from "../Tables/CutomersAccount";
 import ProceduresTable from "../Tables/ProceduresTable";
 import RealStatesTable from "../Tables/RealStatesTable";
@@ -30,6 +31,11 @@ export default function ManageTabContent({ activeTab }: TabContentProps) {
     Tenants: (
       <div className="tab-content">
         <TenantsContractTable />
+      </div>
+    ),
+    admin: (
+      <div className="tab-content">
+        <Admin />
       </div>
     ),
   };

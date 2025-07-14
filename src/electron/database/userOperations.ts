@@ -383,6 +383,16 @@ if (currentVersion < 18) {
     console.log("Database updated to version 18: Added 'activation' table.");
     currentVersion = 18;
   }
+  if (currentVersion < 19) {
+    const columns = await db.all(`PRAGMA table_info(users)`);
+    const hasPermissions = columns.some(col => col.name === 'permissions');
+    if (!hasPermissions) {
+      await db.exec(`ALTER TABLE users ADD COLUMN permissions TEXT DEFAULT '{}'`);
+      console.log("Database updated to version 19: Added 'permissions' column to 'users' table.");
+    }
+    await db.run(`UPDATE meta SET value = '19' WHERE key = 'db_version'`);
+    currentVersion = 19;
+  }
 
 
 }
@@ -435,7 +445,7 @@ export async function deleteUser(userId: number): Promise<{ deleted: boolean }> 
 
 export async function getAllUsers(): Promise<Array<{ id: number; username: string; role: string; debit: number; credit: number }>> {
   const db = await initializeDatabase();
-  const users = await db.all('SELECT id, username, role, debit, credit FROM users');
+  const users = await db.all('SELECT id, username, role, debit, credit ,permissions FROM users');
   return users;
 }
 
@@ -518,6 +528,27 @@ export async function activateCode(
      SET status = 'used', activatedAt = ?, activatedBy = ?, updatedAt = ?
      WHERE code = ? AND status = 'active'`,
     [now, userId, now, code]
+  );
+  return { updated: result.changes! > 0 };
+}
+
+/**
+ * Update a user's permissions.
+ * @param userId The user's ID.
+ * @param permissions An object representing permissions, e.g. { dashboard: true, cash: false }
+ */
+export async function updateUserPermissions(
+  userId: number,
+  permissions: Record<string, boolean>
+): Promise<{ updated: boolean }> {
+  const db = await initializeDatabase();
+  console.log('====================================');
+  console.log(permissions);
+  console.log('====================================');
+  const permissionsStr = JSON.stringify(permissions);
+  const result = await db.run(
+    `UPDATE users SET permissions = ? WHERE id = ?`,
+    [permissionsStr, userId]
   );
   return { updated: result.changes! > 0 };
 }

@@ -32,6 +32,14 @@ function App() {
   }, []);
 
   useEffect(() => {
+    const fetchUsers = async () => {
+      const users = await window.electron.getAllUsers();
+      console.log("Fetched users:", users);
+    };
+    fetchUsers();
+  }, []);
+
+  useEffect(() => {
     const activationStatus = async () => {
       const activationCodes = await window.electron.getActivationCodes();
       console.log("====================================");
@@ -83,6 +91,8 @@ function App() {
       {/* <SecondNav /> */}
       <ToastContainer position="top-right" autoClose={3000} newestOnTop rtl />
       <Routes>
+        <Route path="/" element={<Reports />} />
+
         <Route path="/reports" element={<Reports />} />
         <Route path="/cash" element={<Cash />} />
         <Route path="/manage" element={<Management />} />
