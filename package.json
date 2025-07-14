@@ -25,6 +25,7 @@
     "@mui/x-charts": "^8.5.3",
     "@reduxjs/toolkit": "^2.5.0",
     "antd": "^5.24.9",
+    "axios": "^1.10.0",
     "bcrypt": "^5.1.1",
     "electron-context-menu": "^4.1.0",
     "electron-store": "^10.0.1",

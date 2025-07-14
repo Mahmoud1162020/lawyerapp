@@ -178,6 +178,18 @@ type Statistics = {
   date?: string;
   details?: string;
 }
+
+
+ type ActivationCode = {
+  id: number;
+  code: string;
+  status: string;
+  activatedAt: string | null;
+  activatedBy: number | null;
+  duration: number | null;
+  createdAt: string;
+  updatedAt: string;
+};
   
   interface Window {
     electron: {
@@ -277,6 +289,9 @@ type Statistics = {
       getInternalTransactionById: (id: number) => Promise<InternalTransaction | undefined>;
       updateInternalTransaction: (id: number, tx: Partial<InternalTransaction>) => Promise<void>;
       deleteInternalTransaction: (id: number) => Promise<void>;
+      createActivationCode: (code: string, duration: number,status:string, activatedBy?: number) => Promise<void>;
+      getActivationCodes: () => Promise<ActivationCode[]>;
+      activateCode: (code: string, userId: number) => Promise<void>;
     };
 
   }

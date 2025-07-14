@@ -29,7 +29,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
         <p>يرجى تسجيل الدخول لمتابعة استخدام التطبيق.</p>
         <div className="modal-buttons">
           {!userStatus.isLoggedIn && <Login />}
-          <Register />
+          {/* <Register /> */}
           {/* <button className="login-btn" onClick={onLogin}>
             تسجيل الدخول
           </button> */}

@@ -365,6 +365,26 @@ if (currentVersion < 16) {
   currentVersion = 17;
 }
 
+if (currentVersion < 18) {
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS activation (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        code TEXT NOT NULL UNIQUE,
+        status TEXT NOT NULL DEFAULT 'active',
+        activatedAt TEXT,
+        activatedBy INTEGER,
+        duration INTEGER,
+        createdAt TEXT DEFAULT (datetime('now', 'localtime')),
+        updatedAt TEXT DEFAULT (datetime('now', 'localtime')),
+        FOREIGN KEY (activatedBy) REFERENCES users(id)
+      );
+    `);
+    await db.run(`UPDATE meta SET value = '18' WHERE key = 'db_version'`);
+    console.log("Database updated to version 18: Added 'activation' table.");
+    currentVersion = 18;
+  }
+
+
 }
 
 async function getDatabaseVersion(db: Database): Promise<number> {
@@ -458,6 +478,46 @@ export async function updateUser(
   const result = await db.run(
     `UPDATE users SET ${fields.join(', ')} WHERE id = ?`,
     values
+  );
+  return { updated: result.changes! > 0 };
+}
+
+
+
+//Activation Code Operations
+export async function createActivationCode(
+  code: string,
+  duration: number,
+  activatedBy: number | null = null,
+  status:string
+): Promise<{ id: number; code: string }> {
+  const db = await initializeDatabase();
+  const now = new Date().toISOString();
+  const result = await db.run(
+    `INSERT INTO activation (code, status, duration, createdAt, updatedAt, activatedBy)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [code,status, duration, now, now, activatedBy]
+  );
+  return { id: result.lastID!, code };
+}
+
+
+export async function getActivationCodes(): Promise<ActivationCode[]> {
+  const db = await initializeDatabase();
+  return db.all<ActivationCode[]>(`SELECT * FROM activation`);
+}
+
+export async function activateCode(
+  code: string,
+  userId: number
+): Promise<{ updated: boolean }> {
+  const db = await initializeDatabase();
+  const now = new Date().toISOString();
+  const result = await db.run(
+    `UPDATE activation
+     SET status = 'used', activatedAt = ?, activatedBy = ?, updatedAt = ?
+     WHERE code = ? AND status = 'active'`,
+    [now, userId, now, code]
   );
   return { updated: result.changes! > 0 };
 }

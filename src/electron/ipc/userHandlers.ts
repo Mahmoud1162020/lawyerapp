@@ -1,5 +1,5 @@
 import { ipcMain, BrowserWindow } from "electron";
-import { registerUser, loginUser, deleteUser, updateUser } from "../database/userOperations.js";
+import { registerUser, loginUser, deleteUser, updateUser, createActivationCode, getActivationCodes } from "../database/userOperations.js";
 import Store from "electron-store";
 import { getAllUsers } from "../database/userOperations.js";
 const store = new Store();
@@ -76,3 +76,14 @@ ipcMain.handle(
     return result;
   }
 );
+
+
+ipcMain.handle("create-activation-code", async (_event, code: string, duration: number,status:string, activatedBy?: number,) => {
+  const result=await createActivationCode(code, duration, activatedBy,status);
+  return result;
+});
+
+ipcMain.handle("get-activation-codes", async () => {
+  const activationCodes = getActivationCodes();
+  return activationCodes;
+});

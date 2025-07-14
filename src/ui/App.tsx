@@ -19,14 +19,40 @@ import ProcedureIncomingDetails from "./components/Details/ProcedureIncomingDeta
 import TenantTransactionDetails from "./components/Details/TenantTransactionDetails";
 import InternatTransactionDetails from "./components/Details/InternatTransactionDetails";
 import SuperAdmin from "./screens/SuperAdmin";
+import ActivationContact from "./components/ActvationCoantact";
 
 function App() {
   const [showAdminModal, setShowAdminModal] = useState(false);
+  const [activationAlert, setActivationAlert] = useState(false);
   useEffect(() => {
     const unsub = window.electron.subscribeStatistics((stats) =>
       console.log("===>", stats)
     );
     return unsub;
+  }, []);
+
+  useEffect(() => {
+    const activationStatus = async () => {
+      const activationCodes = await window.electron.getActivationCodes();
+      console.log("====================================");
+      console.log(activationCodes);
+      console.log("====================================");
+      //get the newest code
+      const newestCode = activationCodes.reduce((latest, current) => {
+        return new Date(latest.createdAt) > new Date(current.createdAt)
+          ? latest
+          : current;
+      }, activationCodes[0]);
+      console.log("====================================");
+      console.log(newestCode);
+      console.log("====================================");
+      if (newestCode && newestCode.status === "active") {
+        setActivationAlert(false);
+      } else {
+        setActivationAlert(true);
+      }
+    };
+    activationStatus();
   }, []);
 
   useEffect(() => {
@@ -47,6 +73,9 @@ function App() {
 
   if (showAdminModal) {
     return <SuperAdmin />;
+  }
+  if (activationAlert) {
+    return <ActivationContact />;
   }
   return (
     <Router>

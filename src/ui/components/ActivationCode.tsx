@@ -1,12 +1,14 @@
-import React, { useState } from "react";
+import axios from "axios";
+import React, { useEffect, useState } from "react";
 
 const ActivationCode: React.FC = () => {
-  const [userId, setUserId] = useState("");
+  const [user, setUser] = useState<User | undefined>(undefined);
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
+  const [selectionId, setSelectionId] = useState<number | null>(null);
 
-  const handleGenerate = async () => {
+  const handleActivate = async () => {
     setLoading(true);
     setResult(null);
     try {
@@ -15,93 +17,119 @@ const ActivationCode: React.FC = () => {
       //     Number(userId)
       //   );
       //   setCode(newCode);
-      setResult("تم إنشاء كود التفعيل بنجاح");
+      const activationStatus = await axios.post(
+        "http://localhost:8080/api/activate",
+        {
+          code: code,
+          user: user,
+        }
+      );
+
+      if (activationStatus && activationStatus.data) {
+        const res = await window.electron.createActivationCode(
+          activationStatus.data.code.code,
+          activationStatus.data.code.duration,
+          activationStatus.data.code.status,
+          activationStatus.data.code.activatedBy.id
+        );
+        console.log("====================================");
+        console.log(res);
+        console.log("====================================");
+      }
+
+      setResult("تم  التفعيل بنجاح");
+      alert("تم  التفعيل بنجاح");
+      setCode("");
     } catch (error) {
-      setResult("حدث خطأ أثناء إنشاء كود التفعيل");
+      setResult("حدث خطأ أثناء  التفعيل" + error);
+      alert("حدث خطأ أثناء  التفعيل" + error);
     }
     setLoading(false);
   };
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(code);
-    setResult("تم نسخ الكود");
-  };
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const users = await window.electron.getAllUsers();
+        if (users && users.length > 0) {
+          // Ensure each user has the required properties
+          users.filter((u) => u.role === "admin");
+
+          setUser(users[0]); // Set the first user as default
+        }
+      } catch (error) {
+        console.error("Failed to fetch users:", error);
+      }
+    };
+    fetchUsers();
+  }, []);
+
+  const content = [
+    {
+      id: 1,
+      title: " كود تفعيل",
+    },
+  ];
 
   return (
-    <div
-      style={{
-        maxWidth: 400,
-        margin: "40px auto",
-        background: "#fff",
-        borderRadius: 12,
-        boxShadow: "0 4px 24px #0001",
-        padding: 32,
-        textAlign: "center",
-      }}>
-      <h2 style={{ color: "#1976d2", marginBottom: 24 }}>توليد كود تفعيل</h2>
-      <input
-        type="number"
-        placeholder="معرف المستخدم"
-        value={userId}
-        onChange={(e) => setUserId(e.target.value)}
+    <div>
+      <div
         style={{
-          padding: "10px 12px",
-          border: "1px solid #b0bec5",
-          borderRadius: 6,
-          fontSize: "1rem",
-          marginBottom: 16,
-          width: "100%",
-        }}
-      />
-      <button
-        onClick={handleGenerate}
-        disabled={loading || !userId}
-        style={{
-          padding: "10px 0",
-          background: "#1976d2",
-          color: "#fff",
-          border: "none",
-          borderRadius: 6,
-          fontSize: "1.1rem",
-          fontWeight: "bold",
-          cursor: "pointer",
-          width: "100%",
-          marginBottom: 20,
+          textAlign: "center",
+          marginBottom: 24,
+          display: "flex",
+          justifyContent: "center",
         }}>
-        {loading ? "جاري التوليد..." : "توليد الكود"}
-      </button>
-      {code && (
-        <div style={{ margin: "16px 0" }}>
+        {content.map((item) => (
           <div
-            style={{
-              fontSize: "1.3rem",
-              background: "#f5f7fa",
-              padding: "12px 0",
-              borderRadius: 6,
-              marginBottom: 8,
-              letterSpacing: 2,
-              fontWeight: "bold",
-            }}>
-            {code}
+            key={item.id}
+            className="superadmin-card"
+            onClick={() => setSelectionId(item.id)}>
+            {item.title}
           </div>
-          <button
-            onClick={handleCopy}
+        ))}
+      </div>
+      {selectionId === 1 && (
+        <div
+          style={{
+            maxWidth: 400,
+            margin: "40px auto",
+            background: "#fff",
+            borderRadius: 12,
+            boxShadow: "0 4px 24px #0001",
+            padding: 32,
+            textAlign: "center",
+          }}>
+          <h2 style={{ color: "#1976d2", marginBottom: 24 }}> تفعيل</h2>
+          <input
+            placeholder="كود التفعيل"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
             style={{
-              padding: "6px 18px",
-              background: "#388e3c",
+              padding: "10px 12px",
+              border: "1px solid #b0bec5",
+              borderRadius: 6,
+              fontSize: "1rem",
+              marginBottom: 16,
+              width: "100%",
+            }}
+          />
+          <button
+            onClick={handleActivate}
+            style={{
+              padding: "10px 0",
+              background: "#1976d2",
               color: "#fff",
               border: "none",
               borderRadius: 6,
-              fontSize: "1rem",
+              fontSize: "1.1rem",
+              fontWeight: "bold",
               cursor: "pointer",
+              width: "100%",
+              marginBottom: 20,
             }}>
-            نسخ الكود
+            {loading ? "جاري التفعيل..." : " تفعيل"}
           </button>
-        </div>
-      )}
-      {result && (
-        <div style={{ marginTop: 12, color: "#1976d2", fontWeight: "bold" }}>
-          {result}
         </div>
       )}
     </div>

@@ -158,6 +158,10 @@ addInternalTransaction: (
   getInternalTransactionById: (id: number): Promise<InternalTransaction | undefined> => electron.ipcRenderer.invoke('get-internal-transaction-by-id', id),
   updateInternalTransaction: (id: number, tx: Partial<InternalTransaction>): Promise<void> => electron.ipcRenderer.invoke('update-internal-transaction', id, tx),
   deleteInternalTransaction: (id: number): Promise<void> => electron.ipcRenderer.invoke('delete-internal-transaction', id),
+  createActivationCode: (code: string, duration: number, status:string,activatedBy?: number): Promise<void> => electron.ipcRenderer.invoke('create-activation-code', code, duration,status, activatedBy),
+  getActivationCodes: (): Promise<ActivationCode[]> => electron.ipcRenderer.invoke('get-activation-codes'),
+  activateCode: (code: string, userId: number): Promise<void> => electron.ipcRenderer.invoke('activate-code', code, userId),
+  
 
 } satisfies Window['electron']);
 
