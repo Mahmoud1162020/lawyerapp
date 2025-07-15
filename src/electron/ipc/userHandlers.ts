@@ -25,6 +25,7 @@ export function registerIpcHandlers(mainWindow: BrowserWindow): void {
   
     store.set("user", user); // Store user persistently
   });
+  
   ipcMain.handle("get-user", async() => {
    
   const user: User = store.get("user") as User;

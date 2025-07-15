@@ -20,10 +20,19 @@ import TenantTransactionDetails from "./components/Details/TenantTransactionDeta
 import InternatTransactionDetails from "./components/Details/InternatTransactionDetails";
 import SuperAdmin from "./screens/SuperAdmin";
 import ActivationContact from "./components/ActvationCoantact";
+import { useAppDispatch } from "./store";
+import { setUsers } from "./store/slices/usersSlice";
+import { useSelector } from "react-redux";
+import { RootState } from "./types";
 
 function App() {
   const [showAdminModal, setShowAdminModal] = useState(false);
   const [activationAlert, setActivationAlert] = useState(false);
+  const { users } = useSelector((state: RootState) => state.users);
+  console.log("====================================");
+  console.log(users);
+  console.log("====================================");
+  const dispatch = useAppDispatch();
   useEffect(() => {
     const unsub = window.electron.subscribeStatistics((stats) =>
       console.log("===>", stats)
@@ -33,27 +42,39 @@ function App() {
 
   useEffect(() => {
     const fetchUsers = async () => {
-      const users = await window.electron.getAllUsers();
-      console.log("Fetched users:", users);
+      const user = await window.electron.getUser();
+      console.log("====================================");
+      console.log(user);
+      console.log("====================================");
+      const parsedUerPermissions =
+        user && typeof user.permissions === "string"
+          ? JSON.parse(user.permissions || "{}")
+          : user?.permissions || {};
+
+      const userWithPermissions = {
+        ...user,
+        permissions: parsedUerPermissions,
+      };
+
+      dispatch(setUsers(userWithPermissions));
+      console.log("====================================");
+      console.log("User Info:", userWithPermissions);
+      console.log("====================================");
     };
     fetchUsers();
-  }, []);
+  }, [dispatch]);
 
   useEffect(() => {
     const activationStatus = async () => {
       const activationCodes = await window.electron.getActivationCodes();
-      console.log("====================================");
-      console.log(activationCodes);
-      console.log("====================================");
+
       //get the newest code
       const newestCode = activationCodes.reduce((latest, current) => {
         return new Date(latest.createdAt) > new Date(current.createdAt)
           ? latest
           : current;
       }, activationCodes[0]);
-      console.log("====================================");
-      console.log(newestCode);
-      console.log("====================================");
+
       if (newestCode && newestCode.status === "active") {
         setActivationAlert(false);
       } else {
@@ -92,7 +113,6 @@ function App() {
       <ToastContainer position="top-right" autoClose={3000} newestOnTop rtl />
       <Routes>
         <Route path="/" element={<Reports />} />
-
         <Route path="/reports" element={<Reports />} />
         <Route path="/cash" element={<Cash />} />
         <Route path="/manage" element={<Management />} />

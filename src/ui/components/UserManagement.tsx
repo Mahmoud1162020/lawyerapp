@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "./UserManagement.css";
+import { ROLES, ROLESARRAY } from "../types/Keys";
 
 interface User {
   id: number;
@@ -55,7 +56,9 @@ const UserManagement: React.FC = () => {
       user: users.find((u) => u.id === userId) || null,
     });
   };
-
+  console.log("====================================");
+  console.log(editRole);
+  console.log("====================================");
   const confirmDelete = async () => {
     if (!modal.user) return;
     try {
@@ -130,9 +133,13 @@ const UserManagement: React.FC = () => {
                       value={editRole}
                       onChange={(e) => setEditRole(e.target.value)}
                       className="user-mgmt-select">
-                      <option value="user">user</option>
-                      <option value="admin">admin</option>
-                      <option value="superadmin">superadmin</option>
+                      {ROLESARRAY.map(
+                        (role: { key: string; label: string }) => (
+                          <option key={role.key} value={role.key}>
+                            {role.label}
+                          </option>
+                        )
+                      )}
                     </select>
                   </td>
                   <td>
@@ -152,7 +159,9 @@ const UserManagement: React.FC = () => {
                 <tr key={user.id}>
                   <td>{user.id}</td>
                   <td>{user.username}</td>
-                  <td>{user.role}</td>
+                  <td>
+                    {ROLESARRAY.find((ra) => ra.key === user.role)?.label}
+                  </td>
                   <td>
                     <button
                       onClick={() => handleEdit(user)}

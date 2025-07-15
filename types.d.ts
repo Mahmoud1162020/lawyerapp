@@ -26,10 +26,10 @@ type Statistics = {
     id:number;
     username:string;
     password:string;
-    role: "superadmin" | "admin" | "user";
+    role: string;
     debit: number;
     credit: number;
-    permissions?: string; // JSON string of permissions
+    permissions: Record<string, boolean>;
   }
   type Transaction= {
     id: number;

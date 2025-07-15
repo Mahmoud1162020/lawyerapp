@@ -1,17 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { FEATURES, ROLES } from "../types/Keys";
+import { useAppDispatch } from "../store";
+import { setUsers } from "../store/slices/usersSlice";
 
 // Example features/components in the app
 
 const UsersPermissions = () => {
-  const [users, setUsers] = useState<
-    Array<{
-      id: number;
-      username: string;
-      role: string;
-      permissions: Record<string, boolean>;
-    }>
-  >([]);
+  const dispatch = useAppDispatch();
+  const [usersInfo, setUsersInfo] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Fetch users and their permissions
@@ -24,7 +20,11 @@ const UsersPermissions = () => {
         ...u,
         permissions: u.permissions ? JSON.parse(u.permissions) : {},
       }));
-      setUsers(usersWithParsedPermissions);
+      setUsersInfo(usersWithParsedPermissions);
+      console.log("====================================");
+      console.log(usersWithParsedPermissions);
+      console.log("====================================");
+      dispatch(setUsers(usersWithParsedPermissions));
       setLoading(false);
     };
     fetchUsers();
@@ -37,7 +37,7 @@ const UsersPermissions = () => {
     value: boolean
   ) => {
     // Update local state immediately for UI feedback
-    setUsers((prev) =>
+    setUsersInfo((prev) =>
       prev.map((u) =>
         u.id === userId
           ? { ...u, permissions: { ...u.permissions, [feature]: value } }
@@ -46,7 +46,7 @@ const UsersPermissions = () => {
     );
 
     // Find the updated user's permissions object
-    const updatedUser = users.find((u) => u.id === userId);
+    const updatedUser = usersInfo.find((u) => u.id === userId);
     const newPermissions = { ...updatedUser?.permissions, [feature]: value };
 
     // Save the full permissions object to DB via IPC
@@ -96,7 +96,7 @@ const UsersPermissions = () => {
             </tr>
           </thead>
           <tbody>
-            {users.map((user) => (
+            {usersInfo.map((user) => (
               <tr key={user.id}>
                 <td style={{ border: "1px solid #e0e0e0", padding: 8 }}>
                   {user.id}

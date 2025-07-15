@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 
 import { CSSProperties } from "react";
+import { useAppDispatch } from "../store";
+import { setUsers } from "../store/slices/usersSlice";
 
 const styles: { [key: string]: CSSProperties } = {
   container: {
@@ -33,6 +35,7 @@ const styles: { [key: string]: CSSProperties } = {
 };
 
 const Login: React.FC = () => {
+  const dispatch = useAppDispatch();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
@@ -41,8 +44,16 @@ const Login: React.FC = () => {
   const handleLogin = async () => {
     try {
       const user: User = await window.electron.login(username, password); // Replace with your actual login logic
+      console.log("====================================");
+      console.log(user);
+      console.log("====================================");
       window.electron.setUser(user);
       console.log("Logged in:", user);
+      const userWithParsedPermissions = {
+        ...user,
+        permissions: JSON.parse(user.permissions || "{}"),
+      };
+      dispatch(setUsers(userWithParsedPermissions)); // Dispatch user info to Redux store
     } catch (error) {
       console.error("Login failed:", error);
     }

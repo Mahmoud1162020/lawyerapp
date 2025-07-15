@@ -418,7 +418,7 @@ export async function registerUser(username: string, password: string): Promise<
 }
 
 // Login a user
-export async function loginUser(username: string, password: string): Promise<{ id: number; username: string }> {
+export async function loginUser(username: string, password: string): Promise<{ id: number; username: string, role: string, debit: number, credit: number, permissions?: string }> {
   const db = await initializeDatabase();
   const user = await db.get('SELECT * FROM users WHERE username = ?', [username]);
 
@@ -433,7 +433,7 @@ console.log('====================================');
     throw new Error('Invalid password');
   }
 
-  return { id: user.id, username: user.username };
+  return { id: user.id, username: user.username , role: user.role, debit: user.debit, credit: user.credit, permissions: user.permissions };
 }
 
 // Delete a user

@@ -95,7 +95,7 @@ export default function CashTab() {
       <div className="tabs-container">
         <div className="tabs">
           <FinancialTable />
-          <div></div>
+
           {tabs.map((tab) => (
             <button
               key={tab.id}

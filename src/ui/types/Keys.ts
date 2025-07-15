@@ -21,3 +21,14 @@ export const ROLES = {
   client: "عميل",
   guest: "زائر",
 };
+
+export const ROLESARRAY = [
+  {key: "user", label: "مستخدم"},
+  {key: "admin", label: "مدير"},
+  {key: "superadmin", label: "مدير النظام"},
+  {key: "accountant", label: "محاسب"},
+  {key: "realstate_manager", label: "مدير عقارات"},
+  {key: "employee", label: "موظف"},
+  {key: "lawyer", label: "محامي"},
+
+]

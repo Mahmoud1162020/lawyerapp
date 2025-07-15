@@ -4,13 +4,15 @@ import navReducer from './slices/navSlice';
 import subNavReducer from './slices/subNavSlice';
 import { RootState } from '../types';
 import financeReducer from './slices/financeSlice';
+import usersReducer from './slices/usersSlice';
 
 
 export const store = configureStore({
   reducer: {
     nav: navReducer,
     subNav:subNavReducer,
-    finance:financeReducer
+    finance:financeReducer,
+    users:usersReducer
   
   },
 //   middleware: (getDefaultMiddleware) =>

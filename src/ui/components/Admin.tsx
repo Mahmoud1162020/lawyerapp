@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import UserManagement from "./UserManagement";
 import UsersPermissions from "./UsersPermissions";
 import Register from "./Register";
+import ExportBackup from "./ExportBackup";
 
 const Admin = () => {
   const [selectionId, setSelectionId] = useState<number | null>(null);
@@ -19,9 +20,14 @@ const Admin = () => {
     },
 
     {
-      title: "إدارة المستخدمين",
+      title: "إدارة الصلاحيات",
       link: "/activation-code",
       id: 3,
+    },
+    {
+      title: "نسخ احتياطي",
+      link: "/backup",
+      id: 4,
     },
   ];
   return (
@@ -51,6 +57,7 @@ const Admin = () => {
           {selectionId === 1 && <Register />}
           {selectionId === 2 && <UserManagement />}
           {selectionId === 3 && <UsersPermissions />}
+          {selectionId === 4 && <ExportBackup />}
         </div>
       </div>
     </div>

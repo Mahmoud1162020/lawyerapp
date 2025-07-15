@@ -14,6 +14,7 @@ export default function Home() {
     {
       id: "admin",
       label: "المدير",
+      itemId: 4,
     },
 
     { id: "Tenants", label: "المستأجرين", itemId: 0 },
