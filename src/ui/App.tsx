@@ -21,17 +21,17 @@ import InternatTransactionDetails from "./components/Details/InternatTransaction
 import SuperAdmin from "./screens/SuperAdmin";
 import ActivationContact from "./components/ActvationCoantact";
 import { useAppDispatch } from "./store";
-import { setUsers } from "./store/slices/usersSlice";
+import { setUser } from "./store/slices/usersSlice";
 import { useSelector } from "react-redux";
 import { RootState } from "./types";
+import { useAuthUser } from "./helper/useAuthUser";
 
 function App() {
   const [showAdminModal, setShowAdminModal] = useState(false);
   const [activationAlert, setActivationAlert] = useState(false);
-  const { users } = useSelector((state: RootState) => state.users);
-  console.log("====================================");
-  console.log(users);
-  console.log("====================================");
+  const { user } = useSelector((state: RootState) => state.user);
+  console.log(user);
+
   const dispatch = useAppDispatch();
   useEffect(() => {
     const unsub = window.electron.subscribeStatistics((stats) =>
@@ -56,7 +56,7 @@ function App() {
         permissions: parsedUerPermissions,
       };
 
-      dispatch(setUsers(userWithPermissions));
+      dispatch(setUser(userWithPermissions));
       console.log("====================================");
       console.log("User Info:", userWithPermissions);
       console.log("====================================");

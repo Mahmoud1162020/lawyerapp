@@ -1,30 +1,36 @@
 import React, { useEffect, useState } from "react";
 import { FEATURES, ROLES } from "../types/Keys";
-import { useAppDispatch } from "../store";
-import { setUsers } from "../store/slices/usersSlice";
+// import { useAppDispatch } from "../store";
+// import { setUser } from "../store/slices/usersSlice";
+import { useAuthUser } from "../helper/useAuthUser";
 
 // Example features/components in the app
 
 const UsersPermissions = () => {
-  const dispatch = useAppDispatch();
+  // const dispatch = useAppDispatch();
   const [usersInfo, setUsersInfo] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const user = useAuthUser();
 
   // Fetch users and their permissions
   useEffect(() => {
+    console.log("Fetching users and permissions for:", user);
+
     const fetchUsers = async () => {
       setLoading(true);
       // Replace with your actual API call
       const dbUsers = await window.electron.getAllUsers?.();
       const usersWithParsedPermissions = (dbUsers || []).map((u: User) => ({
         ...u,
-        permissions: u.permissions ? JSON.parse(u.permissions) : {},
+        permissions:
+          typeof u.permissions === "string"
+            ? JSON.parse(u.permissions)
+            : u.permissions || {},
       }));
       setUsersInfo(usersWithParsedPermissions);
       console.log("====================================");
       console.log(usersWithParsedPermissions);
       console.log("====================================");
-      dispatch(setUsers(usersWithParsedPermissions));
       setLoading(false);
     };
     fetchUsers();

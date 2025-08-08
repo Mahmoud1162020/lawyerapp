@@ -2,7 +2,7 @@ import React, { useState } from "react";
 
 import { CSSProperties } from "react";
 import { useAppDispatch } from "../store";
-import { setUsers } from "../store/slices/usersSlice";
+import { setUser } from "../store/slices/usersSlice";
 
 const styles: { [key: string]: CSSProperties } = {
   container: {
@@ -51,9 +51,12 @@ const Login: React.FC = () => {
       console.log("Logged in:", user);
       const userWithParsedPermissions = {
         ...user,
-        permissions: JSON.parse(user.permissions || "{}"),
+        permissions:
+          user && typeof user.permissions === "string"
+            ? JSON.parse(user.permissions || "{}")
+            : user?.permissions || {},
       };
-      dispatch(setUsers(userWithParsedPermissions)); // Dispatch user info to Redux store
+      dispatch(setUser(userWithParsedPermissions)); // Dispatch user info to Redux store
     } catch (error) {
       console.error("Login failed:", error);
     }

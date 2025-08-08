@@ -16,10 +16,17 @@ export interface RootState {
   }
   
   export interface UserState {
-    profile: UserProfile | null;
-    // preferences: UserPreferences;
-    loading: boolean;
-    error: string | null;
+    profile?: UserProfile | null;
+    user?: User | null;
+    loading?: boolean;
+    error?: string | null;
+  }
+
+  export interface User {
+    id: string;
+    username: string;
+    email: string;
+    // Add other user fields as needed
   }
   
   export interface SettingsState {

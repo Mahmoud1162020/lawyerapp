@@ -4,7 +4,7 @@ import navReducer from './slices/navSlice';
 import subNavReducer from './slices/subNavSlice';
 import { RootState } from '../types';
 import financeReducer from './slices/financeSlice';
-import usersReducer from './slices/usersSlice';
+import userReducer from './slices/usersSlice';
 
 
 export const store = configureStore({
@@ -12,7 +12,7 @@ export const store = configureStore({
     nav: navReducer,
     subNav:subNavReducer,
     finance:financeReducer,
-    users:usersReducer
+    user:userReducer
   
   },
 //   middleware: (getDefaultMiddleware) =>
