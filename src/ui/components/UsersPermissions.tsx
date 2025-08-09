@@ -3,13 +3,16 @@ import { FEATURES, ROLES } from "../types/Keys";
 // import { useAppDispatch } from "../store";
 // import { setUser } from "../store/slices/usersSlice";
 import { useAuthUser } from "../helper/useAuthUser";
+import { setUser } from "../store/slices/usersSlice";
+import { useAppDispatch } from "../store";
 
 // Example features/components in the app
 
 const UsersPermissions = () => {
-  // const dispatch = useAppDispatch();
+  const dispatch = useAppDispatch();
   const [usersInfo, setUsersInfo] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [changeFlag, setChangeFlag] = useState(false);
   const user = useAuthUser();
 
   // Fetch users and their permissions
@@ -32,9 +35,10 @@ const UsersPermissions = () => {
       console.log(usersWithParsedPermissions);
       console.log("====================================");
       setLoading(false);
+      // dispatch(setUser(usersWithParsedPermissions)); // Removed: setUser expects a single User, not an array
     };
     fetchUsers();
-  }, []);
+  }, [changeFlag]);
 
   // Handle permission change
   const handlePermissionChange = async (

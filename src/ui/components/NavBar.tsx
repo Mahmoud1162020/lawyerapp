@@ -5,6 +5,7 @@ import { useAppDispatch } from "../store";
 import { navState } from "../store/slices/navSlice";
 import UserStatus from "./UserStatus";
 import { Link } from "react-router-dom";
+import { useAuthUser } from "../helper/useAuthUser";
 
 const navItems = [
   { name: "ادارة", href: "/manage", icon: Users, itemId: 2 },
@@ -13,6 +14,7 @@ const navItems = [
 ];
 
 function Navbar() {
+  const user = useAuthUser();
   const [isOpen, setIsOpen] = useState(false);
   const dispatch = useAppDispatch();
   const handleSubmit = async (item: number) => {
@@ -27,13 +29,17 @@ function Navbar() {
   return (
     <nav className="navbar">
       <div className="navbar-container">
+        <p
+          className="brand-name"
+          style={{
+            marginRight: "50px",
+          }}>
+          {user?.username} مرحبا
+        </p>
         <div className="status">
           <UserStatus />
         </div>
         <div className="navbar-header">
-          {/* <Link to="/customer" className="brand-name">
-            App Name
-          </Link> */}
           <div className="menu-toggle">
             <button
               onClick={() => setIsOpen(!isOpen)}

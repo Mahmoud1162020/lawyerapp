@@ -1,11 +1,15 @@
 export const FEATURES = [
   { key: "dashboard", label: "لوحة التحكم" },
-  { key: "cash", label: "الصندوق" },
+  { key: "Cashbox", label: "الصندوق" },
   { key: "realstate", label: "العقارات" },
   { key: "procedures", label: "المعاملات" },
   { key: "tenants", label: "المستأجرين" },
   { key: "reports", label: "التقارير" },
   { key: "users", label: "المستخدمين" },
+  { key: "internal", label: "قيد داخلي" },
+  { key: "incoming", label: "وارد" },
+  { key: "outgoing", label: "صادر" },
+
 ];
 
 // Example roles for display

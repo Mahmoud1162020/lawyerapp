@@ -2,16 +2,18 @@ import { useEffect, useState } from "react";
 import "./styles.css";
 import TabContent from "./TabContent";
 import FinancialTable from "../Tables/FinancialTable";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useAppDispatch } from "../../store";
 import { addCredit, addDebit } from "../../store/slices/financeSlice";
+import { useAuthUser } from "../../helper/useAuthUser";
+import NoPermission from "../NoPermission";
 
 export default function CashTab() {
   const dispatch = useAppDispatch();
+  const userPermission = useAuthUser();
 
   const [activeTab, setActiveTab] = useState<string>("outgoing");
   const location = useLocation();
-  const navigate = useNavigate();
   const [totalIncoming, setTotalIncoming] = useState(0);
   const [totalOutgoing, setTotalOutgoing] = useState(0);
   const [transactions, setTransactions] = useState<{
@@ -94,7 +96,11 @@ export default function CashTab() {
     <div className="container">
       <div className="tabs-container">
         <div className="tabs">
-          <FinancialTable />
+          {userPermission?.permissions?.Cashbox ? (
+            <FinancialTable />
+          ) : (
+            <div className="tabs"></div>
+          )}
 
           {tabs.map((tab) => (
             <button

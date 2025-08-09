@@ -5,6 +5,7 @@ import { LineChart } from "@mui/x-charts/LineChart";
 
 import "./Reports.css";
 import InfoModal from "../components/Modal/InfoModal";
+import { useAuthUser } from "../helper/useAuthUser";
 
 // Add Customer type definition here
 
@@ -19,6 +20,11 @@ function getPercentageChange(current: number, previous: number) {
 }
 
 export default function Reports() {
+  const userPermission = useAuthUser();
+  console.log("====================================");
+  console.log(userPermission);
+  console.log("====================================");
+
   const [incomingPercentChange, setIncomingPercentChange] = useState(0);
   const [outgoingPercentChange, setOutgoingPercentChange] = useState(0);
   const [totalIncoming, setTotalIncoming] = useState(0);
@@ -564,7 +570,7 @@ export default function Reports() {
         <button
           className={activeTab === "transactions" ? "active" : ""}
           onClick={() => setActiveTab("transactions")}>
-          الحوالات
+          القيود
         </button>
       </div>
 
@@ -777,7 +783,7 @@ export default function Reports() {
         {activeTab === "transactions" && (
           <>
             <div>
-              الحوالات
+              القيود
               <LineChart
                 dataset={lineChartData}
                 xAxis={[
@@ -786,12 +792,12 @@ export default function Reports() {
                 series={[
                   {
                     dataKey: "incoming",
-                    label: "مجموع الحوالات الوارد",
+                    label: "مجموع القيود الوارد",
                     color: "#1976d2",
                   },
                   {
                     dataKey: "outgoing",
-                    label: "مجموع الحوالات الصادر",
+                    label: "مجموع القيود الصادر",
                     color: "#d32f2f",
                   },
                 ]}
@@ -799,7 +805,7 @@ export default function Reports() {
                 grid={{ vertical: true, horizontal: true }}
               />
             </div>
-            <h2>الحوالات</h2>
+            <h2>القيود</h2>
 
             {/* Procedure Transactions */}
             <h3>حوالات المعاملات</h3>

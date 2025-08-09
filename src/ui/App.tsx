@@ -25,6 +25,7 @@ import { setUser } from "./store/slices/usersSlice";
 import { useSelector } from "react-redux";
 import { RootState } from "./types";
 import { useAuthUser } from "./helper/useAuthUser";
+import NoPermission from "./components/NoPermission";
 
 function App() {
   const [showAdminModal, setShowAdminModal] = useState(false);
@@ -39,13 +40,15 @@ function App() {
     );
     return unsub;
   }, []);
+  const userPermission = useAuthUser();
+  useEffect(() => {
+    console.log("User Permissions:", userPermission);
+  }, [userPermission]);
 
   useEffect(() => {
     const fetchUsers = async () => {
       const user = await window.electron.getUser();
-      console.log("====================================");
-      console.log(user);
-      console.log("====================================");
+
       const parsedUerPermissions =
         user && typeof user.permissions === "string"
           ? JSON.parse(user.permissions || "{}")
@@ -55,7 +58,9 @@ function App() {
         ...user,
         permissions: parsedUerPermissions,
       };
-
+      console.log("====================================");
+      console.log(userWithPermissions);
+      console.log("====================================");
       dispatch(setUser(userWithPermissions));
       console.log("====================================");
       console.log("User Info:", userWithPermissions);
@@ -103,19 +108,29 @@ function App() {
   if (showAdminModal) {
     return <SuperAdmin />;
   }
-  if (activationAlert) {
-    return <ActivationContact />;
-  }
+  // if (activationAlert) {
+  //   return <ActivationContact />;
+  // }
   return (
     <Router>
       <Navbar />
       {/* <SecondNav /> */}
       <ToastContainer position="top-right" autoClose={3000} newestOnTop rtl />
       <Routes>
-        <Route path="/" element={<Reports />} />
-        <Route path="/reports" element={<Reports />} />
+        {userPermission?.permissions.reports ? (
+          <Route path="/" element={<Reports />} />
+        ) : (
+          <Route path="/" element={<NoPermission />} />
+        )}
+        {userPermission?.permissions.reports ? (
+          <Route path="/reports" element={<Reports />} />
+        ) : (
+          <Route path="/reports" element={<NoPermission />} />
+        )}
         <Route path="/cash" element={<Cash />} />
+
         <Route path="/manage" element={<Management />} />
+
         <Route path="/real-state-details/:id" element={<RealStateDetails />} />
         {/* tenantContract */}
         <Route path="/tenantContract/:id" element={<TenantsDetails />} />

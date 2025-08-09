@@ -1,5 +1,7 @@
+import { useAuthUser } from "../../helper/useAuthUser";
 import { useAppSelector } from "../../store";
 import Admin from "../Admin";
+import NoPermission from "../NoPermission";
 import CustomersAccount from "../Tables/CutomersAccount";
 import ProceduresTable from "../Tables/ProceduresTable";
 import RealStatesTable from "../Tables/RealStatesTable";
@@ -10,32 +12,49 @@ interface TabContentProps {
 }
 
 export default function ManageTabContent({ activeTab }: TabContentProps) {
+  const userPermission = useAuthUser();
   const { subNavState } = useAppSelector((state) => state.subNav);
   activeTab = subNavState.toString();
   const content = {
     customersAccount: (
       <div className="tab-content">
-        <CustomersAccount />
+        {userPermission?.permissions.users ? (
+          <CustomersAccount />
+        ) : (
+          <NoPermission />
+        )}
       </div>
     ),
     realState: (
       <div className="tab-content">
-        <RealStatesTable />
+        {userPermission?.permissions.realstate ? (
+          <RealStatesTable />
+        ) : (
+          <NoPermission />
+        )}
       </div>
     ),
     Procedures: (
       <div className="tab-content">
-        <ProceduresTable />
+        {userPermission?.permissions.procedures ? (
+          <ProceduresTable />
+        ) : (
+          <NoPermission />
+        )}
       </div>
     ),
     Tenants: (
       <div className="tab-content">
-        <TenantsContractTable />
+        {userPermission?.permissions.tenants ? (
+          <TenantsContractTable />
+        ) : (
+          <NoPermission />
+        )}
       </div>
     ),
     admin: (
       <div className="tab-content">
-        <Admin />
+        {userPermission?.permissions.dashboard ? <Admin /> : <NoPermission />}
       </div>
     ),
   };
