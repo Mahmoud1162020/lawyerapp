@@ -91,9 +91,8 @@ function App() {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Example: log the pressed key
-      if (event.ctrlKey && event.key === "Escape") {
-        console.log("Control + Escape pressed", event);
+      if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === "a") {
+        console.log("Control + Shift + A pressed", event);
         setShowAdminModal((prev) => !prev);
       }
     };
