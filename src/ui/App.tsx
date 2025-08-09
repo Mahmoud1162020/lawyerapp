@@ -91,8 +91,12 @@ function App() {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === "a") {
-        console.log("Control + Shift + A pressed", event);
+      if (
+        (event.ctrlKey || event.metaKey) &&
+        event.shiftKey &&
+        event.key.toLowerCase() === "a"
+      ) {
+        console.log("Control/Command + Shift + A pressed", event);
         setShowAdminModal((prev) => !prev);
       }
     };

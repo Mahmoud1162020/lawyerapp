@@ -414,6 +414,7 @@ export async function registerUser(username: string, password: string): Promise<
   const db = await initializeDatabase();
   const hashedPassword = await bcrypt.hash(password, saltRounds);
   const result = await db.run('INSERT INTO users (username, password,role) VALUES (?, ?,?)', [username, hashedPassword,"admin"]);
+  updateUserPermissions(result.lastID!,{ dashboard: true,});
   return { id: result.lastID!, username};
 }
 
