@@ -11,17 +11,17 @@ interface TransactionPageProps {
   activeTab: string;
 }
 
-interface personalTransaction {
-  id: number;
-  userId: number;
-  customer_id: number;
-  amount: number;
-  report: string;
-  date: string;
-  transactionType?: string;
-  type?: string; // "personal" or "procedure"
-  customer_name?: string; // Optional field for customer name
-}
+// interface personalTransaction {
+//   id: number;
+//   userId: number;
+//   customer_id: number;
+//   amount: number;
+//   report: string;
+//   date: string;
+//   transactionType?: string;
+//   type?: string; // "personal" or "procedure"
+//   customer_name?: string; // Optional field for customer name
+// }
 
 const TransactionPage: React.FC<TransactionPageProps> = ({ activeTab }) => {
   const navigate = useNavigate();
@@ -46,8 +46,9 @@ const TransactionPage: React.FC<TransactionPageProps> = ({ activeTab }) => {
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
-  const [personalTransactions, setPersonalTransactions] =
-    useState<personalTransaction[]>();
+  const [personalTransactions, setPersonalTransactions] = useState<
+    PersonalTransaction[]
+  >([]);
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
@@ -151,8 +152,7 @@ const TransactionPage: React.FC<TransactionPageProps> = ({ activeTab }) => {
 
         // Filter transactions with transactionType "outgoing" and type "personal"
         const filteredTransactions = rawTransactions.filter(
-          (t: personalTransaction) =>
-            t.transactionType === "outgoing" && t.type === "personal"
+          (t) => t.transactionType === "outgoing" && t.type === "personal"
         );
 
         console.log("Filtered Personal Transactions:", filteredTransactions);
@@ -256,7 +256,7 @@ const TransactionPage: React.FC<TransactionPageProps> = ({ activeTab }) => {
       console.log("transactionToDelete", transactionToDelete);
       await window.electron.deletePersonalTransaction(transactionToDelete);
       setPersonalTransactions(
-        (personalTransactions ?? []).filter((t) => t.id !== transactionToDelete)
+        personalTransactions.filter((t) => t.id !== transactionToDelete)
       );
     }
 

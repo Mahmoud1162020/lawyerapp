@@ -19,7 +19,7 @@ export default function TabContent({ activeTab }: TabContentProps) {
   const content: Record<string, JSX.Element> = {
     outgoing: (
       <div className="tab-content">
-        {userPermission.permissions.outgoing ? (
+        {userPermission && userPermission.permissions.outgoing ? (
           <OutgoingConten activeTab={activeTab} />
         ) : (
           <NoPermission />
@@ -28,7 +28,7 @@ export default function TabContent({ activeTab }: TabContentProps) {
     ),
     incoming: (
       <div className="tab-content">
-        {userPermission.permissions.incoming ? (
+        {userPermission && userPermission.permissions.incoming ? (
           <IncomingContent activeTab={activeTab} />
         ) : (
           <NoPermission />
@@ -37,7 +37,7 @@ export default function TabContent({ activeTab }: TabContentProps) {
     ),
     internal: (
       <div className="tab-content">
-        {userPermission.permissions.internal ? (
+        {userPermission && userPermission.permissions.internal ? (
           <InternalTransactions activeTab={activeTab} />
         ) : (
           <NoPermission />
