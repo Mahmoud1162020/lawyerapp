@@ -14,6 +14,8 @@ import { setupAutoUpdater } from "./autoUpdater.js";
 
 app.on("ready", () => {
   const mainWindow = createMainWindow();
+    setupAutoUpdater(mainWindow);
+
   registerIpcHandlers(mainWindow);
   registerTransactionIpcHandlers(mainWindow);
   registerPersonalTransactionIpcHandlers(mainWindow);
@@ -23,7 +25,6 @@ app.on("ready", () => {
   registerTenantsIpcHandlers(mainWindow);
   registerTenantsTransactionsIpcHandlers(mainWindow);
   registerInternalTransactionsIpcHandlers(mainWindow);
-  setupAutoUpdater(mainWindow);
   setInterval(async () => {
     await updateExpiredTenancies();
   }, 1 * 60 * 60 * 1000); // every 24 hours

@@ -1,8 +1,10 @@
 import pkg from "electron-updater";
 const { autoUpdater } = pkg;
-import { app, dialog } from "electron";
+import { dialog } from "electron";
 
 export function setupAutoUpdater(mainWindow: Electron.BrowserWindow) {
+  console.log("Setting up auto updater...");
+  
   autoUpdater.autoDownload = true;
 
   autoUpdater.on("checking-for-update", () => {
@@ -42,8 +44,6 @@ export function setupAutoUpdater(mainWindow: Electron.BrowserWindow) {
     });
   });
 
-  // Check for updates after app is ready
-  app.on("ready", () => {
-    autoUpdater.checkForUpdatesAndNotify();
-  });
+  // Check for updates now (after handlers are set)
+  autoUpdater.checkForUpdatesAndNotify();
 }
