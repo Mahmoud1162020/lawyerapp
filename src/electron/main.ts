@@ -26,27 +26,14 @@ app.on("ready", () => {
    
   });
   getAutoUpdater().on('update-available', (info) => {
-  const updateWindow = new BrowserWindow({
-      width: 400,
-      height: 200,
-      title: "Checking for Updates",
-      resizable: false,
-      minimizable: false,
-      maximizable: false,
-      alwaysOnTop: true,
-      modal: true,
-      parent: mainWindow,
-      webPreferences: {
-        nodeIntegration: true,
-        contextIsolation: false
-      }
-    });
+    // Show a notification or dialog to the user about the available update
+    if (global.updateProgressWindow && !global.updateProgressWindow.isDestroyed()) {
+      global.updateProgressWindow.close();
+      global.updateProgressWindow = null;
+    }
+    mainWindow.webContents.send('update-available', info);
 
-    updateWindow.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(`
-      <body style="font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;">
-        <h2>Checking for updates..${info}.</h2>
-      </body>
-    `));
+
 })
 getAutoUpdater().on('update-not-available', (info) => {
  
@@ -94,7 +81,13 @@ getAutoUpdater().on('download-progress', (progressObj) => {
   `));
 })
 getAutoUpdater().on('update-downloaded', (info) => {
-    
+  // Close the update progress window after download completes
+  if (global.updateProgressWindow && !global.updateProgressWindow.isDestroyed()) {
+    global.updateProgressWindow.close();
+    global.updateProgressWindow = null;
+  }
+  // Optionally, notify the renderer or show a dialog
+  mainWindow.webContents.send('update-downloaded', info);
 });
 
   // THEN call checkForUpdates
