@@ -1,21 +1,28 @@
 {
-    "appId": "com.ashursoft.lawyersapp",
-    "files": [
+  "appId": "com.ashursoft.lawyersapp",
+  "files": [
     "dist-electron/**/*",
     "dist-react/**/*",
     "node_modules/**/*",
     "package.json"
   ],
-    "extraResources": ["dist-electron/preload.cjs", "src/assets/**"],
-    "icon": "./desktopIcon.png",
-    "mac": {
-      "target": "dmg"
-    },
-    "linux": {
-      "target": "AppImage",
-      "category": "Utility"
-    },
-    "win": {
-      "target": ["portable", "msi"]
+  "extraResources": ["dist-electron/preload.cjs", "src/assets/**"],
+  "icon": "./desktopIcon.png",
+  "mac": {
+    "target": "dmg"
+  },
+  "linux": {
+    "target": "AppImage",
+    "category": "Utility"
+  },
+  "win": {
+    "target": ["portable", "msi"]
+  },
+  "publish": [
+    {
+      "provider": "github",
+      "owner": "Mahmoud1162020",
+      "repo": "lawyerapp"
     }
-  }
+  ]
+}

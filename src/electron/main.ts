@@ -10,6 +10,7 @@ import { registerPersonalTransactionIpcHandlers } from "./ipc/personalTransactio
 import { registerTenantsTransactionsIpcHandlers } from "./ipc/TenantsTransactionsHandler.js";
 import { registerInternalTransactionsIpcHandlers } from "./ipc/InternalTransactionsHandler.js";
 import { updateExpiredTenancies } from "./database/managedb/tenantsOperations.js";
+import { setupAutoUpdater } from "./autoUpdater.js";
 
 app.on("ready", () => {
   const mainWindow = createMainWindow();
@@ -22,7 +23,8 @@ app.on("ready", () => {
   registerTenantsIpcHandlers(mainWindow);
   registerTenantsTransactionsIpcHandlers(mainWindow);
   registerInternalTransactionsIpcHandlers(mainWindow);
-   setInterval(async () => {
+  setupAutoUpdater(mainWindow);
+  setInterval(async () => {
     await updateExpiredTenancies();
   }, 1 * 60 * 60 * 1000); // every 24 hours
 });

@@ -1,7 +1,7 @@
 {
   "name": "caseflow",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "main": "dist-electron/main.js",
   "scripts": {
@@ -29,6 +29,7 @@
     "bcrypt": "^5.1.1",
     "electron-context-menu": "^4.1.0",
     "electron-store": "^10.0.1",
+    "electron-updater": "^6.6.2",
     "lucide-react": "^0.469.0",
     "moment": "^2.30.1",
     "os-utils": "^0.0.14",
