@@ -1,0 +1,60 @@
+/* Styles for the tab container and tabs */
+.tabs-container {
+    width: 100%;
+    font-family: Arial, sans-serif;
+  }
+  
+  .tabs-list {
+    display: flex;
+    justify-content: flex-end; /* Align tabs to the right for RTL */
+    margin-bottom: 1rem;
+   justify-content: center;
+
+  }
+  
+  .tabs-trigger {
+    background-color: transparent;
+    border: 1px solid #ddd;
+    padding: 0.5rem 1rem;
+    margin: 0 0.25rem;
+    cursor: pointer;
+    font-size: 1rem;
+    text-align: right; /* Ensures RTL text alignment */
+    display: inline-flex;
+    justify-content: flex-end; /* Ensures the label aligns to the right */
+  }
+  
+  .tabs-trigger:hover {
+    background-color: #f1f1f1;
+  }
+  
+  .tabs-trigger.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+  }
+  
+  .tabs-content {
+    display: none;
+    padding: 1rem;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+  }
+  
+  .tabs-content.active {
+    display: block;
+  }
+  
+  .tabs-title {
+    font-size: 1.25rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    text-align: right; /* Align the title to the right */
+  }
+  
+  /* Styling for the content text, if needed */
+  .tabs-content p {
+    text-align: right; /* Ensure content is aligned right */
+  }
+  

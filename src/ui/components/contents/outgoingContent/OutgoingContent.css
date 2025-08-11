@@ -1,0 +1,119 @@
+.transaction-container {
+    background-color: #6d4c66;
+    padding: 20px;
+    color: white;
+    font-family: Arial, sans-serif;
+    direction: rtl;
+  }
+  
+  .form-section {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    width: 200px;
+  }
+  
+  input, select {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #d3d3d3;
+  }
+  
+  .save-btn {
+    background-color:red;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .transactions-table table,
+  .personal-table table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+  }
+  
+  .transactions-table th, .transactions-table td,
+  .personal-table th, .personal-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+    background: #b0b0b0;
+  }
+  
+  .btn {
+    background: #ddd;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    margin: 4px;
+  }
+  
+  .search-section{
+    
+    height: 60px;
+    
+  }
+  .search-section input{
+    width: 200px !important;
+    height: 25px;
+   }
+
+.customer-details-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.customer-details-title {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.customer-details-form-group {
+  margin-bottom: 15px;
+}
+
+.customer-details-form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.customer-details-form-group input,
+.customer-details-form-group select,
+.customer-details-form-group textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.customer-details-save-button,
+.customer-details-cancel-button {
+  padding: 10px 20px;
+  margin-right: 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.customer-details-save-button {
+  background-color: #4caf50;
+  color: white;
+}
+
+.customer-details-cancel-button {
+  background-color: #f44336;
+  color: white;
+}

@@ -1,0 +1,555 @@
+import sqlite3 from 'sqlite3';
+import { open, Database } from 'sqlite';
+import path from 'path';
+import bcrypt from 'bcrypt';
+import { app } from 'electron';
+
+const saltRounds = 10;
+////data base////////////////////////////////
+export async function initializeDatabase(): Promise<Database> {
+  const db = await open({
+    filename: path.join(app.getPath("userData"), "appdatabase.sqlite"),
+    driver: sqlite3.Database,
+  });
+console.log('====================================');
+console.log(path.join(app.getPath("userData"), "appdatabase.sqlite"));
+console.log('====================================');
+  // ✅ Ensure the "meta" table exists
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS meta (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
+  `);
+
+  // ✅ Apply migrations
+  await applyMigrations(db);
+
+  return db;
+}
+
+async function applyMigrations(db: Database) {
+  let currentVersion = await getDatabaseVersion(db);
+
+  if (currentVersion < 1) {
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        role TEXT DEFAULT 'user',
+        debit REAL DEFAULT 0,
+        credit REAL DEFAULT 0
+      );
+    `);
+    await db.run(`INSERT INTO meta (key, value) VALUES ('db_version', '1') ON CONFLICT(key) DO UPDATE SET value='1'`);
+    currentVersion = 1;
+  }
+
+  if (currentVersion < 2) {
+    const roleColumnExists = await db.get(`
+      SELECT 1 
+      FROM pragma_table_info('users') 
+      WHERE name = 'role'
+    `);
+
+    if (!roleColumnExists) {
+      await db.exec(`ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user';`);
+      console.log("Database updated to version 2: Added 'role' column.");
+    }
+
+    await db.run(`UPDATE meta SET value = '2' WHERE key = 'db_version'`);
+    currentVersion = 2;
+  }
+
+  if (currentVersion < 3) {
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS transactions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      recipient TEXT NOT NULL,
+      amount REAL NOT NULL,
+      report TEXT,
+      procedureId INTEGER NOT NULL,
+      type TEXT CHECK(type IN ('procedure', 'personal')) NOT NULL,
+      date TEXT DEFAULT (datetime('now', 'localtime')), 
+      transactionType TEXT CHECK(transactionType IN ('incoming', 'outgoing')) NOT NULL,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (procedureId) REFERENCES procedures(id) ON DELETE CASCADE
+      );
+    `);
+    await db.run(`UPDATE meta SET value = '3' WHERE key = 'db_version'`);
+    console.log("Database updated to version 3: Added 'transactions' table.");
+    currentVersion = 3;
+  }
+
+  if (currentVersion < 4) {
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS customersaccount (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        accountNumber TEXT NOT NULL,
+        accountType TEXT NOT NULL,
+        phone TEXT NOT NULL,
+        address TEXT NOT NULL,
+        date TEXT DEFAULT (datetime('now', 'localtime')),
+        details TEXT,
+        name TEXT,
+        debit REAL DEFAULT 0, -- New column for debit
+        credit REAL DEFAULT 0 -- New column for credit
+      );
+    `);
+    await db.run(`UPDATE meta SET value = '4' WHERE key = 'db_version'`);
+    console.log("Database updated to version 4: Added 'customersaccount' table.");
+    currentVersion = 4;
+  }
+
+  if (currentVersion < 5) {
+    await db.run(`UPDATE meta SET value = '5' WHERE key = 'db_version'`);
+    console.log("Database updated to version 5.");
+    currentVersion = 5;
+  }
+
+  if (currentVersion < 6) {
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS realstates (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        propertyTitle TEXT NOT NULL,
+        propertyNumber TEXT NOT NULL,
+        address TEXT NOT NULL,
+        price REAL NOT NULL,
+        date TEXT DEFAULT (datetime('now', 'localtime')),
+        details TEXT,
+        isSold INTEGER DEFAULT 0, -- New column to indicate if the property is sold
+        soldDate TEXT, -- New column to store the date when the property was sold,
+        isRented INTEGER DEFAULT 0 -- New column to indicate if the property is rented
+      );
+    `);
+    await db.run(`UPDATE meta SET value = '6' WHERE key = 'db_version'`);
+    console.log("Database updated to version 6: Added 'realstates' table.");
+    currentVersion = 6;
+  }
+
+  if (currentVersion < 7) {
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS realstate_owners (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        realstate_id INTEGER NOT NULL,
+        customer_id INTEGER NOT NULL,
+        FOREIGN KEY (realstate_id) REFERENCES realstates(id) ON DELETE CASCADE,
+        FOREIGN KEY (customer_id) REFERENCES customersaccount(id) ON DELETE CASCADE
+      );
+    `);
+    await db.run(`UPDATE meta SET value = '7' WHERE key = 'db_version'`);
+    console.log("Database updated to version 7: Added 'realstate_owners' table.");
+    currentVersion = 7;
+  }
+
+  if (currentVersion < 8) {
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS procedures (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        procedureNumber TEXT NOT NULL,
+        procedureName TEXT NOT NULL,
+        description TEXT,
+        date TEXT DEFAULT (datetime('now', 'localtime')),
+        status TEXT NOT NULL,
+        phone TEXT NOT NULL
+      );
+    `);
+    await db.run(`UPDATE meta SET value = '8' WHERE key = 'db_version'`);
+    console.log("Database updated to version 8: Added 'procedures' table.");
+    currentVersion = 8;
+  }
+
+  if (currentVersion < 9) {
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS procedure_owners (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        procedure_id INTEGER NOT NULL,
+        customer_id INTEGER NOT NULL,
+        FOREIGN KEY (procedure_id) REFERENCES procedures(id) ON DELETE CASCADE,
+        FOREIGN KEY (customer_id) REFERENCES customersaccount(id) ON DELETE CASCADE
+      );
+    `);
+    await db.run(`UPDATE meta SET value = '9' WHERE key = 'db_version'`);
+    console.log("Database updated to version 9: Added 'procedure_owners' table.");
+    currentVersion = 9;
+  }
+
+  if (currentVersion < 10) {
+    // ✅ Create the "tenants" table
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS tenants (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        contractStatus TEXT NOT NULL,
+        startDate TEXT NOT NULL,
+        propertyId INTEGER NOT NULL,
+        endDate TEXT NOT NULL,
+        entitlement REAL NOT NULL,
+        contractNumber TEXT NOT NULL UNIQUE,
+        installmentCount INTEGER NOT NULL,
+        leasedUsage TEXT NOT NULL,
+        installmentsDue TEXT DEFAULT '[]', -- New column for installments due
+        installmentAmount REAL DEFAULT 0, -- New column for installment amount
+        propertyType TEXT NOT NULL,
+        FOREIGN KEY (propertyId) REFERENCES realstates(id) ON DELETE CASCADE
+      );
+    `);
+    await db.run(`UPDATE meta SET value = '10' WHERE key = 'db_version'`);
+    console.log("Database updated to version 10: Added 'tenants' table.");
+    currentVersion = 10;
+  }
+
+  if (currentVersion < 11) {
+    // ✅ Create the "tenant_names" table
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS tenant_names (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        tenant_id INTEGER NOT NULL, -- Foreign key to tenants table
+        customer_id INTEGER NOT NULL, -- Foreign key to customersaccount table
+        FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
+        FOREIGN KEY (customer_id) REFERENCES customersaccount(id) ON DELETE CASCADE
+      );
+    `);
+    await db.run(`UPDATE meta SET value = '11' WHERE key = 'db_version'`);
+    console.log("Database updated to version 11: Added 'tenant_names' table.");
+    currentVersion = 11;
+  }
+  if (currentVersion < 12) {
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS personaltransactions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      customer_id INTEGER NOT NULL, 
+      amount REAL NOT NULL,
+      customer_debit REAL DEFAULT 0,
+      customer_credit REAL DEFAULT 0,
+      report TEXT,
+      type TEXT CHECK(type IN ('procedure', 'personal','rent')) NOT NULL,
+      date TEXT DEFAULT (datetime('now', 'localtime')), 
+      transactionType TEXT CHECK(transactionType IN ('incoming', 'outgoing')) NOT NULL,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (customer_id) REFERENCES customersaccount(id) ON DELETE CASCADE
+      );
+    `);
+    await db.run(`UPDATE meta SET value = '12' WHERE key = 'db_version'`);
+    console.log("Database updated to version 12: Added 'personaltransactions' table.");
+    currentVersion = 12;
+  }
+  if (currentVersion < 13) {
+  // Check if columns already exist
+  const columns = await db.all(`PRAGMA table_info(realstates)`);
+  const hasDebit = columns.some(col => col.name === 'debit');
+  const hasCredit = columns.some(col => col.name === 'credit');
+  if (!hasDebit) {
+    await db.exec(`ALTER TABLE realstates ADD COLUMN debit TEXT DEFAULT '[]';`);
+  }
+  if (!hasCredit) {
+    await db.exec(`ALTER TABLE realstates ADD COLUMN credit TEXT DEFAULT '[]';`);
+  }
+  await db.run(`UPDATE meta SET value = '13' WHERE key = 'db_version'`);
+  console.log("Database updated to version 13: Added 'debit' and 'credit' columns to 'realstates' table.");
+  currentVersion = 13;
+}
+
+if (currentVersion < 14) {
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS tenantsTransactions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      propertyId INTEGER NOT NULL, -- Foreign key to realstates table
+      tenantId INTEGER NOT NULL, -- Foreign key to tenants table
+      customerId INTEGER NOT NULL, -- Foreign key to customersaccount table
+      amount REAL NOT NULL, -- Transaction amount
+      date TEXT DEFAULT (datetime('now', 'localtime')), -- Transaction date
+      isPaid INTEGER DEFAULT 0, -- Indicates if the transaction is paid (0 = false, 1 = true)
+      description TEXT, -- Optional description for the transaction
+      FOREIGN KEY (propertyId) REFERENCES realstates(id) ON DELETE CASCADE,
+      FOREIGN KEY (tenantId) REFERENCES tenants(id) ON DELETE CASCADE,
+      FOREIGN KEY (customerId) REFERENCES customersaccount(id) ON DELETE CASCADE
+    );
+  `);
+  await db.run(`UPDATE meta SET value = '14' WHERE key = 'db_version'`);
+  console.log("Database updated to version 14: Added 'tenantsTransactions' table.");
+  currentVersion = 14;
+}
+
+// Add this to your applyMigrations function in userOperations.ts
+
+if (currentVersion < 15) {
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS internalTransactions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      fromId INTEGER NOT NULL,
+      toId INTEGER NOT NULL,
+      amount REAL NOT NULL,
+      fromType TEXT NOT NULL, -- e.g. 'user', 'customer', 'realstate', etc.
+      toType TEXT NOT NULL,   -- e.g. 'user', 'customer', 'realstate', etc.
+      date TEXT DEFAULT (datetime('now', 'localtime')),
+      details TEXT
+      -- Foreign keys are not enforced here because fromId/toId can point to different tables
+    );
+  `);
+  await db.run(`UPDATE meta SET value = '15' WHERE key = 'db_version'`);
+  console.log("Database updated to version 15: Added 'internalTransactions' table.");
+  currentVersion = 15;
+}
+if (currentVersion < 16) {
+  // Check if columns already exist
+  const realstatesColumns = await db.all(`PRAGMA table_info(realstates)`);
+  const proceduresColumns = await db.all(`PRAGMA table_info(procedures)`);
+  const hasRealstatesDebit = realstatesColumns.some(col => col.name === 'debit' && col.type === 'REAL');
+  const hasRealstatesCredit = realstatesColumns.some(col => col.name === 'credit' && col.type === 'REAL');
+  const hasProceduresDebit = proceduresColumns.some(col => col.name === 'debit');
+  const hasProceduresCredit = proceduresColumns.some(col => col.name === 'credit');
+  if (!hasProceduresDebit) {
+    await db.exec(`ALTER TABLE procedures ADD COLUMN debit REAL DEFAULT 0;`);
+  }
+  if (!hasProceduresCredit) {
+    await db.exec(`ALTER TABLE procedures ADD COLUMN credit REAL DEFAULT 0;`);
+  }
+  await db.run(`UPDATE meta SET value = '16' WHERE key = 'db_version'`);
+  console.log("Database updated to version 16: Added REAL 'debit' and 'credit' columns to 'realstates' and 'procedures' tables.");
+  currentVersion = 16;
+}
+ if (currentVersion < 17) {
+  // Check if rentamounts column exists before adding
+  const realstatesColumns = await db.all(`PRAGMA table_info(realstates)`);
+  const hasRentAmounts = realstatesColumns.some(col => col.name === 'rentamounts');
+  if (!hasRentAmounts) {
+    await db.exec(`ALTER TABLE realstates ADD COLUMN rentamounts TEXT DEFAULT '[]';`);
+  }
+
+  await db.exec(`
+    PRAGMA foreign_keys=off;
+
+    CREATE TABLE IF NOT EXISTS realstates_temp (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      propertyTitle TEXT NOT NULL,
+      propertyNumber TEXT NOT NULL,
+      address TEXT NOT NULL,
+      price REAL NOT NULL,
+      date TEXT DEFAULT (datetime('now', 'localtime')),
+      details TEXT,
+      isSold INTEGER DEFAULT 0,
+      soldDate TEXT,
+      isRented INTEGER DEFAULT 0,
+      debit REAL DEFAULT 0,
+      credit REAL DEFAULT 0,
+      rentamounts TEXT DEFAULT '[]'
+    );
+
+    INSERT INTO realstates_temp (
+      id, propertyTitle, propertyNumber, address, price, date, details, isSold, soldDate, isRented, debit, credit, rentamounts
+    )
+    SELECT
+      id, propertyTitle, propertyNumber, address, price, date, details, isSold, soldDate, isRented,
+      CASE
+        WHEN typeof(debit) = 'text' THEN 0
+        ELSE debit
+      END as debit,
+      CASE
+        WHEN typeof(credit) = 'text' THEN 0
+        ELSE credit
+      END as credit,
+      rentamounts
+    FROM realstates;
+
+    DROP TABLE realstates;
+
+    ALTER TABLE realstates_temp RENAME TO realstates;
+
+    PRAGMA foreign_keys=on;
+  `);
+  await db.run(`UPDATE meta SET value = '17' WHERE key = 'db_version'`);
+  console.log("Database updated to version 17: Added 'debit' and 'credit' columns to 'realstates' table.");
+  currentVersion = 17;
+}
+
+if (currentVersion < 18) {
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS activation (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        code TEXT NOT NULL UNIQUE,
+        status TEXT NOT NULL DEFAULT 'active',
+        activatedAt TEXT,
+        activatedBy INTEGER,
+        duration INTEGER,
+        createdAt TEXT DEFAULT (datetime('now', 'localtime')),
+        updatedAt TEXT DEFAULT (datetime('now', 'localtime')),
+        FOREIGN KEY (activatedBy) REFERENCES users(id)
+      );
+    `);
+    await db.run(`UPDATE meta SET value = '18' WHERE key = 'db_version'`);
+    console.log("Database updated to version 18: Added 'activation' table.");
+    currentVersion = 18;
+  }
+  if (currentVersion < 19) {
+    const columns = await db.all(`PRAGMA table_info(users)`);
+    const hasPermissions = columns.some(col => col.name === 'permissions');
+    if (!hasPermissions) {
+      await db.exec(`ALTER TABLE users ADD COLUMN permissions TEXT DEFAULT '{}'`);
+      console.log("Database updated to version 19: Added 'permissions' column to 'users' table.");
+    }
+    await db.run(`UPDATE meta SET value = '19' WHERE key = 'db_version'`);
+    currentVersion = 19;
+  }
+
+
+}
+
+async function getDatabaseVersion(db: Database): Promise<number> {
+  const row = await db.get(`SELECT value FROM meta WHERE key = 'db_version'`);
+  return row ? Number(row.value) : 0;
+}
+
+
+
+
+
+//////////data base////////////////////////////////
+
+
+// Register a new user
+export async function registerUser(username: string, password: string): Promise<{ id: number; username: string }> {
+  const db = await initializeDatabase();
+  const hashedPassword = await bcrypt.hash(password, saltRounds);
+  const result = await db.run('INSERT INTO users (username, password,role) VALUES (?, ?,?)', [username, hashedPassword,"admin"]);
+  updateUserPermissions(result.lastID!,{ dashboard: true,});
+  return { id: result.lastID!, username};
+}
+
+// Login a user
+export async function loginUser(username: string, password: string): Promise<{ id: number; username: string, role: string, debit: number, credit: number, permissions?: string }> {
+  const db = await initializeDatabase();
+  const user = await db.get('SELECT * FROM users WHERE username = ?', [username]);
+
+  if (!user) {
+    throw new Error('User not found');
+  }
+console.log('====================================');
+console.log(user);
+console.log('====================================');
+  const isValid = await bcrypt.compare(password, user.password);
+  if (!isValid) {
+    throw new Error('Invalid password');
+  }
+
+  return { id: user.id, username: user.username , role: user.role, debit: user.debit, credit: user.credit, permissions: user.permissions };
+}
+
+// Delete a user
+export async function deleteUser(userId: number): Promise<{ deleted: boolean }> {
+  const db = await initializeDatabase();
+  const result = await db.run('DELETE FROM users WHERE id = ?', [userId]);
+  return { deleted: result.changes! > 0 };
+}
+
+export async function getAllUsers(): Promise<Array<{ id: number; username: string; role: string; debit: number; credit: number }>> {
+  const db = await initializeDatabase();
+  const users = await db.all('SELECT id, username, role, debit, credit ,permissions FROM users');
+  return users;
+}
+
+
+export async function updateUser(
+  userId: number,
+  updates: { username?: string; password?: string; role?: string; debit?: number; credit?: number }
+): Promise<{ updated: boolean }> {
+  const db = await initializeDatabase();
+  const fields: string[] = [];
+  const values: any[] = [];
+
+  if (updates.username !== undefined) {
+    fields.push('username = ?');
+    values.push(updates.username);
+  }
+  if (updates.password !== undefined) {
+    const hashedPassword = await bcrypt.hash(updates.password, saltRounds);
+    fields.push('password = ?');
+    values.push(hashedPassword);
+  }
+  if (updates.role !== undefined) {
+    fields.push('role = ?');
+    values.push(updates.role);
+  }
+  if (updates.debit !== undefined) {
+    fields.push('debit = ?');
+    values.push(updates.debit);
+  }
+  if (updates.credit !== undefined) {
+    fields.push('credit = ?');
+    values.push(updates.credit);
+  }
+
+  if (fields.length === 0) {
+    return { updated: false };
+  }
+
+  values.push(userId);
+  const result = await db.run(
+    `UPDATE users SET ${fields.join(', ')} WHERE id = ?`,
+    values
+  );
+  return { updated: result.changes! > 0 };
+}
+
+
+
+//Activation Code Operations
+export async function createActivationCode(
+  code: string,
+  duration: number,
+  activatedBy: number | null = null,
+  status:string
+): Promise<{ id: number; code: string }> {
+  const db = await initializeDatabase();
+  const now = new Date().toISOString();
+  const result = await db.run(
+    `INSERT INTO activation (code, status, duration, createdAt, updatedAt, activatedBy)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [code,status, duration, now, now, activatedBy]
+  );
+  return { id: result.lastID!, code };
+}
+
+
+export async function getActivationCodes(): Promise<ActivationCode[]> {
+  const db = await initializeDatabase();
+  return db.all<ActivationCode[]>(`SELECT * FROM activation`);
+}
+
+export async function activateCode(
+  code: string,
+  userId: number
+): Promise<{ updated: boolean }> {
+  const db = await initializeDatabase();
+  const now = new Date().toISOString();
+  const result = await db.run(
+    `UPDATE activation
+     SET status = 'used', activatedAt = ?, activatedBy = ?, updatedAt = ?
+     WHERE code = ? AND status = 'active'`,
+    [now, userId, now, code]
+  );
+  return { updated: result.changes! > 0 };
+}
+
+/**
+ * Update a user's permissions.
+ * @param userId The user's ID.
+ * @param permissions An object representing permissions, e.g. { dashboard: true, cash: false }
+ */
+export async function updateUserPermissions(
+  userId: number,
+  permissions: Record<string, boolean>
+): Promise<{ updated: boolean }> {
+  const db = await initializeDatabase();
+  console.log('====================================');
+  console.log(permissions);
+  console.log('====================================');
+  const permissionsStr = JSON.stringify(permissions);
+  const result = await db.run(
+    `UPDATE users SET permissions = ? WHERE id = ?`,
+    [permissionsStr, userId]
+  );
+  return { updated: result.changes! > 0 };
+}

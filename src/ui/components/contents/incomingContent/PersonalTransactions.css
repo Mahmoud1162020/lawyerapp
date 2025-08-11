@@ -1,0 +1,79 @@
+.personal-transactions-table {
+  margin: 20px auto;
+  width: 100%;
+  max-width: 100%;
+  border-collapse: collapse;
+  background-color: #6d4c66; /* Matches the theme from OutgoingContent.css */
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  color: white;
+  font-family: Arial, sans-serif;
+  direction: rtl; /* Right-to-left direction for Arabic */
+}
+
+.personal-transactions-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.personal-transactions-table th,
+.personal-transactions-table td {
+  padding: 12px 15px;
+  text-align: center;
+  border-bottom: 1px solid #ddd;
+  border-width: 1px;
+  border-style: solid;
+  background-color: #b0b0b0; /* Matches the table cell background from OutgoingContent.css */
+}
+
+.personal-transactions-table th {
+  background-color: #2196f3; /* Blue header background */
+  color: white;
+  font-weight: bold;
+}
+
+.personal-transactions-table tr:hover {
+  background-color: #b42323; /* Light hover effect */
+}
+
+.personal-transactions-table .delete-btn {
+  background-color: #f44336; /* Red delete button */
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.personal-transactions-table .delete-btn:hover {
+  background-color: #e53935; /* Darker red on hover */
+}
+
+.search-section {
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.search-section input {
+  width: 200px;
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #d3d3d3;
+}
+
+.search-section button {
+  background-color: #2196f3;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.search-section button:hover {
+  background-color: #0b7dda;
+}
