@@ -111,9 +111,9 @@ function App() {
   if (showAdminModal) {
     return <SuperAdmin />;
   }
-  if (activationAlert) {
-    return <ActivationContact />;
-  }
+  // if (activationAlert) {
+  //   return <ActivationContact />;
+  // }
   return (
     <Router>
       <Navbar />
