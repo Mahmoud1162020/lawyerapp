@@ -160,6 +160,15 @@ addInternalTransaction: (
   deleteInternalTransaction: (id: number): Promise<void> => electron.ipcRenderer.invoke('delete-internal-transaction', id),
   // Restore a previously exported backup. Pass the parsed backup object (from ZIP contents).
   restoreBackup: (backupObj: any): Promise<{ restored: boolean; message?: string; summary?: Record<string, number>; warnings?: string[] }> => electron.ipcRenderer.invoke('restore-backup', backupObj),
+  // Save a binary file to the app userData attachments folder. Returns { path }
+  saveFile: (filename: string, buffer: ArrayBuffer | Buffer, subfolder?: string): Promise<{ path: string }> => electron.ipcRenderer.invoke('save-file', filename, buffer, subfolder),
+  // Persist an attachment record linking a saved file path to a realstate id (or null)
+  addAttachment: (realstateId: number | null, filePath: string): Promise<{ id: number }> => electron.ipcRenderer.invoke('add-attachment', realstateId, filePath),
+  // Open a saved file using the OS default application
+  openFile: (filePath: string): Promise<{ success: boolean; message: string }> => electron.ipcRenderer.invoke('open-file', filePath),
+  // Get attachments for a realstate
+  getAttachments: (realstateId: number): Promise<{ id: number; realstate_id: number | null; path: string; created_at?: string }[]> => electron.ipcRenderer.invoke('get-attachments', realstateId),
+  deleteAttachment: (attachmentId: number): Promise<{ deleted: boolean }> => electron.ipcRenderer.invoke('delete-attachment', attachmentId),
   createActivationCode: (code: string, duration: number, status:string,activatedBy?: number): Promise<void> => electron.ipcRenderer.invoke('create-activation-code', code, duration,status, activatedBy),
   getActivationCodes: (): Promise<ActivationCode[]> => electron.ipcRenderer.invoke('get-activation-codes'),
   activateCode: (code: string, userId: number): Promise<void> => electron.ipcRenderer.invoke('activate-code', code, userId),

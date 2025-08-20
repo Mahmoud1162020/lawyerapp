@@ -295,6 +295,13 @@ type Statistics = {
       activateCode: (code: string, userId: number) => Promise<void>;
   restoreBackup: (backupObj: unknown) => Promise<{ restored: boolean; message?: string; summary?: Record<string, number>; warnings?: string[] }> ;
 
+  // Save binary file (image/pdf) to app storage. Returns saved absolute path.
+  saveFile: (filename: string, buffer: ArrayBuffer | Buffer, subfolder?: string) => Promise<{ path: string }>;
+  addAttachment: (realstateId: number | null, filePath: string) => Promise<{ id: number }>;
+  openFile: (filePath: string) => Promise<{ success: boolean; message: string }>;
+  getAttachments: (realstateId: number) => Promise<{ id: number; realstate_id: number | null; path: string; created_at?: string }[]>;
+  deleteAttachment: (attachmentId: number) => Promise<{ deleted: boolean }>;
+
       updateUserPermissions: (userId: number, permissions: Record<string, boolean>) => Promise<{ updated: boolean }>;
     };
 

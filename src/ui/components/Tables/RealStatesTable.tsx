@@ -1,9 +1,20 @@
 import { useEffect, useState } from "react";
-import { Select, Input, Button, Table, Collapse } from "antd";
+import {
+  Select,
+  Input,
+  Button,
+  Table,
+  Collapse,
+  Modal,
+  List,
+  Tooltip,
+} from "antd";
 import "./RealStatesTable.css"; // Add your custom styles here
 import { useNavigate } from "react-router-dom";
 import { IoIosRefresh } from "react-icons/io";
+import { FiPaperclip } from "react-icons/fi";
 import ConfirmModal from "../Modal/ConfirmModal";
+import FileUploader from "../FileUploader";
 // import {
 //   formatNumberWithCommas,
 //   sanitizeNumberInput,
@@ -36,6 +47,7 @@ export default function RealStatesTable() {
       details: string | null;
     }[]
   >([]);
+  const [savedAttachments, setSavedAttachments] = useState<string[]>([]);
   const [activeCollapse, setActiveCollapse] = useState<
     string | string[] | number | number[]
   >(["0"]);
@@ -106,6 +118,16 @@ export default function RealStatesTable() {
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [recordToDelete, setRecordToDelete] = useState<number | null>(null);
+  const [attachmentsModalVisible, setAttachmentsModalVisible] = useState(false);
+  const [attachmentsForRecord, setAttachmentsForRecord] = useState<
+    {
+      id: number;
+      realstate_id: number | null;
+      path: string;
+      created_at?: string;
+    }[]
+  >([]);
+  const [attachmentsLoading, setAttachmentsLoading] = useState(false);
 
   const handleSearchChange = (field: string, value: string) => {
     setSearchFilters((prevFilters) => ({
@@ -168,6 +190,17 @@ export default function RealStatesTable() {
         newRecord.owners // Array of owner IDs
       );
 
+      // Persist attachments (if any) by creating attachment rows pointing to the saved files
+      if (savedAttachments.length > 0) {
+        try {
+          for (const p of savedAttachments) {
+            await window.electron.addAttachment(addedRealState.id, p);
+          }
+        } catch (err) {
+          console.error("Failed to persist attachments for realstate", err);
+        }
+      }
+
       // Add the new record to the table data
       setTableData([
         ...tableData,
@@ -180,6 +213,7 @@ export default function RealStatesTable() {
       ]);
 
       // Clear form fields
+      setSavedAttachments([]); // Clear saved attachments
       setPropertyTitle("");
       setPropertyNumber("");
       setSelectedOwners([]);
@@ -357,6 +391,26 @@ export default function RealStatesTable() {
               onClick={() => navigate(`/real-state-details/${record.key}`)}>
               تفاصيل
             </Button>
+            <Tooltip title="مرفقات">
+              <Button
+                type="text"
+                icon={<FiPaperclip />}
+                onClick={async () => {
+                  setAttachmentsLoading(true);
+                  try {
+                    const rows = await window.electron.getAttachments(
+                      record.key
+                    );
+                    setAttachmentsForRecord(rows || []);
+                    setAttachmentsModalVisible(true);
+                  } catch (err) {
+                    console.error("Failed to fetch attachments", err);
+                  } finally {
+                    setAttachmentsLoading(false);
+                  }
+                }}
+              />
+            </Tooltip>
           </div>
         );
       },
@@ -452,6 +506,29 @@ export default function RealStatesTable() {
                 />
               </div>
             </div>
+            <div style={{ marginBottom: 12 }}>
+              <label>المرفقات (صور أو PDF)</label>
+              <div>
+                <FileUploader
+                  subfolder={`realstates/${Date.now()}`}
+                  accept="image/*,application/pdf"
+                  onSaved={(p) => setSavedAttachments((s) => [...s, p])}
+                  label="أضف مرفق"
+                />
+              </div>
+              {savedAttachments.length > 0 && (
+                <div style={{ marginTop: 8, textAlign: "left" }}>
+                  <strong>الملفات المرفوعة:</strong>
+                  <ul>
+                    {savedAttachments.map((p) => (
+                      <li key={p} style={{ fontSize: 12 }}>
+                        <code>{p}</code>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
             <Button
               type="primary"
               onClick={handleSave}
@@ -486,6 +563,54 @@ export default function RealStatesTable() {
           pagination={{ pageSize: 500 }}
           bordered
         />
+        {/* Attachments Modal */}
+        <Modal
+          title="مرفقات العقار"
+          open={attachmentsModalVisible}
+          onCancel={() => setAttachmentsModalVisible(false)}
+          footer={null}>
+          <List
+            loading={attachmentsLoading}
+            dataSource={attachmentsForRecord}
+            renderItem={(item) => (
+              <List.Item
+                actions={[
+                  <Button
+                    type="link"
+                    onClick={async () => {
+                      try {
+                        await window.electron.openFile(item.path);
+                      } catch (err) {
+                        console.error("Failed to open file", err);
+                      }
+                    }}>
+                    فتح
+                  </Button>,
+                  <Button
+                    type="link"
+                    danger
+                    onClick={async () => {
+                      try {
+                        const res = await window.electron.deleteAttachment(
+                          item.id
+                        );
+                        if (res.deleted) {
+                          setAttachmentsForRecord((rows) =>
+                            rows.filter((r) => r.id !== item.id)
+                          );
+                        }
+                      } catch (err) {
+                        console.error("Failed to delete attachment", err);
+                      }
+                    }}>
+                    حذف
+                  </Button>,
+                ]}>
+                <code style={{ fontSize: 12 }}>{item.path}</code>
+              </List.Item>
+            )}
+          />
+        </Modal>
       </div>
 
       {/* Confirm Modal */}

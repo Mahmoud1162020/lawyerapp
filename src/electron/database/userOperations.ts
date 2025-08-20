@@ -394,6 +394,21 @@ if (currentVersion < 18) {
     currentVersion = 19;
   }
 
+  if (currentVersion < 20) {
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS attachments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        realstate_id INTEGER,
+        path TEXT NOT NULL,
+        created_at TEXT DEFAULT (datetime('now', 'localtime')),
+        FOREIGN KEY (realstate_id) REFERENCES realstates(id) ON DELETE CASCADE
+      );
+    `);
+    await db.run(`UPDATE meta SET value = '20' WHERE key = 'db_version'`);
+    console.log("Database updated to version 20: Added 'attachments' table.");
+    currentVersion = 20;
+  }
+
 
 }
 
