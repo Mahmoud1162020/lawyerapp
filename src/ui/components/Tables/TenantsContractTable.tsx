@@ -5,7 +5,9 @@ import "./TenantsContractTable.css";
 import { IoIosRefresh } from "react-icons/io";
 import ConfirmModal from "../Modal/ConfirmModal";
 import { useNavigate } from "react-router-dom";
-import { Select } from "antd";
+import FileUploader from "../FileUploader";
+import { Select, Modal, List, Button, Tooltip } from "antd";
+import { FiPaperclip } from "react-icons/fi";
 import { toast } from "react-toastify";
 
 const { Option } = Select;
@@ -62,6 +64,17 @@ export default function TenantsContractTable() {
   // Modal state for delete confirmation
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [contractToDelete, setContractToDelete] = useState<number | null>(null);
+  const [savedAttachments, setSavedAttachments] = useState<string[]>([]);
+  const [attachmentsModalVisible, setAttachmentsModalVisible] = useState(false);
+  const [attachmentsForRecord, setAttachmentsForRecord] = useState<
+    {
+      id: number;
+      realstate_id: number | null;
+      path: string;
+      created_at?: string;
+    }[]
+  >([]);
+  const [attachmentsLoading, setAttachmentsLoading] = useState(false);
 
   // Fetch tenant contract records on mount
 
@@ -257,6 +270,23 @@ export default function TenantsContractTable() {
           propertyNumber: String(contract?.propertyDetails?.propertyNumber), // Convert to string
         }))
       );
+      // persist any uploaded attachments for the newly created tenant
+      try {
+        const newId = response?.id ?? response; // handle different return shapes
+        if (savedAttachments && savedAttachments.length > 0 && newId) {
+          for (const p of savedAttachments) {
+            try {
+              await window.electron.addAttachment(newId, p);
+            } catch (err) {
+              console.error("Failed to persist attachment", p, err);
+            }
+          }
+          // refresh attachments modal or table if needed (we refreshed contracts above)
+          setSavedAttachments([]);
+        }
+      } catch (err) {
+        console.error("Error while saving attachments:", err);
+      }
 
       // Clear form fields
       setContractStatus("جديد");
@@ -464,6 +494,29 @@ export default function TenantsContractTable() {
           </div>
         </div>
         <div className="contracts-form-buttons">
+          <div style={{ marginBottom: 12 }}>
+            <label>المرفقات (صور أو PDF)</label>
+            <div>
+              <FileUploader
+                subfolder={`tenants/${Date.now()}`}
+                accept="image/*,application/pdf"
+                onSaved={(p) => setSavedAttachments((s) => [...s, p])}
+                label="أضف مرفق"
+              />
+            </div>
+            {savedAttachments.length > 0 && (
+              <div style={{ marginTop: 8, textAlign: "left" }}>
+                <strong>الملفات المرفوعة:</strong>
+                <ul>
+                  {savedAttachments.map((p) => (
+                    <li key={p} style={{ fontSize: 12 }}>
+                      <code>{p}</code>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
           <button className="contracts-save-button" onClick={handleSave}>
             حفظ
           </button>
@@ -579,12 +632,81 @@ export default function TenantsContractTable() {
                     onClick={() => navigate(`/tenantContract/${row.id}`)}>
                     تفاصيل
                   </button>
+                  <Tooltip title="مرفقات">
+                    <Button
+                      type="text"
+                      icon={<FiPaperclip />}
+                      onClick={async () => {
+                        setAttachmentsLoading(true);
+                        try {
+                          const rows = await window.electron.getAttachments(
+                            row.id
+                          );
+                          setAttachmentsForRecord(rows || []);
+                          setAttachmentsModalVisible(true);
+                        } catch (err) {
+                          console.error("Failed to fetch attachments", err);
+                        } finally {
+                          setAttachmentsLoading(false);
+                        }
+                      }}
+                    />
+                  </Tooltip>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {/* Attachments Modal */}
+      <Modal
+        title="مرفقات العقد"
+        open={attachmentsModalVisible}
+        onCancel={() => setAttachmentsModalVisible(false)}
+        footer={null}>
+        <List
+          loading={attachmentsLoading}
+          dataSource={attachmentsForRecord}
+          renderItem={(item) => (
+            <List.Item
+              actions={[
+                <Button
+                  type="link"
+                  onClick={async () => {
+                    try {
+                      await window.electron.openFile(item.path);
+                    } catch (err) {
+                      console.error("Failed to open file", err);
+                    }
+                  }}>
+                  فتح
+                </Button>,
+                <Button
+                  type="link"
+                  danger
+                  onClick={async () => {
+                    try {
+                      const res = await window.electron.deleteAttachment(
+                        item.id
+                      );
+                      if (res.deleted) {
+                        setAttachmentsForRecord((rows) =>
+                          rows.filter((r) => r.id !== item.id)
+                        );
+                      }
+                    } catch (err) {
+                      console.error("Failed to delete attachment", err);
+                    }
+                  }}>
+                  حذف
+                </Button>,
+              ]}>
+              <code style={{ fontSize: 12 }}>{item.path}</code>
+            </List.Item>
+          )}
+        />
+      </Modal>
 
       <ConfirmModal
         show={isModalOpen}

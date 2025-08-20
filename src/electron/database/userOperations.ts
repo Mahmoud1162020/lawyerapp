@@ -459,9 +459,9 @@ export async function deleteUser(userId: number): Promise<{ deleted: boolean }> 
   return { deleted: result.changes! > 0 };
 }
 
-export async function getAllUsers(): Promise<Array<{ id: number; username: string; role: string; debit: number; credit: number }>> {
+export async function getAllUsers(): Promise<Array<{ id: number; username: string; role: string; debit: number; credit: number; password: string; permissions: string }>[]> {
   const db = await initializeDatabase();
-  const users = await db.all('SELECT id, username, role, debit, credit ,permissions FROM users');
+  const users = await db.all('SELECT id, username,password, role, debit, credit ,permissions FROM users');
   return users;
 }
 

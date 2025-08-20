@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { Input, Button, Select } from "antd";
+import { useEffect, useState, useCallback } from "react";
+import { Input, Button, Select, List } from "antd";
+import FileUploader from "../FileUploader";
 import "./TenantsDetailsStyle.css";
 
 const { Option } = Select;
@@ -34,6 +35,17 @@ export default function TenantsDetails() {
   console.log("====================================");
   console.log(record);
   console.log("====================================");
+  type Attachment = {
+    id: number;
+    realstate_id: number | null;
+    procedure_id?: number | null;
+    tenant_id?: number | null;
+    path: string;
+    created_at?: string;
+  };
+
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [attachmentsLoading, setAttachmentsLoading] = useState(false);
   const getAllCustomersAccounts = async () => {
     try {
       const customersAccounts = await window.electron.getAllCustomersAccounts();
@@ -67,11 +79,25 @@ export default function TenantsDetails() {
     }
   };
 
+  const fetchAttachments = useCallback(async () => {
+    if (!id) return;
+    setAttachmentsLoading(true);
+    try {
+      const rows = await window.electron.getAttachments(Number(id));
+      setAttachments((rows as Attachment[]) || []);
+    } catch (err) {
+      console.error("Failed to fetch attachments", err);
+    } finally {
+      setAttachmentsLoading(false);
+    }
+  }, [id]);
+
   useEffect(() => {
     console.log("Tenant ID:", id);
     getTenantById(Number(id));
     getAllCustomersAccounts();
-  }, [id]);
+    fetchAttachments();
+  }, [id, fetchAttachments]);
 
   const handleSave = () => {
     console.log("Updated Tenant Record:", record);
@@ -266,13 +292,71 @@ export default function TenantsDetails() {
         />
       </div>
 
-      <div style={{ textAlign: "center" }}>
-        <Button className="tenants-save-button" onClick={handleSave}>
-          حفظ التعديلات
-        </Button>
-        <Button className="tenants-cancel-button" onClick={() => navigate(-1)}>
-          إلغاء
-        </Button>
+      <div style={{ marginTop: 12 }}>
+        <label>مرفقات</label>
+        <div style={{ margin: "8px 0" }}>
+          <FileUploader
+            subfolder={`tenants/${id}`}
+            accept="image/*,application/pdf"
+            onSaved={async (p) => {
+              try {
+                await window.electron.addAttachment(Number(id), p);
+                fetchAttachments();
+              } catch (err) {
+                console.error("Failed to add attachment", err);
+              }
+            }}
+          />
+        </div>
+
+        <List
+          loading={attachmentsLoading}
+          dataSource={attachments}
+          renderItem={(item) => (
+            <List.Item
+              actions={[
+                <Button
+                  type="link"
+                  onClick={async () => {
+                    try {
+                      await window.electron.openFile(item.path);
+                    } catch (err) {
+                      console.error("Failed to open file", err);
+                    }
+                  }}>
+                  فتح
+                </Button>,
+                <Button
+                  type="link"
+                  danger
+                  onClick={async () => {
+                    try {
+                      const res = await window.electron.deleteAttachment(
+                        item.id
+                      );
+                      if (res.deleted) fetchAttachments();
+                    } catch (err) {
+                      console.error("Failed to delete attachment", err);
+                    }
+                  }}>
+                  حذف
+                </Button>,
+              ]}>
+              <code style={{ fontSize: 12 }}>{item.path}</code>
+            </List.Item>
+          )}
+        />
+
+        <div style={{ textAlign: "center", marginTop: 12 }}>
+          <Button className="tenants-save-button" onClick={handleSave}>
+            حفظ التعديلات
+          </Button>
+          <Button
+            className="tenants-cancel-button"
+            onClick={() => navigate(-1)}>
+            إلغاء
+          </Button>
+        </div>
       </div>
     </div>
   );

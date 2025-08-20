@@ -2,6 +2,7 @@ import { app } from 'electron';
 import fs from 'fs';
 import path from 'path';
 import { Database } from 'sqlite';
+import bcrypt from 'bcrypt';
 import { initializeDatabase } from './userOperations.js';
 
 export type BackupObject = Record<string, any>;
@@ -25,6 +26,7 @@ async function insertRows(db: Database, tableName: string, rows: any[]) {
   // Get table schema to know which columns exist and which are NOT NULL
   const tableInfo: any[] = await db.all(`PRAGMA table_info(${tableName})`);
   const schemaCols = tableInfo.map((c) => c.name);
+  // keep full info for defaults
   const requiredCols = tableInfo.filter((c) => c.notnull === 1).map((c) => c.name);
 
   let inserted = 0;
@@ -36,9 +38,43 @@ async function insertRows(db: Database, tableName: string, rows: any[]) {
 
     // Check required columns are present and non-null (except id auto-handled)
     const missingRequired = requiredCols.filter((col) => col !== 'id' && (row[col] === undefined || row[col] === null));
-    if (missingRequired.length > 0) {
-      warnings.push(`Table ${tableName}: skipped row because missing required columns: ${missingRequired.join(', ')}`);
-      continue; // skip this row
+  if (missingRequired.length > 0) {
+      // Try to fill missing required columns from schema default values when possible
+      for (const col of missingRequired) {
+        const colInfo = tableInfo.find((c) => c.name === col);
+        if (colInfo && colInfo.dflt_value !== null && colInfo.dflt_value !== undefined) {
+          // strip surrounding single quotes for string defaults like 'user'
+          const dv: string = String(colInfo.dflt_value);
+          const strMatch = dv.match(/^'(.*)'$/s);
+          if (strMatch) {
+            row[col] = strMatch[1];
+          } else if (!Number.isNaN(Number(dv))) {
+            row[col] = Number(dv);
+          } else {
+            row[col] = dv;
+          }
+        } else {
+          // fallback sensible defaults: empty string for text, 0 for numbers
+          row[col] = '';
+        }
+      }
+      // note that we filled missing required cols
+      // continue on to attempt insert
+    }
+
+    // Special-case users: if there's no password in the backup row, set a default hashed password
+    if (tableName === 'users') {
+      if (!row.password || row.password === '') {
+        try {
+          // default password (user should change it after login)
+          const defaultPassword = 'changeme';
+          const hashed = await bcrypt.hash(defaultPassword, 10);
+          row.password = hashed;
+          warnings.push(`Table users: user '${row.username ?? '<unknown>'}' had no password; default password set ('changeme'). Please change after login.`);
+        } catch (e) {
+          warnings.push(`Table users: failed to set default password for user '${row.username ?? '<unknown>'}'`);
+        }
+      }
     }
 
     if (rowKeys.length === 0) {
@@ -49,7 +85,18 @@ async function insertRows(db: Database, tableName: string, rows: any[]) {
     const columns = rowKeys;
     const placeholders = columns.map(() => '?').join(', ');
     const insertSql = `INSERT INTO ${tableName} (${columns.join(', ')}) VALUES (${placeholders})`;
-    const values = columns.map((c) => (row[c] === undefined ? null : row[c]));
+    // Prepare values; stringify objects to avoid binding errors (e.g. permissions objects)
+    const values = columns.map((c) => {
+      let v = row[c] === undefined ? null : row[c];
+      if (v !== null && typeof v === 'object') {
+        try {
+          v = JSON.stringify(v);
+        } catch (e) {
+          v = String(v);
+        }
+      }
+      return v;
+    });
 
     try {
       await db.run(insertSql, values);
@@ -107,14 +154,30 @@ export async function restoreBackup(backup: BackupObject): Promise<{ restored: b
     for (const key of Object.keys(TABLE_MAP)) {
       const tableName = TABLE_MAP[key];
       const rows = backup[key];
-      if (!rows) continue;
+      // Debug: log what we found in the backup for this key
+      try {
+        console.log(`restore: key='${key}' -> table='${tableName}' rowsInBackup=` + (Array.isArray(rows) ? rows.length : String(typeof rows)));
+      } catch (e) {
+        // ignore logging errors
+      }
 
-      // Clear existing data
+      // If the backup does not include this table OR includes an empty array, skip it.
+      // Treat empty arrays as "no data provided" to avoid wiping existing data on partial backups.
+      if (!rows || (Array.isArray(rows) && rows.length === 0)) {
+        console.log(`restore: skipping table='${tableName}' because no rows present in backup`);
+        continue;
+      }
+
+      // Clear existing data only when the backup actually provides rows to insert
       await db.run(`DELETE FROM ${tableName};`);
 
       // Insert rows (if any)
       if (Array.isArray(rows) && rows.length > 0) {
         const result = await insertRows(db, tableName, rows as Record<string, unknown>[]);
+        // Debug: log insert result
+        try {
+          console.log(`restore: table='${tableName}' inserted=${result.inserted} warnings=${(result.warnings || []).length}`);
+        } catch (e) {}
         summary[tableName] = result.inserted ?? 0;
         if (Array.isArray(result.warnings) && result.warnings.length > 0) {
           allWarnings.push(...result.warnings);
