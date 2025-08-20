@@ -158,6 +158,8 @@ addInternalTransaction: (
   getInternalTransactionById: (id: number): Promise<InternalTransaction | undefined> => electron.ipcRenderer.invoke('get-internal-transaction-by-id', id),
   updateInternalTransaction: (id: number, tx: Partial<InternalTransaction>): Promise<void> => electron.ipcRenderer.invoke('update-internal-transaction', id, tx),
   deleteInternalTransaction: (id: number): Promise<void> => electron.ipcRenderer.invoke('delete-internal-transaction', id),
+  // Restore a previously exported backup. Pass the parsed backup object (from ZIP contents).
+  restoreBackup: (backupObj: any): Promise<{ restored: boolean; message?: string; summary?: Record<string, number>; warnings?: string[] }> => electron.ipcRenderer.invoke('restore-backup', backupObj),
   createActivationCode: (code: string, duration: number, status:string,activatedBy?: number): Promise<void> => electron.ipcRenderer.invoke('create-activation-code', code, duration,status, activatedBy),
   getActivationCodes: (): Promise<ActivationCode[]> => electron.ipcRenderer.invoke('get-activation-codes'),
   activateCode: (code: string, userId: number): Promise<void> => electron.ipcRenderer.invoke('activate-code', code, userId),

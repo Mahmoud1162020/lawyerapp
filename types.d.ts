@@ -293,6 +293,7 @@ type Statistics = {
       createActivationCode: (code: string, duration: number,status:string, activatedBy?: number) => Promise<void>;
       getActivationCodes: () => Promise<ActivationCode[]>;
       activateCode: (code: string, userId: number) => Promise<void>;
+  restoreBackup: (backupObj: unknown) => Promise<{ restored: boolean; message?: string; summary?: Record<string, number>; warnings?: string[] }> ;
 
       updateUserPermissions: (userId: number, permissions: Record<string, boolean>) => Promise<{ updated: boolean }>;
     };

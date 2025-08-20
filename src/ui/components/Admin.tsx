@@ -57,7 +57,7 @@ const Admin = () => {
           {selectionId === 1 && <Register />}
           {selectionId === 2 && <UserManagement />}
           {selectionId === 3 && <UsersPermissions />}
-          {/* {selectionId === 4 && <ExportBackup />} */}
+          {selectionId === 4 && <ExportBackup />}
         </div>
       </div>
     </div>

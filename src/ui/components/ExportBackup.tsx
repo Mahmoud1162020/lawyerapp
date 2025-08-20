@@ -1,79 +1,149 @@
 import React, { useState } from "react";
+import JSZip from "jszip";
 
 const ExportBackup: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
 
   const handleExport = async () => {
-    // setLoading(true);
-    // setResult(null);
-    // try {
-    //   // Fetch all tables' data from your backend
-    //   const users = await window.electron.getAllUsers();
-    //   const transactions = await window.electron.getAllTransactions?.();
-    //   const realstates = await window.electron.getAllRealStates?.();
-    //   const procedures = await window.electron.getAllProcedures?.();
-    //   const tenants = await window.electron.getAllTenants?.();
-    //   const customers = await window.electron.getAllCustomersAccounts?.();
-    //   // Map only needed fields for each table
-    //   const exportUsers = users.map((u: any) => ({
-    //     "اسم المستخدم": u.username,
-    //     الدور: u.role,
-    //     دائن: u.debit,
-    //     مدين: u.credit,
-    //   }));
-    //   const exportTransactions = (transactions || []).map((t: any) => ({
-    //     المستلم: t.recipient,
-    //     المبلغ: t.amount,
-    //     النوع: t.type,
-    //     تاريخ: t.date,
-    //   }));
-    //   const exportRealstates = (realstates || []).map((r: any) => ({
-    //     "اسم العقار": r.propertyTitle,
-    //     "رقم العقار": r.propertyNumber,
-    //     العنوان: r.address,
-    //     السعر: r.price,
-    //     تاريخ: r.date,
-    //   }));
-    //   const exportProcedures = (procedures || []).map((p: any) => ({
-    //     "رقم المعاملة": p.procedureNumber,
-    //     "اسم المعاملة": p.procedureName,
-    //     الوصف: p.description,
-    //     الحالة: p.status,
-    //     تاريخ: p.date,
-    //   }));
-    //   const exportTenants = (tenants || []).map((t: any) => ({
-    //     "رقم العقد": t.contractNumber,
-    //     الحالة: t.contractStatus,
-    //     "تاريخ البداية": t.startDate,
-    //     "تاريخ النهاية": t.endDate,
-    //     القيمة: t.entitlement,
-    //   }));
-    //   const exportCustomers = (customers || []).map((c: any) => ({
-    //     الاسم: c.name,
-    //     "رقم الحساب": c.accountNumber,
-    //     الهاتف: c.phone,
-    //     العنوان: c.address,
-    //     "نوع الحساب": c.accountType,
-    //   }));
-    //   // Send all data to backend to generate Excel file
-    //   const success = await window.electron.exportBackupToExcel({
-    //     users: exportUsers,
-    //     transactions: exportTransactions,
-    //     realstates: exportRealstates,
-    //     procedures: exportProcedures,
-    //     tenants: exportTenants,
-    //     customers: exportCustomers,
-    //   });
-    //   if (success) {
-    //     setResult("تم تصدير النسخة الاحتياطية بنجاح!");
-    //   } else {
-    //     setResult("حدث خطأ أثناء التصدير.");
-    //   }
-    // } catch (error) {
-    //   setResult("حدث خطأ أثناء التصدير: " + error);
-    // }
-    // setLoading(false);
+    setLoading(true);
+    setResult(null);
+    try {
+      // Fetch all tables' data via preload-exposed IPC
+      const users = await window.electron.getAllUsers?.();
+      const transactions = await window.electron.getAllTransactions?.();
+      const personalTransactions =
+        await window.electron.getAllPersonalTransactions?.();
+      const realstates = await window.electron.getAllRealStates?.();
+      const procedures = await window.electron.getAllProcedures?.();
+      const tenants = await window.electron.getAllTenants?.();
+      const tenantTransactions =
+        await window.electron.getAllTenantTransactions?.();
+      const customers = await window.electron.getAllCustomersAccounts?.();
+      const internalTransactions =
+        await window.electron.getAllInternalTransactions?.();
+
+      const backup = {
+        metadata: {
+          exportedAt: new Date().toISOString(),
+          app: "CaseFlow",
+        },
+        users: users || [],
+        transactions: transactions || [],
+        personalTransactions: personalTransactions || [],
+        realstates: realstates || [],
+        procedures: procedures || [],
+        tenants: tenants || [],
+        tenantTransactions: tenantTransactions || [],
+        customers: customers || [],
+        internalTransactions: internalTransactions || [],
+      };
+
+      // create zip with each table as separate json file
+      const zip = new JSZip();
+      for (const key of Object.keys(backup)) {
+        if (key === "metadata") continue;
+        zip.file(
+          `${key}.json`,
+          JSON.stringify((backup as any)[key] || [], null, 2)
+        );
+      }
+      zip.file("metadata.json", JSON.stringify(backup.metadata, null, 2));
+      const content = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(content);
+      const a = document.createElement("a");
+      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+      a.href = url;
+      a.download = `caseflow-backup-${timestamp}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+
+      setResult("تم تصدير النسخة الاحتياطية بنجاح!");
+    } catch (error: any) {
+      setResult("حدث خطأ أثناء التصدير: " + (error?.message || String(error)));
+    }
+    setLoading(false);
+  };
+
+  const handleImport = async (file: File | null) => {
+    if (!file) return;
+    setLoading(true);
+    setResult(null);
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const zip = await JSZip.loadAsync(arrayBuffer);
+      const backup: any = { metadata: {} };
+      if (zip.file("metadata.json")) {
+        const metaText = await zip.file("metadata.json")!.async("string");
+        backup.metadata = JSON.parse(metaText);
+      }
+      const tableFiles = [
+        "users.json",
+        "transactions.json",
+        "personalTransactions.json",
+        "realstates.json",
+        "procedures.json",
+        "tenants.json",
+        "tenantTransactions.json",
+        "customers.json",
+        "internalTransactions.json",
+      ];
+      for (const name of tableFiles) {
+        const f = zip.file(name);
+        if (f) {
+          const txt = await f.async("string");
+          const key = name.replace(".json", "");
+          try {
+            backup[key] = JSON.parse(txt);
+          } catch (e) {
+            backup[key] = [];
+          }
+        }
+      }
+
+      // Ask main to restore (this will backup the current DB before applying)
+      if (!window.electron.restoreBackup) {
+        setResult(
+          "ميزة الاستعادة غير متاحة حالياً — أعد تشغيل التطبيق لتطبيق التغييرات"
+        );
+        setLoading(false);
+        return;
+      }
+
+      const res = await window.electron.restoreBackup(backup as any);
+      if (res?.restored) {
+        let msg = res.message || "تمت الاستعادة بنجاح";
+        if (res.summary) {
+          const parts = Object.keys(res.summary || {}).map(
+            (t) => `${t}: ${res.summary?.[t] ?? 0} صف`
+          );
+          msg += " — ملخص: " + parts.join(", ");
+        }
+        if (
+          res.warnings &&
+          Array.isArray(res.warnings) &&
+          res.warnings.length > 0
+        ) {
+          msg += " — تحذيرات: " + res.warnings.slice(0, 5).join("; ");
+          if (res.warnings.length > 5)
+            msg += `; ...و ${res.warnings.length - 5} تحذيرات إضافية`;
+        }
+        setResult(msg);
+      } else {
+        // show returned payload for debugging
+        setResult(
+          "فشل الاستعادة: " +
+            (res ? JSON.stringify(res) : "لا يوجد رد من المعالج")
+        );
+      }
+    } catch (error: any) {
+      setResult(
+        "حدث خطأ أثناء الاستيراد: " + (error?.message || String(error))
+      );
+    }
+    setLoading(false);
   };
 
   return (
@@ -103,8 +173,29 @@ const ExportBackup: React.FC = () => {
           fontWeight: "bold",
           cursor: "pointer",
         }}>
-        {loading ? "جاري التصدير..." : "تصدير إلى Excel"}
+        {loading ? "جاري التصدير..." : "تصدير  "}
       </button>
+      <div style={{ marginTop: 12 }}>
+        <label
+          style={{
+            display: "inline-block",
+            padding: "8px 14px",
+            background: "#eee",
+            borderRadius: 8,
+            cursor: "pointer",
+          }}>
+          استيراد نسخة احتياطية
+          <input
+            type="file"
+            accept=".zip"
+            style={{ display: "none" }}
+            onChange={(e) =>
+              handleImport(e.target.files ? e.target.files[0] : null)
+            }
+            disabled={loading}
+          />
+        </label>
+      </div>
       {result && (
         <div style={{ marginTop: 18, color: "#1976d2", fontWeight: "bold" }}>
           {result}

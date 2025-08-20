@@ -6,6 +6,7 @@ import ConfirmModal from "../../Modal/ConfirmModal";
 import { useLocation } from "react-router-dom";
 import PersonalTransactions from "./PersonalTransactions";
 import ProcedureTransactions from "./ProcedureTransactions";
+import ExportToExcel from "../../ExportToExcel";
 import TenantTransactions from "./TenantTransactions";
 import { Select } from "antd";
 
@@ -546,13 +547,51 @@ const IncomingPage: React.FC<IncomingPageProps> = ({ activeTab }) => {
       <ToastContainer />
       {/* Search Section */}
       <div>
-        <div className="search-section">
-          <input
-            type="text"
-            placeholder="ابحث بالاسم أو رقم المعاملة"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+        <div
+          style={{
+            minWidth: 160,
+            textAlign: "right",
+          }}>
+          <ExportToExcel
+            data={
+              // merge displayed incoming rows: personal + procedure + tenant as simple flatten
+              [
+                ...personalTransactions.map((t) => ({
+                  ...t,
+                  source: "personal",
+                })),
+                ...procedureTransactions.map((t) => ({
+                  ...t,
+                  source: "procedure",
+                })),
+                ...tenansTransactions.map((t) => ({
+                  ...t,
+                  source: "tenant",
+                })),
+              ]
+            }
+            columns={[
+              { header: "التاريخ", key: "date" },
+              { header: "المبلغ (د.ع)", key: "amount" },
+              { header: "اسم العميل", key: "customer_name" },
+            ]}
+            filename={`incoming-${new Date().toISOString().slice(0, 10)}`}
           />
+        </div>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}>
+          <div className="search-section" style={{ flex: 1, marginRight: 12 }}>
+            <input
+              type="text"
+              placeholder="ابحث بالاسم أو رقم المعاملة"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
         </div>
 
         {/* Form Section */}

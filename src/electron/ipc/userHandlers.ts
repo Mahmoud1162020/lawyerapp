@@ -1,5 +1,6 @@
 import { ipcMain, BrowserWindow } from "electron";
 import { registerUser, loginUser, deleteUser, updateUser, createActivationCode, getActivationCodes, updateUserPermissions } from "../database/userOperations.js";
+import { restoreBackup, BackupObject } from "../database/restoreOperations.js";
 import Store from "electron-store";
 import { getAllUsers } from "../database/userOperations.js";
 const store = new Store();
@@ -97,3 +98,9 @@ ipcMain.handle(
     return result;
   }
 );
+
+// Restore backup (expects parsed backup object)
+ipcMain.handle("restore-backup", async (_event, backupObj: BackupObject) => {
+  const result = await restoreBackup(backupObj);
+  return result;
+});
