@@ -6,8 +6,7 @@ import { registerUser, loginUser, deleteUser, updateUser, createActivationCode, 
 import { restoreBackup, BackupObject } from "../database/restoreOperations.js";
 import Store from "electron-store";
 import { getAllUsers } from "../database/userOperations.js";
-import { addAttachment } from '../database/managedb/attachmentsOperations.js';
-import { getAttachmentsForRealState } from '../database/managedb/attachmentsOperations.js';
+import { addAttachment, getAttachmentsForEntity } from '../database/managedb/attachmentsOperations.js';
 import { deleteAttachment } from '../database/managedb/attachmentsOperations.js';
 const store = new Store();
 
@@ -93,9 +92,9 @@ ipcMain.handle("save-file", async (_event, filename: string, buffer: ArrayBuffer
 });
 
 // Add attachment record (link a saved path to a realstate)
-ipcMain.handle('add-attachment', async (_event, realstateId: number | null, filePath: string) => {
+ipcMain.handle('add-attachment', async (_event, entityType: string, entityId: number | null, filePath: string) => {
   try {
-    const res = await addAttachment(realstateId, filePath);
+    const res = await addAttachment(entityType, entityId, filePath);
     return res;
   } catch (err) {
     console.error('Failed to add attachment record', err);
@@ -104,9 +103,9 @@ ipcMain.handle('add-attachment', async (_event, realstateId: number | null, file
 });
 
 // Fetch attachments for a given realstate id
-ipcMain.handle('get-attachments', async (_event, realstateId: number) => {
+ipcMain.handle('get-attachments', async (_event, entityType: string, entityId: number) => {
   try {
-    const rows = await getAttachmentsForRealState(realstateId);
+    const rows = await getAttachmentsForEntity(entityType, entityId);
     return rows;
   } catch (err) {
     console.error('Failed to fetch attachments', err);

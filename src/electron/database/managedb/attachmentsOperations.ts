@@ -1,15 +1,17 @@
 import { initializeDatabase } from "../userOperations.js";
 import fs from 'fs/promises';
 
-export async function addAttachment(realstateId: number | null, filePath: string): Promise<{ id: number }> {
+// New schema usage: attachments table should have columns (id, entity_type, entity_id, path, created_at)
+// addAttachment now accepts entityType and entityId for a generic attachment API.
+export async function addAttachment(entityType: string, entityId: number | null, filePath: string): Promise<{ id: number }> {
   const db = await initializeDatabase();
-  const result = await db.run(`INSERT INTO attachments (realstate_id, path) VALUES (?, ?)`, [realstateId, filePath]);
+  const result = await db.run(`INSERT INTO attachments (entity_type, entity_id, path) VALUES (?, ?, ?)`, [entityType, entityId, filePath]);
   return { id: result.lastID! };
 }
 
-export async function getAttachmentsForRealState(realstateId: number) {
+export async function getAttachmentsForEntity(entityType: string, entityId: number) {
   const db = await initializeDatabase();
-  return db.all(`SELECT * FROM attachments WHERE realstate_id = ? ORDER BY created_at DESC`, [realstateId]);
+  return db.all(`SELECT * FROM attachments WHERE entity_type = ? AND entity_id = ? ORDER BY created_at DESC`, [entityType, entityId]);
 }
 
 export async function deleteAttachment(attachmentId: number): Promise<{ deleted: boolean }> {

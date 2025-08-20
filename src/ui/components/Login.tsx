@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { CSSProperties } from "react";
 import { useAppDispatch } from "../store";
 import { setUser } from "../store/slices/usersSlice";
+import { toast } from "react-toastify";
 
 const styles: { [key: string]: CSSProperties } = {
   container: {
@@ -58,7 +59,12 @@ const Login: React.FC = () => {
       };
       dispatch(setUser(userWithParsedPermissions)); // Dispatch user info to Redux store
     } catch (error) {
-      console.error("Login failed:", error);
+      const errorMessage =
+        typeof error === "object" && error !== null && "message" in error
+          ? (error as { message: string }).message
+          : String(error);
+      toast.error(errorMessage);
+      console.error("Login failed:", errorMessage);
     }
   };
 

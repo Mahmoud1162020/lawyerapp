@@ -162,12 +162,12 @@ addInternalTransaction: (
   restoreBackup: (backupObj: any): Promise<{ restored: boolean; message?: string; summary?: Record<string, number>; warnings?: string[] }> => electron.ipcRenderer.invoke('restore-backup', backupObj),
   // Save a binary file to the app userData attachments folder. Returns { path }
   saveFile: (filename: string, buffer: ArrayBuffer | Buffer, subfolder?: string): Promise<{ path: string }> => electron.ipcRenderer.invoke('save-file', filename, buffer, subfolder),
-  // Persist an attachment record linking a saved file path to a realstate id (or null)
-  addAttachment: (realstateId: number | null, filePath: string): Promise<{ id: number }> => electron.ipcRenderer.invoke('add-attachment', realstateId, filePath),
+  // Persist an attachment record linking a saved file path to an entity (entityType, entityId)
+  addAttachment: (entityType: string, entityId: number | null, filePath: string): Promise<{ id: number }> => electron.ipcRenderer.invoke('add-attachment', entityType, entityId, filePath),
   // Open a saved file using the OS default application
   openFile: (filePath: string): Promise<{ success: boolean; message: string }> => electron.ipcRenderer.invoke('open-file', filePath),
-  // Get attachments for a realstate
-  getAttachments: (realstateId: number): Promise<{ id: number; realstate_id: number | null; path: string; created_at?: string }[]> => electron.ipcRenderer.invoke('get-attachments', realstateId),
+  // Get attachments for an entity
+  getAttachments: (entityType: string, entityId: number): Promise<{ id: number; entity_type?: string; entity_id?: number | null; path: string; created_at?: string }[]> => electron.ipcRenderer.invoke('get-attachments', entityType, entityId),
   deleteAttachment: (attachmentId: number): Promise<{ deleted: boolean }> => electron.ipcRenderer.invoke('delete-attachment', attachmentId),
   createActivationCode: (code: string, duration: number, status:string,activatedBy?: number): Promise<void> => electron.ipcRenderer.invoke('create-activation-code', code, duration,status, activatedBy),
   getActivationCodes: (): Promise<ActivationCode[]> => electron.ipcRenderer.invoke('get-activation-codes'),

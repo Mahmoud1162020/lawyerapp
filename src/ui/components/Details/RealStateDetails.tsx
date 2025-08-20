@@ -34,7 +34,8 @@ export default function RealStateDetails() {
   const [attachments, setAttachments] = useState<
     {
       id: number;
-      realstate_id: number | null;
+      entity_id?: number | null;
+      entity_type?: string;
       path: string;
       created_at?: string;
     }[]
@@ -44,7 +45,10 @@ export default function RealStateDetails() {
   const fetchAttachments = async (realStateId: number) => {
     setAttachmentsLoading(true);
     try {
-      const rows = await window.electron.getAttachments(realStateId);
+      const rows = await window.electron.getAttachments(
+        "realstate",
+        realStateId
+      );
       setAttachments(rows || []);
     } catch (err) {
       console.error("Failed to fetch attachments", err);
@@ -253,7 +257,11 @@ export default function RealStateDetails() {
             onSaved={async (savedPath) => {
               try {
                 if (id) {
-                  await window.electron.addAttachment(Number(id), savedPath);
+                  await window.electron.addAttachment(
+                    "realstate",
+                    Number(id),
+                    savedPath
+                  );
                   await fetchAttachments(Number(id));
                   message.success("تم إضافة المرفق");
                 } else {

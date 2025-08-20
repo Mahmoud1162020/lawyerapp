@@ -122,7 +122,8 @@ export default function RealStatesTable() {
   const [attachmentsForRecord, setAttachmentsForRecord] = useState<
     {
       id: number;
-      realstate_id: number | null;
+      entity_id?: number | null;
+      entity_type?: string;
       path: string;
       created_at?: string;
     }[]
@@ -194,7 +195,11 @@ export default function RealStatesTable() {
       if (savedAttachments.length > 0) {
         try {
           for (const p of savedAttachments) {
-            await window.electron.addAttachment(addedRealState.id, p);
+            await window.electron.addAttachment(
+              "realstate",
+              addedRealState.id,
+              p
+            );
           }
         } catch (err) {
           console.error("Failed to persist attachments for realstate", err);
@@ -399,6 +404,7 @@ export default function RealStatesTable() {
                   setAttachmentsLoading(true);
                   try {
                     const rows = await window.electron.getAttachments(
+                      "realstate",
                       record.key
                     );
                     setAttachmentsForRecord(rows || []);

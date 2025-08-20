@@ -297,9 +297,9 @@ type Statistics = {
 
   // Save binary file (image/pdf) to app storage. Returns saved absolute path.
   saveFile: (filename: string, buffer: ArrayBuffer | Buffer, subfolder?: string) => Promise<{ path: string }>;
-  addAttachment: (realstateId: number | null, filePath: string) => Promise<{ id: number }>;
+  addAttachment: (entityType: string, entityId: number | null, filePath: string) => Promise<{ id: number }>;
   openFile: (filePath: string) => Promise<{ success: boolean; message: string }>;
-  getAttachments: (realstateId: number) => Promise<{ id: number; realstate_id: number | null; path: string; created_at?: string }[]>;
+  getAttachments: (entityType: string, entityId: number) => Promise<{ id: number; entity_type?: string; entity_id?: number | null; path: string; created_at?: string }[]>;
   deleteAttachment: (attachmentId: number) => Promise<{ deleted: boolean }>;
 
       updateUserPermissions: (userId: number, permissions: Record<string, boolean>) => Promise<{ updated: boolean }>;

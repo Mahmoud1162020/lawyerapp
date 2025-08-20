@@ -409,6 +409,36 @@ if (currentVersion < 18) {
     currentVersion = 20;
   }
 
+  // Migration: normalize attachments to (entity_type, entity_id) schema while preserving existing data
+  if (currentVersion === 20) {
+    // Check if attachments table already has entity_type column
+  const cols: Array<{ cid: number; name: string; type: string; notnull: number; dflt_value: string | null; pk: number }> = await db.all(`PRAGMA table_info(attachments)`);
+  const hasEntityType = cols.some((c) => c.name === 'entity_type');
+    if (!hasEntityType) {
+      await db.exec(`
+        PRAGMA foreign_keys=off;
+        
+        CREATE TABLE IF NOT EXISTS attachments_new (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          entity_type TEXT NOT NULL,
+          entity_id INTEGER,
+          path TEXT NOT NULL,
+          created_at TEXT DEFAULT (datetime('now', 'localtime'))
+        );
+
+        INSERT INTO attachments_new (entity_type, entity_id, path, created_at)
+          SELECT 'realstate', realstate_id, path, created_at FROM attachments;
+
+        DROP TABLE attachments;
+        ALTER TABLE attachments_new RENAME TO attachments;
+        PRAGMA foreign_keys=on;
+      `);
+      console.log("Database migration: normalized attachments to entity_type/entity_id");
+    }
+    await db.run(`UPDATE meta SET value = '21' WHERE key = 'db_version'`);
+    currentVersion = 21;
+  }
+
 
 }
 
@@ -472,7 +502,7 @@ export async function updateUser(
 ): Promise<{ updated: boolean }> {
   const db = await initializeDatabase();
   const fields: string[] = [];
-  const values: any[] = [];
+  const values: (string | number)[] = [];
 
   if (updates.username !== undefined) {
     fields.push('username = ?');

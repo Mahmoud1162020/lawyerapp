@@ -37,9 +37,8 @@ export default function TenantsDetails() {
   console.log("====================================");
   type Attachment = {
     id: number;
-    realstate_id: number | null;
-    procedure_id?: number | null;
-    tenant_id?: number | null;
+    entity_id?: number | null;
+    entity_type?: string;
     path: string;
     created_at?: string;
   };
@@ -83,7 +82,7 @@ export default function TenantsDetails() {
     if (!id) return;
     setAttachmentsLoading(true);
     try {
-      const rows = await window.electron.getAttachments(Number(id));
+      const rows = await window.electron.getAttachments("tenant", Number(id));
       setAttachments((rows as Attachment[]) || []);
     } catch (err) {
       console.error("Failed to fetch attachments", err);
@@ -300,7 +299,7 @@ export default function TenantsDetails() {
             accept="image/*,application/pdf"
             onSaved={async (p) => {
               try {
-                await window.electron.addAttachment(Number(id), p);
+                await window.electron.addAttachment("tenant", Number(id), p);
                 fetchAttachments();
               } catch (err) {
                 console.error("Failed to add attachment", err);

@@ -23,7 +23,8 @@ export default function ProcedureDetails() {
   const [attachments, setAttachments] = useState<
     {
       id: number;
-      realstate_id: number | null;
+      entity_id?: number | null;
+      entity_type?: string;
       path: string;
       created_at?: string;
     }[]
@@ -33,7 +34,10 @@ export default function ProcedureDetails() {
   const fetchAttachments = async (procedureId: number) => {
     setAttachmentsLoading(true);
     try {
-      const rows = await window.electron.getAttachments(procedureId);
+      const rows = await window.electron.getAttachments(
+        "procedure",
+        procedureId
+      );
       setAttachments(rows || []);
     } catch (err) {
       console.error("Failed to fetch attachments", err);
@@ -254,7 +258,11 @@ export default function ProcedureDetails() {
             onSaved={async (savedPath) => {
               try {
                 if (id) {
-                  await window.electron.addAttachment(Number(id), savedPath);
+                  await window.electron.addAttachment(
+                    "procedure",
+                    Number(id),
+                    savedPath
+                  );
                   await fetchAttachments(Number(id));
                   message.success("تم إضافة المرفق");
                 } else {

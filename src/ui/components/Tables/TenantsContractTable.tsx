@@ -69,7 +69,8 @@ export default function TenantsContractTable() {
   const [attachmentsForRecord, setAttachmentsForRecord] = useState<
     {
       id: number;
-      realstate_id: number | null;
+      entity_id?: number | null;
+      entity_type?: string;
       path: string;
       created_at?: string;
     }[]
@@ -276,7 +277,7 @@ export default function TenantsContractTable() {
         if (savedAttachments && savedAttachments.length > 0 && newId) {
           for (const p of savedAttachments) {
             try {
-              await window.electron.addAttachment(newId, p);
+              await window.electron.addAttachment("tenant", newId, p);
             } catch (err) {
               console.error("Failed to persist attachment", p, err);
             }
@@ -640,6 +641,7 @@ export default function TenantsContractTable() {
                         setAttachmentsLoading(true);
                         try {
                           const rows = await window.electron.getAttachments(
+                            "tenant",
                             row.id
                           );
                           setAttachmentsForRecord(rows || []);
