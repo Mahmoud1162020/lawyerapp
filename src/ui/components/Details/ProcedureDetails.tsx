@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Input, Button, Select } from "antd";
+import { Input, Button, Select, List, message } from "antd";
+import FileUploader from "../FileUploader";
 import "./ProcedureDetailsStyle.css";
 
 const { Option } = Select;
@@ -19,6 +20,27 @@ export default function ProcedureDetails() {
     phone: "",
     owners: [] as number[], // Array of owner IDs
   });
+  const [attachments, setAttachments] = useState<
+    {
+      id: number;
+      realstate_id: number | null;
+      path: string;
+      created_at?: string;
+    }[]
+  >([]);
+  const [attachmentsLoading, setAttachmentsLoading] = useState(false);
+
+  const fetchAttachments = async (procedureId: number) => {
+    setAttachmentsLoading(true);
+    try {
+      const rows = await window.electron.getAttachments(procedureId);
+      setAttachments(rows || []);
+    } catch (err) {
+      console.error("Failed to fetch attachments", err);
+    } finally {
+      setAttachmentsLoading(false);
+    }
+  };
 
   const getAllCustomersAccounts = async () => {
     try {
@@ -74,6 +96,7 @@ export default function ProcedureDetails() {
     console.log("Procedure ID:", id);
     getProcedureById(Number(id));
     getAllCustomersAccounts();
+    if (id) fetchAttachments(Number(id));
   }, [id]);
 
   const handleSave = () => {
@@ -221,6 +244,83 @@ export default function ProcedureDetails() {
             </Option>
           ))}
         </Select>
+      </div>
+      <div style={{ marginTop: 12 }} className="procedure-form-group">
+        <label>المرفقات (صورة أو PDF)</label>
+        <div style={{ marginBottom: 8 }}>
+          <FileUploader
+            subfolder={id ? `procedures/${id}` : `procedures/temp`}
+            accept="image/*,application/pdf"
+            onSaved={async (savedPath) => {
+              try {
+                if (id) {
+                  await window.electron.addAttachment(Number(id), savedPath);
+                  await fetchAttachments(Number(id));
+                  message.success("تم إضافة المرفق");
+                } else {
+                  message.info("احفظ المعاملة أولاً ثم أضف المرفقات");
+                }
+              } catch (err) {
+                console.error("Failed to persist attachment", err);
+                message.error("فشل حفظ المرفق");
+              }
+            }}
+          />
+        </div>
+
+        <List
+          loading={attachmentsLoading}
+          dataSource={attachments}
+          locale={{ emptyText: "لا توجد مرفقات" }}
+          renderItem={(item) => (
+            <List.Item
+              actions={[
+                <Button
+                  type="link"
+                  onClick={async () => {
+                    try {
+                      await window.electron.openFile(item.path);
+                    } catch (err) {
+                      console.error("Failed to open attachment", err);
+                      message.error("فشل فتح الملف");
+                    }
+                  }}>
+                  فتح
+                </Button>,
+                <Button
+                  type="link"
+                  danger
+                  onClick={async () => {
+                    const ok = window.confirm(
+                      "هل أنت متأكد من حذف هذا المرفق؟"
+                    );
+                    if (!ok) return;
+                    try {
+                      const res = await window.electron.deleteAttachment(
+                        item.id
+                      );
+                      if (res.deleted) {
+                        setAttachments((rows) =>
+                          rows.filter((r) => r.id !== item.id)
+                        );
+                        message.success("تم حذف المرفق");
+                      } else {
+                        message.error("فشل حذف المرفق");
+                      }
+                    } catch (err) {
+                      console.error("Failed to delete attachment", err);
+                      message.error("فشل حذف المرفق");
+                    }
+                  }}>
+                  حذف
+                </Button>,
+              ]}>
+              <code style={{ fontSize: 13 }}>
+                {item.path.split(/[\\/]/).pop()}
+              </code>
+            </List.Item>
+          )}
+        />
       </div>
       <div style={{ textAlign: "center" }}>
         <Button className="procedure-save-button" onClick={handleSave}>

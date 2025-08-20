@@ -5,7 +5,9 @@ import "./ProceduresTable.css"; // Use the updated CSS file below
 import { IoIosRefresh } from "react-icons/io";
 import ConfirmModal from "../Modal/ConfirmModal";
 import { useNavigate } from "react-router-dom";
-import { Collapse, Select } from "antd";
+import FileUploader from "../FileUploader";
+import { Collapse, Select, Modal, List, Button, Tooltip } from "antd";
+import { FiPaperclip } from "react-icons/fi";
 const { Panel } = Collapse;
 const { Option } = Select;
 export default function ProceduresTable() {
@@ -45,6 +47,7 @@ export default function ProceduresTable() {
     }[]
   >([]);
   const [filteredData, setFilteredData] = useState(tableData);
+  const [savedAttachments, setSavedAttachments] = useState<string[]>([]);
   const [searchFilters, setSearchFilters] = useState({
     procedureNumber: "",
     procedureName: "",
@@ -59,6 +62,16 @@ export default function ProceduresTable() {
   const [procedureToDelete, setProcedureToDelete] = useState<number | null>(
     null
   );
+  const [attachmentsModalVisible, setAttachmentsModalVisible] = useState(false);
+  const [attachmentsForRecord, setAttachmentsForRecord] = useState<
+    {
+      id: number;
+      realstate_id: number | null;
+      path: string;
+      created_at?: string;
+    }[]
+  >([]);
+  const [attachmentsLoading, setAttachmentsLoading] = useState(false);
 
   // Fetch procedure records on mount
   const getAllCustomersAccounts = async () => {
@@ -165,6 +178,16 @@ export default function ProceduresTable() {
         selectedOwners // المالكين (owners) - Provide an empty array or appropriate data
       );
       console.log("Procedure added:", response);
+      // Persist attachments if any
+      if (savedAttachments.length > 0 && response?.id) {
+        try {
+          for (const p of savedAttachments) {
+            await window.electron.addAttachment(response.id, p);
+          }
+        } catch (err) {
+          console.error("Failed to persist attachments for procedure", err);
+        }
+      }
       const updatedProcedures = await window.electron.getAllProcedures();
       setTableData(updatedProcedures);
       setFilteredData(updatedProcedures);
@@ -176,6 +199,7 @@ export default function ProceduresTable() {
       setDate("");
       setStatus("");
       setSelectedOwners([]);
+      setSavedAttachments([]);
     } catch (error) {
       console.error("Error adding procedure:", error);
     }
@@ -299,6 +323,31 @@ export default function ProceduresTable() {
             </div>
             {/* New container for buttons under the inputs */}
             <div className="procedures-form-buttons">
+              <div style={{ marginBottom: 12 }}>
+                <label>المرفقات (صور أو PDF)</label>
+                <div>
+                  <FileUploader
+                    subfolder={`procedures/${Date.now()}`}
+                    accept="image/*,application/pdf"
+                    onSaved={(p) => setSavedAttachments((s) => [...s, p])}
+                    label="أضف مرفق"
+                  />
+                </div>
+                {savedAttachments.length > 0 && (
+                  <div style={{ marginTop: 8, textAlign: "left" }}>
+                    <strong>الملفات المرفوعة:</strong>
+                    <ul>
+                      {savedAttachments.map((p) => (
+                        <li key={p} style={{ fontSize: 12 }}>
+                          <code>{p}</code>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div>
               <button className="procedures-save-button" onClick={handleSave}>
                 حفظ
               </button>
@@ -326,7 +375,7 @@ export default function ProceduresTable() {
         <table className="procedures-data-table">
           <thead>
             <tr>
-              <th>رقم</th>
+              <th>ت</th>
               <th>
                 {focusedField === "procedureNumber" && (
                   <input
@@ -423,12 +472,81 @@ export default function ProceduresTable() {
                     onClick={() => navigate(`/procedure-details/${row.id}`)}>
                     تفاصيل
                   </button>
+                  <Tooltip title="مرفقات">
+                    <Button
+                      type="text"
+                      icon={<FiPaperclip />}
+                      onClick={async () => {
+                        setAttachmentsLoading(true);
+                        try {
+                          const rows = await window.electron.getAttachments(
+                            row.id
+                          );
+                          setAttachmentsForRecord(rows || []);
+                          setAttachmentsModalVisible(true);
+                        } catch (err) {
+                          console.error("Failed to fetch attachments", err);
+                        } finally {
+                          setAttachmentsLoading(false);
+                        }
+                      }}
+                    />
+                  </Tooltip>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {/* Attachments Modal */}
+      <Modal
+        title="مرفقات المعاملة"
+        open={attachmentsModalVisible}
+        onCancel={() => setAttachmentsModalVisible(false)}
+        footer={null}>
+        <List
+          loading={attachmentsLoading}
+          dataSource={attachmentsForRecord}
+          renderItem={(item) => (
+            <List.Item
+              actions={[
+                <Button
+                  type="link"
+                  onClick={async () => {
+                    try {
+                      await window.electron.openFile(item.path);
+                    } catch (err) {
+                      console.error("Failed to open file", err);
+                    }
+                  }}>
+                  فتح
+                </Button>,
+                <Button
+                  type="link"
+                  danger
+                  onClick={async () => {
+                    try {
+                      const res = await window.electron.deleteAttachment(
+                        item.id
+                      );
+                      if (res.deleted) {
+                        setAttachmentsForRecord((rows) =>
+                          rows.filter((r) => r.id !== item.id)
+                        );
+                      }
+                    } catch (err) {
+                      console.error("Failed to delete attachment", err);
+                    }
+                  }}>
+                  حذف
+                </Button>,
+              ]}>
+              <code style={{ fontSize: 12 }}>{item.path}</code>
+            </List.Item>
+          )}
+        />
+      </Modal>
 
       {/* Confirmation Modal */}
       <ConfirmModal
