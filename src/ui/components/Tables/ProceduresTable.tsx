@@ -241,7 +241,7 @@ export default function ProceduresTable() {
         }}
         defaultActiveKey={["0"]}
         style={{ display: "flex", justifyContent: "space-between" }}>
-        <Panel key="1" header="إدخال معلومات المعاملة" showArrow={false}>
+        <Panel key="1" header="إدخال معلومات المعاملة" showArrow={true}>
           <div className="procedures-form-container">
             <div className="procedures-form-row">
               <div className="procedures-form-group">

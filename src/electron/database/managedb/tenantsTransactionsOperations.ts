@@ -65,9 +65,30 @@ export async function addTenantTransaction(
     description: transaction.description || null,
     isCredit: transaction.isCredit ? 1 : 0 // Store isCredit as 1 for true, 0 for false
   });
+  // Calculate the total amount from rentamountsArray
+  // interface RentAmountItem {
+  //   amount: number;
+  //   date: string;
+  //   isPaid: boolean | number;
+  //   description: string | null;
+  //   isCredit: number;
+  // }
 
-  await db.run(`UPDATE realstates SET rentamounts = ? WHERE id = ?`, [JSON.stringify(rentamountsArray), propertyId]);
-  console.log(`✅ Added transaction to rentamounts array for realstate ID ${propertyId}`);
+  // const totalAmount: number = (rentamountsArray as RentAmountItem[]).reduce(
+  //   (sum: number, item: RentAmountItem) => sum + (item.amount || 0),
+  //   0
+  // );
+  const oldCredit = typeof realstate.credit === "number" ? realstate.credit : Number(realstate.credit) || 0;
+  const newCredit = oldCredit +  transaction.amount;
+  
+
+  // Update the credit field in realstates table
+  await db.run(
+    `UPDATE realstates SET credit = ?, rentamounts = ? WHERE id = ?`,
+    [newCredit, JSON.stringify(rentamountsArray), propertyId]
+  );
+  console.log(`✅ Updated credit in realstates table for property ID ${propertyId} to ${newCredit}`);
+
 }
 
 // Define a type for tenant transactions

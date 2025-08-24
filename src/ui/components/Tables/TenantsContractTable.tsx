@@ -6,11 +6,13 @@ import { IoIosRefresh } from "react-icons/io";
 import ConfirmModal from "../Modal/ConfirmModal";
 import { useNavigate } from "react-router-dom";
 import FileUploader from "../FileUploader";
-import { Select, Modal, List, Button, Tooltip } from "antd";
+import { Select, Modal, List, Button, Tooltip, Collapse } from "antd";
 import { FiPaperclip } from "react-icons/fi";
 import { toast } from "react-toastify";
 
 const { Option } = Select;
+const { Panel } = Collapse;
+
 export default function TenantsContractTable() {
   const navigate = useNavigate();
 
@@ -25,6 +27,8 @@ export default function TenantsContractTable() {
   const [installmentCount, setInstallmentCount] = useState(""); // عدد الدفعات
   const [leasedUsage, setLeasedUsage] = useState(""); // ادخل استخدام المأجور (مثال: الزراعي)
   const [propertyType, setPropertyType] = useState(""); // ادخل نوع العقار (مثال: عدد الدفعات)
+  const [activeCollapse, setActiveCollapse] = useState<string[]>(["0"]);
+
   const [realStateData, setRealStateData] = useState<
     {
       id: number;
@@ -358,171 +362,184 @@ export default function TenantsContractTable() {
 
   return (
     <div className="contracts-container" dir="rtl">
-      <div className="contracts-form-container">
-        <div className="contracts-form-row">
-          <div className="contracts-form-group">
-            <label>الحالة</label>
-            <input
-              type="text"
-              value={contractStatus}
-              onChange={(e) => setContractStatus(e.target.value)}
-              placeholder="جديد"
-            />
-          </div>
+      <Collapse
+        onChange={(key) => {
+          setActiveCollapse(key);
+        }}
+        defaultActiveKey={["0"]}
+        style={{ display: "flex", justifyContent: "space-between" }}>
+        <Panel key="1" header="إدخال معلومات المعاملة" showArrow={true}>
+          <div className="contracts-form-container">
+            <div className="contracts-form-row">
+              <div className="contracts-form-group">
+                <label>الحالة</label>
+                <input
+                  type="text"
+                  value={contractStatus}
+                  onChange={(e) => setContractStatus(e.target.value)}
+                  placeholder="جديد"
+                />
+              </div>
 
-          <div className="contracts-form-group">
-            <label>ادخل اسم المستأجر</label>
-            <Select
-              mode="multiple"
-              allowClear
-              showSearch // Enables search functionality
-              placeholder=""
-              value={tenantName}
-              onChange={(values) => setTenantName(values)}
-              filterOption={(input, option) =>
-                String(option?.children)
-                  .toLowerCase()
-                  .includes(input.toLowerCase())
-              } // Custom search logic
-            >
-              {customersAccounts.map((owner) => (
-                <Option key={owner.id} value={owner.id}>
-                  {owner.name}
-                </Option>
-              ))}
-            </Select>
-            {/* <input
+              <div className="contracts-form-group">
+                <label>ادخل اسم المستأجر</label>
+                <Select
+                  mode="multiple"
+                  allowClear
+                  showSearch // Enables search functionality
+                  placeholder=""
+                  value={tenantName}
+                  onChange={(values) => setTenantName(values)}
+                  filterOption={(input, option) =>
+                    String(option?.children)
+                      .toLowerCase()
+                      .includes(input.toLowerCase())
+                  } // Custom search logic
+                >
+                  {customersAccounts.map((owner) => (
+                    <Option key={owner.id} value={owner.id}>
+                      {owner.name}
+                    </Option>
+                  ))}
+                </Select>
+                {/* <input
               type="text"
               value={tenantName}
               onChange={(e) => setTenantName(e.target.value)}
               placeholder="500"
             /> */}
-          </div>
-          <div className="contracts-form-group">
-            <label>ادخل رقم العقار </label>
-            <Select
-              allowClear
-              showSearch // Enables search functionality
-              placeholder="اختر رقم العقار"
-              value={
-                realStateData
-                  .filter((rs) => rs.id === Number(propertyNumber))
-                  ?.find((rs) => rs.id === Number(propertyNumber))
-                  ?.propertyTitle
-              }
-              onChange={(values) => {
-                setPropertyNumber(values?.toString());
-              }}
-              filterOption={(input, option) =>
-                typeof option?.children === "string"
-                  ? option.children
-                  : "".toLowerCase().includes(input.toLowerCase())
-              } // Custom search logic
-            >
-              {realStateData.map((realstate) => (
-                <Option key={realstate.id} value={realstate.id}>
-                  {realstate.propertyTitle}
-                </Option>
-              ))}
-            </Select>
-            {/* <input
+              </div>
+              <div className="contracts-form-group">
+                <label>ادخل رقم العقار </label>
+                <Select
+                  allowClear
+                  showSearch // Enables search functionality
+                  placeholder="اختر رقم العقار"
+                  value={
+                    realStateData
+                      .filter((rs) => rs.id === Number(propertyNumber))
+                      ?.find((rs) => rs.id === Number(propertyNumber))
+                      ?.propertyTitle
+                  }
+                  onChange={(values) => {
+                    setPropertyNumber(values?.toString());
+                  }}
+                  filterOption={(input, option) =>
+                    typeof option?.children === "string"
+                      ? option.children
+                      : "".toLowerCase().includes(input.toLowerCase())
+                  } // Custom search logic
+                >
+                  {realStateData.map((realstate) => (
+                    <Option key={realstate.id} value={realstate.id}>
+                      {realstate.propertyTitle}
+                    </Option>
+                  ))}
+                </Select>
+                {/* <input
               type="text"
               value={propertyNumber}
               onChange={(e) => setPropertyNumber(e.target.value)}
               placeholder="07701234567"
             /> */}
-          </div>
-          <div className="contracts-form-group">
-            <label>ادخل تاريخ بدء العقد</label>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-            />
-          </div>
-          <div className="contracts-form-group">
-            <label>ادخل تاريخ نهاية العقد</label>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-            />
-          </div>
-          <div className="contracts-form-group">
-            <label>ادخل الاستحقاق</label>
-            <input
-              type="number"
-              value={entitlement}
-              onChange={(e) => setEntitlement(Number(e.target.value))}
-              placeholder=""
-            />
-          </div>
-          <div className="contracts-form-group">
-            <label>ادخل رقم العقد</label>
-            <input
-              type="text"
-              value={contractNumber}
-              onChange={(e) => setContractNumber(e.target.value)}
-              placeholder="0"
-            />
-          </div>
-          <div className="contracts-form-group">
-            <label>عدد الدفعات</label>
-            <input
-              type="number"
-              value={installmentCount}
-              onChange={(e) => setInstallmentCount(e.target.value)}
-              placeholder="0"
-            />
-          </div>
-          <div className="contracts-form-group">
-            <label>ادخل استخدام المأجور</label>
-            <input
-              type="text"
-              value={leasedUsage}
-              onChange={(e) => setLeasedUsage(e.target.value)}
-              placeholder=""
-            />
-          </div>
-          <div className="contracts-form-group">
-            <label>ادخل نوع العقار</label>
-            <input
-              type="text"
-              value={propertyType}
-              onChange={(e) => setPropertyType(e.target.value)}
-              placeholder=""
-            />
-          </div>
-        </div>
-        <div className="contracts-form-buttons">
-          <div style={{ marginBottom: 12 }}>
-            <label>المرفقات (صور أو PDF)</label>
-            <div>
-              <FileUploader
-                subfolder={`tenants/${Date.now()}`}
-                accept="image/*,application/pdf"
-                onSaved={(p) => setSavedAttachments((s) => [...s, p])}
-                label="أضف مرفق"
-              />
-            </div>
-            {savedAttachments.length > 0 && (
-              <div style={{ marginTop: 8, textAlign: "left" }}>
-                <strong>الملفات المرفوعة:</strong>
-                <ul>
-                  {savedAttachments.map((p) => (
-                    <li key={p} style={{ fontSize: 12 }}>
-                      <code>{p}</code>
-                    </li>
-                  ))}
-                </ul>
               </div>
-            )}
+              <div className="contracts-form-group">
+                <label>ادخل تاريخ بدء العقد</label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                />
+              </div>
+              <div className="contracts-form-group">
+                <label>ادخل تاريخ نهاية العقد</label>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                />
+              </div>
+              <div className="contracts-form-group">
+                <label>ادخل الاستحقاق</label>
+                <input
+                  type="number"
+                  value={entitlement}
+                  onChange={(e) => setEntitlement(Number(e.target.value))}
+                  placeholder=""
+                />
+              </div>
+              <div className="contracts-form-group">
+                <label>ادخل رقم العقد</label>
+                <input
+                  type="text"
+                  value={contractNumber}
+                  onChange={(e) => setContractNumber(e.target.value)}
+                  placeholder="0"
+                />
+              </div>
+              <div className="contracts-form-group">
+                <label>عدد الدفعات</label>
+                <input
+                  type="number"
+                  value={installmentCount}
+                  onChange={(e) => setInstallmentCount(e.target.value)}
+                  placeholder="0"
+                />
+              </div>
+              <div className="contracts-form-group">
+                <label>ادخل استخدام المأجور</label>
+                <input
+                  type="text"
+                  value={leasedUsage}
+                  onChange={(e) => setLeasedUsage(e.target.value)}
+                  placeholder=""
+                />
+              </div>
+              <div className="contracts-form-group">
+                <label>ادخل نوع العقار</label>
+                <input
+                  type="text"
+                  value={propertyType}
+                  onChange={(e) => setPropertyType(e.target.value)}
+                  placeholder=""
+                />
+              </div>
+            </div>
+            <div className="contracts-form-buttons">
+              <div style={{ marginBottom: 12 }}>
+                <label>المرفقات (صور أو PDF)</label>
+                <div>
+                  <FileUploader
+                    subfolder={`tenants/${Date.now()}`}
+                    accept="image/*,application/pdf"
+                    onSaved={(p) => setSavedAttachments((s) => [...s, p])}
+                    label="أضف مرفق"
+                  />
+                </div>
+                {savedAttachments.length > 0 && (
+                  <div style={{ marginTop: 8, textAlign: "left" }}>
+                    <strong>الملفات المرفوعة:</strong>
+                    <ul>
+                      {savedAttachments.map((p) => (
+                        <li key={p} style={{ fontSize: 12 }}>
+                          <code>{p}</code>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div>
+              <button className="procedures-save-button" onClick={handleSave}>
+                حفظ
+              </button>
+            </div>
           </div>
-          <button className="contracts-save-button" onClick={handleSave}>
-            حفظ
-          </button>
+        </Panel>
+        {activeCollapse[1] !== "1" && (
           <button
-            className="contracts-save-button"
+            className="real-states-refresh-button"
             onClick={() =>
               setSearchFilters({
                 contractNumber: "",
@@ -532,8 +549,8 @@ export default function TenantsContractTable() {
             }>
             <IoIosRefresh />
           </button>
-        </div>
-      </div>
+        )}
+      </Collapse>
 
       <div className="contracts-table-container">
         <table className="contracts-data-table">

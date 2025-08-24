@@ -685,7 +685,7 @@ export default function Reports() {
                 </tr>
               </thead>
               <tbody>
-                {customersAccounts.map((user) => (
+                {customersAccounts?.map((user) => (
                   <tr key={user.id} onClick={() => showInfo(user)}>
                     <td>{user.id}</td>
                     <td>{user.name}</td>
@@ -719,25 +719,28 @@ export default function Reports() {
                 </tr>
               </thead>
               <tbody>
-                {tenants.map((tenant) => (
-                  <tr key={tenant.id}>
-                    <td>{tenant.id}</td>
-                    <td>
-                      {tenant.tenantNames && tenant.tenantNames.length > 0
-                        ? (
-                            (typeof tenant.tenantNames === "string"
-                              ? JSON.parse(tenant.tenantNames)
-                              : tenant.tenantNames) as string[]
-                          ).map((i, idx) => <span key={idx}>{i}</span>)
-                        : "N/A"}
-                    </td>
-                    <td>{tenant.propertyDetails.propertyTitle}</td>
-                    <td>{tenant.installmentAmount}</td>
-                    <td>{tenant.contractStatus}</td>
-                    <td>{tenant.startDate}</td>
-                    <td>{tenant.endDate}</td>
-                  </tr>
-                ))}
+                {tenants &&
+                  tenants?.map((tenant) => (
+                    <tr key={tenant.id}>
+                      <td>{tenant.id}</td>
+                      <td>
+                        {tenant.tenantNames && tenant.tenantNames.length > 0
+                          ? (
+                              (typeof tenant.tenantNames === "string"
+                                ? JSON.parse(tenant.tenantNames)
+                                : tenant.tenantNames) as string[]
+                            ).map((i, idx) => <span key={idx}>{i}</span>)
+                          : "N/A"}
+                      </td>
+                      <td>
+                        {tenant?.propertyDetails?.propertyTitle || "غير متوفر"}
+                      </td>
+                      <td>{tenant?.installmentAmount}</td>
+                      <td>{tenant?.contractStatus}</td>
+                      <td>{tenant?.startDate}</td>
+                      <td>{tenant?.endDate}</td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </>
@@ -808,7 +811,7 @@ export default function Reports() {
             <h2>القيود</h2>
 
             {/* Procedure Transactions */}
-            <h3>حوالات المعاملات</h3>
+            <h3>قيود المعاملات</h3>
             <table className="dashboard-table">
               <thead>
                 <tr>
@@ -837,7 +840,7 @@ export default function Reports() {
                 ) : (
                   <tr>
                     <td colSpan={7} style={{ textAlign: "center" }}>
-                      لا توجد حوالات معاملات
+                      لا توجد قيود معاملات
                     </td>
                   </tr>
                 )}
@@ -845,7 +848,7 @@ export default function Reports() {
             </table>
 
             {/* Personal Transactions */}
-            <h3>حوالات شخصية</h3>
+            <h3>قيود شخصية</h3>
             <table className="dashboard-table">
               <thead>
                 <tr>
@@ -874,7 +877,7 @@ export default function Reports() {
                 ) : (
                   <tr>
                     <td colSpan={6} style={{ textAlign: "center" }}>
-                      لا توجد حوالات شخصية
+                      لا توجد قيود شخصية
                     </td>
                   </tr>
                 )}
@@ -882,7 +885,7 @@ export default function Reports() {
             </table>
 
             {/* Internal Transactions */}
-            <h3>حوالات داخلية</h3>
+            <h3>قيود داخلية</h3>
             <table className="dashboard-table">
               <thead>
                 <tr>
@@ -977,7 +980,7 @@ export default function Reports() {
                 ) : (
                   <tr>
                     <td colSpan={6} style={{ textAlign: "center" }}>
-                      لا توجد حوالات داخلية
+                      لا توجد قيود داخلية
                     </td>
                   </tr>
                 )}

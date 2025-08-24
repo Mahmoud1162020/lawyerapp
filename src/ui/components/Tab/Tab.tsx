@@ -20,10 +20,12 @@ export default function CashTab() {
     proceduresTransactions: Transaction[]; // Replace with actual transaction type if available
     personalTransactions: PersonalTransaction[]; // Replace with actual personal transaction type if available
     internalTransactions: InternalTransaction[]; // Replace with actual internal transaction type if available
+    tenantsTransactions: TenantTransaction[]; // Add this line for tenants transactions
   }>({
     proceduresTransactions: [],
     personalTransactions: [],
     internalTransactions: [],
+    tenantsTransactions: [],
   });
 
   useEffect(() => {
@@ -43,14 +45,18 @@ export default function CashTab() {
         await window.electron.getAllPersonalTransactions();
       const InternalTransactions =
         await window.electron.getAllInternalTransactions();
+      const tenantsTransactions =
+        await window.electron.getAllTenantTransactions();
       console.log("Fetched procedures transactions:", proceduresTransactions);
       console.log("Fetched personal transactions:", PersonalTransactions);
       console.log("Fetched internal transactions:", InternalTransactions);
+      console.log("Fetched tenants transactions:", tenantsTransactions);
 
       setTransactions({
         proceduresTransactions,
         personalTransactions: PersonalTransactions,
         internalTransactions: InternalTransactions,
+        tenantsTransactions: tenantsTransactions,
       });
       console.log("Fetched transactions:", {
         proceduresTransactions,
@@ -81,6 +87,9 @@ export default function CashTab() {
           totalOutgoing += Number(t.amount);
       });
     }
+    transactions?.tenantsTransactions.forEach((t) => {
+      totalIncoming += Number(t.amount);
+    });
     setTotalIncoming(totalIncoming);
     setTotalOutgoing(totalOutgoing);
     console.log(totalIncoming, totalOutgoing);
@@ -89,6 +98,7 @@ export default function CashTab() {
   }, [
     transactions?.personalTransactions,
     transactions?.proceduresTransactions,
+    transactions?.tenantsTransactions,
     dispatch,
   ]);
 

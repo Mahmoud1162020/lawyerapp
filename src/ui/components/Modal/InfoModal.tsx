@@ -108,12 +108,14 @@ const InfoModal: React.FC<InfoModalProps> = ({
                 </tr>
               </thead>
               <tbody>
-                {info.tenants.map((tenant, index) => (
+                {info?.tenants?.map((tenant, index) => (
                   <tr key={index}>
-                    <td>{tenant.propertyDetails.propertyTitle}</td>
-                    <td>{tenant.propertyDetails.address}</td>
-                    <td>{tenant.startDate}</td>
-                    <td>{tenant.endDate}</td>
+                    <td>
+                      {tenant.propertyDetails?.propertyTitle || "غير متوفر"}
+                    </td>
+                    <td>{tenant.propertyDetails?.address || "غير متوفر"}</td>
+                    <td>{tenant.startDate || "غير متوفر"}</td>
+                    <td>{tenant.endDate || "غير متوفر"}</td>
                     <td>{tenant.contractStatus}</td>
                     <td>
                       <ul

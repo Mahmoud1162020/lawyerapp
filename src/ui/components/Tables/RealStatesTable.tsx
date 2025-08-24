@@ -432,7 +432,7 @@ export default function RealStatesTable() {
         defaultActiveKey={["0"]}
         style={{ display: "flex", justifyContent: "space-between" }}>
         <Panel
-          style={{ fontSize: "18px" }}
+          style={{ fontSize: "14px" }}
           header="إدخال معلومات العقار"
           key="1">
           <div className="real-states-form-container">
