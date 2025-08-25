@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "./CustomerDetails.css";
+import { toast, ToastContainer } from "react-toastify";
 
 export default function CustomerDetails() {
   const { id } = useParams<{ id: string }>();
@@ -71,12 +72,12 @@ export default function CustomerDetails() {
           "details",
           account.details || ""
         );
-        alert("تم تحديث الحساب بنجاح!");
+        toast("تم تحديث الحساب بنجاح!");
         navigate(-1);
       }
     } catch (error) {
       console.error("Error updating account:", error);
-      alert("حدث خطأ أثناء تحديث الحساب!");
+      toast("حدث خطأ أثناء تحديث الحساب!");
     }
   };
 
@@ -86,6 +87,7 @@ export default function CustomerDetails() {
 
   return (
     <div className="customer-details-container">
+      <ToastContainer />
       <h2 className="customer-details-title">تفاصيل الحساب</h2>
       {/* <div className="customer-details-form-group">
         <label>رقم الحساب</label>

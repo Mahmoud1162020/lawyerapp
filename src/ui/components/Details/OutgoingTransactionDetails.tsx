@@ -2,6 +2,7 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Input, Button, Select } from "antd";
 import "./OutgoingTransactionDetailsStyle.css";
+import { toast, ToastContainer } from "react-toastify";
 
 const { Option } = Select;
 
@@ -104,12 +105,13 @@ export default function OutgoingTransactionDetails() {
       });
 
     // Show success message
-    alert("تم حفظ التعديلات بنجاح");
+    toast("تم حفظ التعديلات بنجاح");
     navigate(-1); // Navigate back to the previous page
   };
 
   return (
     <div className="transaction-details-container">
+      <ToastContainer />
       <h2>تفاصيل المعاملة: {id}</h2>
       <div className="transaction-form-group"></div>
       <div className="transaction-form-group">

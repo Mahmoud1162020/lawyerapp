@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Input, Button, Select, List, message } from "antd";
 import FileUploader from "../FileUploader";
 import "./ProcedureDetailsStyle.css";
+import { toast, ToastContainer } from "react-toastify";
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -177,12 +178,13 @@ export default function ProcedureDetails() {
       });
 
     // Show success message
-    alert("تم حفظ التعديلات بنجاح");
+    toast("تم حفظ التعديلات بنجاح");
     navigate(-1); // Navigate back to the previous page
   };
 
   return (
     <div className="procedure-details-container">
+      <ToastContainer />
       <h2>تفاصيل المعاملة: {id}</h2>
       <div className="procedure-form-group">
         <label>رقم المعاملة</label>

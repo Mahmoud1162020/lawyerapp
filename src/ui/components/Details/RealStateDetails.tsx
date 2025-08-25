@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Input, Button, Select, List, message } from "antd";
 import FileUploader from "../FileUploader";
 import "./RealStateDetailsStyle.css";
+import { toast, ToastContainer } from "react-toastify";
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -174,13 +175,14 @@ export default function RealStateDetails() {
       });
 
     // Show success message
-    alert("تم حفظ التعديلات بنجاح");
+    toast("تم حفظ التعديلات بنجاح");
     navigate(-1); // Navigate back to the previous page
   };
   console.log("record------", record);
 
   return (
     <div className="real-state-details-container">
+      <ToastContainer />
       <h2>تفاصيل العقار: {id}</h2>
       <div className="real-state-form-group">
         <label>اسم العقار</label>
@@ -322,9 +324,9 @@ export default function RealStateDetails() {
                   حذف
                 </Button>,
               ]}>
-              <code style={{ fontSize: 13 }}>
-                {item.path.split(/[\\/]/).pop()}
-              </code>
+            <code style={{ fontSize: 12 }}>
+  {item.path.split(/[\\/]/).pop()}
+</code>
             </List.Item>
           )}
         />

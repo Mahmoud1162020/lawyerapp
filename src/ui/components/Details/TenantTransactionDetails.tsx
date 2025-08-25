@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useParams, useNavigate } from "react-router-dom";
 import "./TenantTransactionDetails.css";
+import { toast, ToastContainer } from "react-toastify";
 
 const TenantTransactionDetails: React.FC = () => {
   const { transactionId } = useParams<{ transactionId: string }>();
@@ -52,10 +53,10 @@ const TenantTransactionDetails: React.FC = () => {
         }
       );
       setIsEditing(false);
-      alert("تم حفظ التعديلات بنجاح");
+      toast("تم حفظ التعديلات بنجاح");
     } catch (error) {
       console.error("Error saving transaction details:", error);
-      alert("حدث خطأ أثناء حفظ التعديلات");
+      toast("حدث خطأ أثناء حفظ التعديلات");
     }
   };
 
@@ -65,6 +66,7 @@ const TenantTransactionDetails: React.FC = () => {
 
   return (
     <div className="tenant-transaction-details" dir="rtl">
+      <ToastContainer />
       <h2>تفاصيل المعاملة</h2>
       <table>
         <tbody>

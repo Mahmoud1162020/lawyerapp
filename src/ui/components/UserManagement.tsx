@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "./UserManagement.css";
 import { ROLES, ROLESARRAY } from "../types/Keys";
+import { toast, ToastContainer } from "react-toastify";
 
 interface User {
   id: number;
@@ -97,13 +98,14 @@ const UserManagement: React.FC = () => {
       );
       setEditUserId(null);
     } catch (error) {
-      alert("فشل تحديث المستخدم. يرجى المحاولة مرة أخرى." + error);
+      toast("فشل تحديث المستخدم. يرجى المحاولة مرة أخرى." + error);
       console.error("Update failed:", error);
     }
   };
 
   return (
     <div className="user-mgmt-container">
+      <ToastContainer />
       <h2 className="user-mgmt-title">إدارة المستخدمين</h2>
       <table className="user-mgmt-table">
         <thead>

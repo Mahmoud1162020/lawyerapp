@@ -15,6 +15,7 @@ import { IoIosRefresh } from "react-icons/io";
 import { FiPaperclip } from "react-icons/fi";
 import ConfirmModal from "../Modal/ConfirmModal";
 import FileUploader from "../FileUploader";
+import { toast, ToastContainer } from "react-toastify";
 // import {
 //   formatNumberWithCommas,
 //   sanitizeNumberInput,
@@ -163,7 +164,7 @@ export default function RealStatesTable() {
       address.trim() === "" ||
       date.trim() === ""
     ) {
-      alert("الرجاء ملء جميع الحقول");
+      toast("الرجاء ملء جميع الحقول");
       return;
     }
 
@@ -230,7 +231,7 @@ export default function RealStatesTable() {
       console.log("New RealState Added:", addedRealState);
     } catch (error) {
       console.error("Failed to save real state:", error);
-      alert("حدث خطأ أثناء حفظ العقار. يرجى المحاولة مرة أخرى.");
+      toast("حدث خطأ أثناء حفظ العقار. يرجى المحاولة مرة أخرى.");
     }
   };
 
@@ -425,6 +426,7 @@ export default function RealStatesTable() {
 
   return (
     <div className="real-states-data-table-container">
+      <ToastContainer />
       <Collapse
         onChange={(key) => {
           setActiveCollapse(key);
@@ -612,8 +614,9 @@ export default function RealStatesTable() {
                     حذف
                   </Button>,
                 ]}>
-                <code style={{ fontSize: 12 }}>{item.path}</code>
-              </List.Item>
+<code style={{ fontSize: 12 }}>
+  {item.path.split(/[\\/]/).pop()}
+</code>              </List.Item>
             )}
           />
         </Modal>

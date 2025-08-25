@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import "./Register.css";
+import { toast, ToastContainer } from "react-toastify";
 
 const Register: React.FC = () => {
   const [username, setUsername] = useState("");
@@ -10,18 +11,19 @@ const Register: React.FC = () => {
       const user = await window.electron.register(username, password);
       console.log("Registered:", user);
       // Optionally, show a success message or redirect
-      alert("تم تسجيل المستخدم بنجاح");
+      toast("تم تسجيل المستخدم بنجاح");
       setUsername("");
       setPassword("");
     } catch (error) {
       console.error("Registration failed:", error);
       // Optionally, show an error message
-      alert("فشل تسجيل المستخدم. يرجى المحاولة مرة أخرى." + error);
+      toast("فشل تسجيل المستخدم. يرجى المحاولة مرة أخرى." + error);
     }
   };
 
   return (
     <div className="register-container">
+      <ToastContainer />
       <form
         className="register-form"
         onSubmit={(e) => {

@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 import FileUploader from "../FileUploader";
 import { Select, Modal, List, Button, Tooltip, Collapse } from "antd";
 import { FiPaperclip } from "react-icons/fi";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 
 const { Option } = Select;
 const { Panel } = Collapse;
@@ -234,7 +234,7 @@ export default function TenantsContractTable() {
       !entitlement ||
       !contractNumber
     ) {
-      alert("الرجاء ملء جميع الحقول");
+      toast("الرجاء ملء جميع الحقول");
       return;
     }
     try {
@@ -251,6 +251,9 @@ export default function TenantsContractTable() {
         propertyType
       );
       console.log("Tenant contract added:", response);
+      if(response){
+        toast.success("تم إضافة عقد المستأجر بنجاح");
+      }
       const updatedContracts = await window.electron.getAllTenants();
       console.log("Updated tenant contracts:", updatedContracts);
 
@@ -306,7 +309,7 @@ export default function TenantsContractTable() {
       setPropertyType("");
     } catch (error) {
       toast.error("رقم العقد موجود مسبقاً");
-      alert("رقم العقد موجود مسبقاً");
+      // toast("رقم العقد موجود مسبقاً");
 
       console.error("Error adding tenant contract:", error);
     }
@@ -362,6 +365,8 @@ export default function TenantsContractTable() {
 
   return (
     <div className="contracts-container" dir="rtl">
+      <ToastContainer />
+      <ToastContainer/>
       <Collapse
         onChange={(key) => {
           setActiveCollapse(key);
@@ -721,8 +726,9 @@ export default function TenantsContractTable() {
                   حذف
                 </Button>,
               ]}>
-              <code style={{ fontSize: 12 }}>{item.path}</code>
-            </List.Item>
+<code style={{ fontSize: 12 }}>
+  {item.path.split(/[\\/]/).pop()}
+</code>            </List.Item>
           )}
         />
       </Modal>

@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import FileUploader from "../FileUploader";
 import { Collapse, Select, Modal, List, Button, Tooltip } from "antd";
 import { FiPaperclip } from "react-icons/fi";
+import { toast, ToastContainer } from "react-toastify";
 const { Panel } = Collapse;
 const { Option } = Select;
 export default function ProceduresTable() {
@@ -165,7 +166,7 @@ export default function ProceduresTable() {
       status.trim() === "" ||
       phone.trim() === ""
     ) {
-      alert("الرجاء ملء جميع الحقول");
+      toast("الرجاء ملء جميع الحقول");
       return;
     }
     try {
@@ -235,6 +236,7 @@ export default function ProceduresTable() {
 
   return (
     <div className="procedures-container" dir="rtl">
+      <ToastContainer />
       <Collapse
         onChange={(key) => {
           setActiveCollapse(key);
@@ -544,7 +546,9 @@ export default function ProceduresTable() {
                   حذف
                 </Button>,
               ]}>
-              <code style={{ fontSize: 12 }}>{item.path}</code>
+             <code style={{ fontSize: 12 }}>
+  {item.path.split(/[\\/]/).pop()}
+</code>
             </List.Item>
           )}
         />

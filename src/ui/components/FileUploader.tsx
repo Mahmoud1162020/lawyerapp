@@ -1,4 +1,5 @@
 import React, { useRef, useState } from "react";
+import { toast, ToastContainer } from "react-toastify";
 
 interface Props {
   subfolder?: string; // optional subfolder under attachments
@@ -32,7 +33,7 @@ export default function FileUploader({
       onSaved?.(res.path);
     } catch (err) {
       console.error("Failed to save file:", err);
-      alert("فشل رفع الملف");
+      toast("فشل رفع الملف");
     } finally {
       setSaving(false);
     }
@@ -40,6 +41,7 @@ export default function FileUploader({
 
   return (
     <div>
+      <ToastContainer />
       <input
         ref={inputRef}
         type="file"

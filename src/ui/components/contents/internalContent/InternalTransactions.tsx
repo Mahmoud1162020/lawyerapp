@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import "./InternalEntry.css";
 import ConfirmModal from "../../Modal/ConfirmModal";
 import { useLocation, useNavigate } from "react-router-dom";
+import { toast, ToastContainer } from "react-toastify";
 
 interface InternatTransactionProps {
   activeTab: string;
@@ -65,7 +66,7 @@ const InternalTransactions: React.FC<InternatTransactionProps> = ({
       );
       setCustomersAccounts(customersWithDebitCredit);
     } else {
-      alert("Failed to fetch customer accounts");
+      toast("Failed to fetch customer accounts");
     }
   };
   const fetchAllProcedures = async () => {
@@ -81,7 +82,7 @@ const InternalTransactions: React.FC<InternatTransactionProps> = ({
       console.log("Fetched Internal Transactions:", res);
       setEntries(res);
     } else {
-      alert("Failed to fetch internal transactions");
+      toast("Failed to fetch internal transactions");
     }
   };
 
@@ -94,7 +95,7 @@ const InternalTransactions: React.FC<InternatTransactionProps> = ({
         setRealState(res);
       }
     } else {
-      alert("Failed to fetch real states");
+      toast("Failed to fetch real states");
     }
   };
   useEffect(() => {
@@ -107,7 +108,7 @@ const InternalTransactions: React.FC<InternatTransactionProps> = ({
 
   const handleSave = async () => {
     if (!amount || !recipient || !sender) {
-      alert("يرجى ملء جميع الحقول المطلوبة!");
+      toast("يرجى ملء جميع الحقول المطلوبة!");
       return;
     }
 
@@ -125,9 +126,9 @@ const InternalTransactions: React.FC<InternatTransactionProps> = ({
       const res = await window.electron.addInternalTransaction(newEntry);
       console.log(res);
       if (res) {
-        alert("تم حفظ العملية بنجاح!");
+        toast("تم حفظ العملية بنجاح!");
       } else {
-        alert("فشل في حفظ العملية!");
+        toast("فشل في حفظ العملية!");
       }
 
       // setEntries([...entries, newEntry]);
@@ -146,10 +147,10 @@ const InternalTransactions: React.FC<InternatTransactionProps> = ({
         console.log("Error saving internal transaction:", error.message);
         // Extract Arabic message after 'Error:'
         const msg = error.message.split("Error:")[1]?.trim() || error.message;
-        alert("فشل في حفظ العملية! يرجى التحقق من البيانات المدخلة. " + msg);
+        toast("فشل في حفظ العملية! يرجى التحقق من البيانات المدخلة. " + msg);
       } else {
         console.log("Error saving internal transaction:", error);
-        alert("فشل في حفظ العملية! يرجى التحقق من البيانات المدخلة.");
+        toast("فشل في حفظ العملية! يرجى التحقق من البيانات المدخلة.");
       }
     }
   };
@@ -217,6 +218,7 @@ const InternalTransactions: React.FC<InternatTransactionProps> = ({
 
   return (
     <div className="internal-entry-container">
+      <ToastContainer />
       <ConfirmModal
         show={isModalOpen}
         message="هل أنت متأكد أنك تريد الحذف؟"

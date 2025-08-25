@@ -346,7 +346,7 @@ const IncomingPage: React.FC<IncomingPageProps> = ({ activeTab }) => {
       console.log("this is try of saving ", amount);
 
       if (amount === "" || amount === 0) {
-        alert("يرجى ملء جميع الحقول المطلوبة!");
+        toast("يرجى ملء جميع الحقول المطلوبة!");
         return;
       }
 
@@ -441,7 +441,7 @@ const IncomingPage: React.FC<IncomingPageProps> = ({ activeTab }) => {
           }
         );
         console.log("Tenant transaction added:", result);
-        alert(`تمت إضافة معاملة الإيجار بنجاح!`);
+        toast(`تمت إضافة معاملة الإيجار بنجاح!`);
         setUpdateFlag(!updateFlag);
       }
 
@@ -453,7 +453,7 @@ const IncomingPage: React.FC<IncomingPageProps> = ({ activeTab }) => {
       const errorMessage =
         error instanceof Error ? error.message : "حدث خطأ غير متوقع!";
       toast.error(`❌ خطأ: ${errorMessage}`);
-      alert("Error saving transaction:" + errorMessage);
+      toast("Error saving transaction:" + errorMessage);
     }
   };
 
@@ -535,6 +535,7 @@ const IncomingPage: React.FC<IncomingPageProps> = ({ activeTab }) => {
 
   return (
     <div className="transaction-container">
+      <ToastContainer />
       <ConfirmModal
         show={isModalOpen}
         message="هل أنت متأكد أنك تريد الحذف؟"

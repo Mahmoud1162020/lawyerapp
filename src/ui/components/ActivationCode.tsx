@@ -1,5 +1,6 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
+import { toast, ToastContainer } from "react-toastify";
 
 const ActivationCode: React.FC = () => {
   const [user, setUser] = useState<User | undefined>(undefined);
@@ -38,11 +39,11 @@ const ActivationCode: React.FC = () => {
       }
 
       setResult("تم  التفعيل بنجاح");
-      alert("تم  التفعيل بنجاح");
+      toast("تم  التفعيل بنجاح");
       setCode("");
     } catch (error) {
       setResult("حدث خطأ أثناء  التفعيل" + error);
-      alert("حدث خطأ أثناء  التفعيل" + error);
+      toast("حدث خطأ أثناء  التفعيل" + error);
     }
     setLoading(false);
   };
@@ -73,6 +74,7 @@ const ActivationCode: React.FC = () => {
 
   return (
     <div>
+      <ToastContainer/>
       <div
         style={{
           textAlign: "center",

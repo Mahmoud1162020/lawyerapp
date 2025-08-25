@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import { Input, Button, Select, List } from "antd";
 import FileUploader from "../FileUploader";
 import "./TenantsDetailsStyle.css";
+import { toast, ToastContainer } from "react-toastify";
 
 const { Option } = Select;
 
@@ -191,12 +192,13 @@ export default function TenantsDetails() {
     //   });
 
     // Show success message
-    alert("تم حفظ التعديلات بنجاح");
+    toast("تم حفظ التعديلات بنجاح");
     navigate(-1); // Navigate back to the previous page
   };
 
   return (
     <div className="tenants-details-container">
+      <ToastContainer />
       <h2>تفاصيل المستأجر: {id}</h2>
       <div className="tenants-form-group">
         <label>اسم المستأجر</label>
@@ -341,8 +343,9 @@ export default function TenantsDetails() {
                   حذف
                 </Button>,
               ]}>
-              <code style={{ fontSize: 12 }}>{item.path}</code>
-            </List.Item>
+<code style={{ fontSize: 12 }}>
+  {item.path.split(/[\\/]/).pop()}
+</code>            </List.Item>
           )}
         />
 

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import "./InternalTransactionDetails.css";
+import { toast, ToastContainer } from "react-toastify";
 
 const InternalTransactionDetails: React.FC = () => {
   const { transactionId } = useParams<{ transactionId: string }>();
@@ -23,7 +24,7 @@ const InternalTransactionDetails: React.FC = () => {
       } catch (error) {
         console.log("Error fetching transaction:", error);
 
-        alert("حدث خطأ أثناء جلب تفاصيل العملية");
+        toast("حدث خطأ أثناء جلب تفاصيل العملية");
       }
     };
     fetchTransaction();
@@ -38,7 +39,7 @@ const InternalTransactionDetails: React.FC = () => {
 
   const handleSave = async () => {
     if (!transaction) {
-      alert("لا توجد بيانات عملية لحفظها.");
+      toast("لا توجد بيانات عملية لحفظها.");
       return;
     }
     try {
@@ -49,11 +50,11 @@ const InternalTransactionDetails: React.FC = () => {
         transaction
       );
       setIsEditing(false);
-      alert("تم حفظ التعديلات بنجاح");
+      toast("تم حفظ التعديلات بنجاح");
     } catch (error) {
       console.log("Error saving transaction:", error);
 
-      alert("فشل في حفظ التعديلات! يرجى التحقق من البيانات المدخلة.");
+      toast("فشل في حفظ التعديلات! يرجى التحقق من البيانات المدخلة.");
     }
   };
 
@@ -61,6 +62,7 @@ const InternalTransactionDetails: React.FC = () => {
 
   return (
     <div className="internal-transaction-details-container" dir="rtl">
+      <ToastContainer />
       <h2>تفاصيل العملية الداخلية</h2>
       <table className="internal-transaction-table">
         <tbody>
